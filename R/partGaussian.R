@@ -26,6 +26,7 @@
 #'                    type = "marginal", nboot = 20, CI = 0.95)
 #' R2
 #'
+#' @export
 
 partGaussian <- function(mod, partvars = NULL, type = "marginal", nboot = NULL, CI = 0.95){
 
