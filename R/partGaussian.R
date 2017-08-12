@@ -79,13 +79,22 @@ partGaussian <- function(mod, partvars = NULL, type = "marginal", nboot = NULL, 
     if (!is.null(nboot))  Ysim_full <- as.matrix(stats::simulate(mod_full, nsim = nboot))
 
     # bootstrap R2 full model
-    boot_R2_full <- apply(Ysim_full, 2, function(x) R2_pe(refit(mod_full, newresp = x)))
+    cat("Bootstrapping progress for the full model \n")
+    R2_full_boot <- pbapply(Ysim_full, 2, function(x) R2_pe(refit(mod_full, newresp = x)))
 
     # CI function
     calc_CI <- function(x) {
         out <- stats::quantile(x, c((1 - CI)/2, 1 - (1 - CI)/2), na.rm = TRUE)
+        names(out) <- c("lower", "upper")
+        out
     }
 
+    # R2 CI for full model
+    R2_full_CI <- data.frame(t(calc_CI(R2_full_boot)))
+    R2_full_df <- data.frame("R2" = R2_full, R2_full_CI)
+
+
+    # unique and common effects
     diff_R2 <- function(partvar, mod) {
         # which variables to reduce?
         to_del <- paste(paste("-", partvar, sep= ""), collapse = " ")
@@ -98,18 +107,19 @@ partGaussian <- function(mod, partvars = NULL, type = "marginal", nboot = NULL, 
 
         if (is.null(nboot)){
             R2_diff <- R2_full - R2_red
-            return(R2 = R2_diff, data.frame("CI_low" = NA, "CI_high" = NA))
+            return(R2 = R2_diff, data.frame("lower" = NA, "upper" = NA))
         }
 
         Ysim_red <- as.matrix(stats::simulate(mod_red, nsim = nboot))
         # bootstrap R2 red model
-        boot_R2_red <- apply(Ysim_red, 2, function(x) R2_pe(refit(mod_red, newresp = x)))
+        cat(paste("Bootstrap progress for", paste(partvar, collapse = "&"), "\n"))
+        boot_R2_red <- pbapply(Ysim_red, 2, function(x) R2_pe(refit(mod_red, newresp = x)))
 
         R2_diff <- R2_full - R2_red
         # difference
-        boot_R2_diff <- boot_R2_full - boot_R2_red
+        boot_R2_diff <- R2_full_boot - boot_R2_red
         R2_diff_CI <- as.data.frame(t(calc_CI(boot_R2_diff)))
-        names(R2_diff_CI) <- c("CI_low", "CI_high")
+        names(R2_diff_CI) <- c("lower", "upper")
         out <- data.frame(R2_diff, R2_diff_CI)
     }
 
@@ -120,7 +130,11 @@ partGaussian <- function(mod, partvars = NULL, type = "marginal", nboot = NULL, 
 
     out <- data.frame("combinations" = all_comb_names, R2_out)
 
-    res <- list(R2 = out)
+    res <- list(call = mod@call,
+                type = type,
+                R2 = R2_full_df,
+                R2_boot = R2_full_boot,
+                CC = out)
     class(res) <- "partR2"
     return(res)
 }

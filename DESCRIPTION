@@ -11,7 +11,8 @@ License: GPL (>= 2)
 Imports: 
     methods,
     stats,
-    lme4
+    lme4,
+    pbapply
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
