@@ -4,7 +4,7 @@
 \alias{partGaussian}
 \title{Partition the R2 for Gaussian mixed models}
 \usage{
-partGaussian(mod, partvars = NULL, type = "marginal", nboot = NULL,
+partGaussian(mod, partvars = NULL, R2_type = "marginal", nboot = NULL,
   CI = 0.95)
 }
 \value{
@@ -23,7 +23,7 @@ mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
             data = BeetlesBody)
 
 R2 <- partGaussian(mod, partvars = c("Sex", "Treatment", "Habitat"),
-                   type = "marginal", nboot = 20, CI = 0.95)
+                   R2_type = "marginal", nboot = 20, CI = 0.95)
 R2
 
 }

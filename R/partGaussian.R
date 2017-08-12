@@ -23,12 +23,12 @@
 #'             data = BeetlesBody)
 #'
 #' R2 <- partGaussian(mod, partvars = c("Sex", "Treatment", "Habitat"),
-#'                    type = "marginal", nboot = 20, CI = 0.95)
+#'                    R2_type = "marginal", nboot = 20, CI = 0.95)
 #' R2
 #'
 #' @export
 
-partGaussian <- function(mod, partvars = NULL, type = "marginal", nboot = NULL, CI = 0.95){
+partGaussian <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NULL, CI = 0.95){
 
     if (is.null(partvars)) stop("partvars has to contain the variables for the commonality analysis")
     if (!is.null(nboot) & nboot < 2) stop("nboot has to be greater than 1")
@@ -40,6 +40,13 @@ partGaussian <- function(mod, partvars = NULL, type = "marginal", nboot = NULL, 
                     recursive = FALSE)
     } else {
         all_comb <- as.list(partvars)
+    }
+
+    # CI function
+    calc_CI <- function(x) {
+        out <- stats::quantile(x, c((1 - CI)/2, 1 - (1 - CI)/2), na.rm = TRUE)
+        names(out) <- c("lower", "upper")
+        out
     }
 
     # full model
@@ -80,18 +87,36 @@ partGaussian <- function(mod, partvars = NULL, type = "marginal", nboot = NULL, 
 
     # bootstrap R2 full model
     cat("Bootstrapping progress for the full model \n")
-    R2_full_boot <- pbapply(Ysim_full, 2, function(x) R2_pe(refit(mod_full, newresp = x)))
-
-    # CI function
-    calc_CI <- function(x) {
-        out <- stats::quantile(x, c((1 - CI)/2, 1 - (1 - CI)/2), na.rm = TRUE)
-        names(out) <- c("lower", "upper")
-        out
+    R2_full_boot <- NA
+    if (!is.null(nboot)){
+        R2_full_boot <- pbapply(Ysim_full, 2, function(x) R2_pe(refit(mod_full, newresp = x)))
     }
 
     # R2 CI for full model
     R2_full_CI <- data.frame(t(calc_CI(R2_full_boot)))
     R2_full_df <- data.frame("R2" = R2_full, R2_full_CI)
+
+    # predicted response
+    Yhat <- lme4:::fitted.merMod(mod)
+    # Structure coefficients
+    SC_pe <- function(Yhat) {
+        mod_mat <- data.frame(model.matrix(mod))
+        pred_ind <- sapply(partvars, function(x) grep(x, names(mod_mat)))
+        out <- data.frame(cor(Yhat, mod_mat[pred_ind]))
+        out
+    }
+
+    SC <- SC_pe(Yhat)
+    # prepare in case of no bootstrapping
+    SC_boot <- NA
+    SC_CI_temp <- matrix(ncol = length(names(SC)), nrow = 2, dimnames = list(c("lower", "upper")))
+
+    cat("Bootstrapping progress for the structure coefficients: \n")
+    if (!is.null(nboot)){
+        SC_boot <- do.call(rbind, pbapply(Ysim_full, 2, SC_pe))
+        SC_CI_temp <- data.frame(apply(SC_boot, 2, calc_CI))
+    }
+    SC <- data.frame("pred" = names(SC),"SC" = t(SC), t(SC_CI_temp), row.names = NULL)
 
 
     # unique and common effects
@@ -102,7 +127,7 @@ partGaussian <- function(mod, partvars = NULL, type = "marginal", nboot = NULL, 
         formula_red <- stats::update(formula_full, paste(". ~ . ", to_del, sep=""))
         # reduced model
         mod_red <- stats::update(mod, formula_red)
-
+        # reduced model R2
         R2_red <- R2_pe(mod_red)
 
         if (is.null(nboot)){
@@ -131,10 +156,15 @@ partGaussian <- function(mod, partvars = NULL, type = "marginal", nboot = NULL, 
     out <- data.frame("combinations" = all_comb_names, R2_out)
 
     res <- list(call = mod@call,
-                type = type,
+                datatype = "gaussian",
+                R2_type = R2_type,
                 R2 = R2_full_df,
                 R2_boot = R2_full_boot,
-                CC = out)
+                CC_df = out,
+                SC_df = SC_df,
+                SC_boot = SC_boot,
+                partvars = partvars,
+                CI = CI)
     class(res) <- "partR2"
     return(res)
 }
