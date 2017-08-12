@@ -37,13 +37,13 @@ print.partR2 <- function(x, ...) {
 
     # prep
     CI_range <- paste0(sub('.*\\.', '', x$CI), "%")
-    names(x$R2) <- c("R2", "CI_lower" ,"CI_upper")
+    names(x$R2_df) <- c("R2", "CI_lower" ,"CI_upper")
     names(x$CC_df) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper")
     names(x$SC_df) <- c("Predictor", "r(Yhat,x)", "CI_lower", "CI_upper")
 
     cat("\n\n")
     cat(paste0("R2 (", x$R2_type, ") and CI (",CI_range ,") for the full model: \n"))
-    print(x$R2, row.names = FALSE, digits = 3, right = FALSE)
+    print(x$R2_df, row.names = FALSE, digits = 3, right = FALSE)
     #cat(paste0("R2 = ", round(x$R2$R2, 3), ", CI = [", round(x$R2$lower, 3), ", ", round(x$R2$upper, 3), "]"))
     cat("\n")
     cat("----------")

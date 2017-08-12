@@ -7,18 +7,41 @@
 partGaussian(mod, partvars = NULL, R2_type = "marginal", nboot = NULL,
   CI = 0.95)
 }
+\arguments{
+\item{mod}{Gaussian merMod object from lme4::lmer.}
+
+\item{partvars}{Character vector specifying the predictors for which to partition the R2.}
+
+\item{R2_type}{"marginal" or "conditional"}
+
+\item{nboot}{Number of parametric bootstraps for interval estimation
+(defaults to NULL). Larger numbers of bootstraps give a better
+asymtotic CI, but may be time-consuming. Bootstrapping can be switch on by setting
+\code{nboot = 1000}.}
+
+\item{CI}{Width of the required confidence interval between 0 and 1 (defaults to
+0.95).}
+}
 \value{
 Returns an object of class \code{partR2} that is a a list with the following elements:
-\item{R2}{Partitioned R2}
+\item{call}{model call}
+\item{datatype}{Response distribution (here: 'Gaussian').}
+\item{R2_type}{Marginal or conditional R2}
+\item{R2_df}{R2 and confidence interval}
+\item{R2_boot}{Parametric bootstrap samples for R2}
+\item{CC_df}{Commonality coefficients (unique and common R2) and confidence intervals}
+\item{SC_df}{Structure coefficients (correlation between predicted response Yhat and the predictors specified in partvars) and confidence intervals}
+\item{SC_boot}{Parametric bootstrap samples for the SCs}
+\item{partvars}{predictors to partition}
+\item{CI}{Coverage of the confidence interval as specified by the \code{CI} argument.}
 }
 \description{
-Uses commonality analyses to partition the R2 into variation unique to variables and common
-between variables.
+R2, commonality coefficients and structure coefficients for gaussian lme4 models.
 }
 \examples{
 
 data(BeetlesBody)
-
+library(lme4)
 mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
             data = BeetlesBody)
 

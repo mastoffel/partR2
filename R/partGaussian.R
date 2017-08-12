@@ -1,11 +1,30 @@
 #' Partition the R2 for Gaussian mixed models
 #'
-#' Uses commonality analyses to partition the R2 into variation unique to variables and common
-#' between variables.
+#' R2, commonality coefficients and structure coefficients for gaussian lme4 models.
+#'
+#' @param mod Gaussian merMod object from lme4::lmer.
+#' @param partvars Character vector specifying the predictors for which to partition the R2.
+#' @param R2_type "marginal" or "conditional"
+#' @param nboot Number of parametric bootstraps for interval estimation
+#'        (defaults to NULL). Larger numbers of bootstraps give a better
+#'        asymtotic CI, but may be time-consuming. Bootstrapping can be switch on by setting
+#'        \code{nboot = 1000}.
+#' @param CI Width of the required confidence interval between 0 and 1 (defaults to
+#'        0.95).
+#'
 #'
 #' @return
 #' Returns an object of class \code{partR2} that is a a list with the following elements:
-#' \item{R2}{Partitioned R2}
+#' \item{call}{model call}
+#' \item{datatype}{Response distribution (here: 'Gaussian').}
+#' \item{R2_type}{Marginal or conditional R2}
+#' \item{R2_df}{R2 and confidence interval}
+#' \item{R2_boot}{Parametric bootstrap samples for R2}
+#' \item{CC_df}{Commonality coefficients (unique and common R2) and confidence intervals}
+#' \item{SC_df}{Structure coefficients (correlation between predicted response Yhat and the predictors specified in partvars) and confidence intervals}
+#' \item{SC_boot}{Parametric bootstrap samples for the SCs}
+#' \item{partvars}{predictors to partition}
+#' \item{CI}{Coverage of the confidence interval as specified by the \code{CI} argument.}
 #'
 #' @references
 #'
@@ -18,7 +37,7 @@
 #' @examples
 #'
 #' data(BeetlesBody)
-#'
+#' library(lme4)
 #' mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
 #'             data = BeetlesBody)
 #'
@@ -31,7 +50,9 @@
 partGaussian <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NULL, CI = 0.95){
 
     if (is.null(partvars)) stop("partvars has to contain the variables for the commonality analysis")
-    if (!is.null(nboot) & nboot < 2) stop("nboot has to be greater than 1")
+    if (!is.null(nboot)) {
+        if (nboot < 2) stop("nboot has to be greater than 1")
+    }
 
     # create list of all unique combinations except for the full model
     if (length(partvars > 1)){
@@ -52,7 +73,7 @@ partGaussian <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NUL
     # full model
     mod_full <- mod
     # formula
-    formula_full <- formula(mod_full)
+    formula_full <- stats::formula(mod_full)
 
     R2_pe <- function(mod) {
         # VarCorr() extracts variance components
@@ -89,7 +110,7 @@ partGaussian <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NUL
     cat("Bootstrapping progress for the full model \n")
     R2_full_boot <- NA
     if (!is.null(nboot)){
-        R2_full_boot <- pbapply(Ysim_full, 2, function(x) R2_pe(refit(mod_full, newresp = x)))
+        R2_full_boot <- pbapply::pbapply(Ysim_full, 2, function(x) R2_pe(lme4::refit(mod_full, newresp = x)))
     }
 
     # R2 CI for full model
@@ -97,12 +118,12 @@ partGaussian <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NUL
     R2_full_df <- data.frame("R2" = R2_full, R2_full_CI)
 
     # predicted response
-    Yhat <- lme4:::fitted.merMod(mod)
+    Yhat <- stats::predict(mod)
     # Structure coefficients
     SC_pe <- function(Yhat) {
-        mod_mat <- data.frame(model.matrix(mod))
+        mod_mat <- data.frame(stats::model.matrix(mod))
         pred_ind <- sapply(partvars, function(x) grep(x, names(mod_mat)))
-        out <- data.frame(cor(Yhat, mod_mat[pred_ind]))
+        out <- data.frame(stats::cor(Yhat, mod_mat[pred_ind]))
         out
     }
 
@@ -113,10 +134,10 @@ partGaussian <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NUL
 
     cat("Bootstrapping progress for the structure coefficients: \n")
     if (!is.null(nboot)){
-        SC_boot <- do.call(rbind, pbapply(Ysim_full, 2, SC_pe))
+        SC_boot <- do.call(rbind, pbapply::pbapply(Ysim_full, 2, SC_pe))
         SC_CI_temp <- data.frame(apply(SC_boot, 2, calc_CI))
     }
-    SC <- data.frame("pred" = names(SC),"SC" = t(SC), t(SC_CI_temp), row.names = NULL)
+    SC_df <- data.frame("pred" = names(SC),"SC" = t(SC), t(SC_CI_temp), row.names = NULL)
 
 
     # unique and common effects
@@ -132,13 +153,13 @@ partGaussian <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NUL
 
         if (is.null(nboot)){
             R2_diff <- R2_full - R2_red
-            return(R2 = R2_diff, data.frame("lower" = NA, "upper" = NA))
+            return(R2 = data.frame(R2_diff, "lower" = NA, "upper" = NA))
         }
 
         Ysim_red <- as.matrix(stats::simulate(mod_red, nsim = nboot))
         # bootstrap R2 red model
         cat(paste("Bootstrap progress for", paste(partvar, collapse = "&"), "\n"))
-        boot_R2_red <- pbapply(Ysim_red, 2, function(x) R2_pe(refit(mod_red, newresp = x)))
+        boot_R2_red <- pbapply::pbapply(Ysim_red, 2, function(x) R2_pe(lme4::refit(mod_red, newresp = x)))
 
         R2_diff <- R2_full - R2_red
         # difference
@@ -158,7 +179,7 @@ partGaussian <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NUL
     res <- list(call = mod@call,
                 datatype = "gaussian",
                 R2_type = R2_type,
-                R2 = R2_full_df,
+                R2_df = R2_full_df,
                 R2_boot = R2_full_boot,
                 CC_df = out,
                 SC_df = SC_df,
