@@ -32,9 +32,9 @@ devtools::install_github("mastoffel/partR2")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+Currently, just Gaussian models are implemented.
 
-```{r example}
+```{r example, results = FALSE}
 library(partR2)
 library(lme4)
 data(BeetlesBody)
