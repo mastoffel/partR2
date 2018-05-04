@@ -42,12 +42,12 @@
 #'             data = BeetlesBody)
 #'
 #' R2 <- partGaussian(mod, partvars = c("Sex", "Treatment", "Habitat"),
-#'                    R2_type = "marginal", nboot = 20, CI = 0.95)
+#'                    R2_type = "marginal", nboot = 100, CI = 0.95)
 #' R2
 #'
 #' @export
 
-partGaussian <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NULL, CI = 0.95){
+partGaussian_test <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NULL, CI = 0.95, verbose = TRUE){
 
     if (is.null(partvars)) stop("partvars has to contain the variables for the commonality analysis")
     if (!is.null(nboot)) {
@@ -57,8 +57,8 @@ partGaussian <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NUL
     # create list of all unique combinations except for the full model
     if (length(partvars > 1)){
         all_comb <- unlist(lapply(1:(length(partvars)),
-                    function(x) utils::combn(partvars, x, simplify = FALSE)),
-                    recursive = FALSE)
+            function(x) utils::combn(partvars, x, simplify = FALSE)),
+            recursive = FALSE)
     } else {
         all_comb <- as.list(partvars)
     }
@@ -67,10 +67,9 @@ partGaussian <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NUL
     calc_CI <- function(x) {
         out <- stats::quantile(x, c((1 - CI)/2, 1 - (1 - CI)/2), na.rm = TRUE)
         names(out) <- c("lower", "upper")
-        out
+        out <- data.frame(t(out))
     }
 
-    # beta_CI <- confint(mod, method = "boot")
     # full model
     mod_full <- mod
     # formula
@@ -100,45 +99,48 @@ partGaussian <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NUL
         R2 <- var_f / var_p
     }
 
-    # calc R2 for the full model
-    R2_full <- R2_pe(mod_full)
-
-    # confidence interval estimation by parametric bootstrapping
-    # simulate matrix from which to draw y
-    if (!is.null(nboot))  Ysim_full <- as.matrix(stats::simulate(mod_full, nsim = nboot))
-
-    # bootstrap R2 full model
-    cat("Bootstrapping progress for the full model \n")
-    R2_full_boot <- NA
-    if (!is.null(nboot)){
-        R2_full_boot <- pbapply::pbapply(Ysim_full, 2, function(x) R2_pe(lme4::refit(mod_full, newresp = x)))
+    # calculate R2 for the full model
+    if (!is.null(nboot)) {
+        # bootstrap R2
+        R2_full_boot <- lme4::bootMer(mod, R2_pe, nsim = nboot, type = "parametric",
+                                      verbose = verbose)
+        R2_bootlist <-data.frame(R2_full_boot$t)
+        R2_full_df <- data.frame("R2" = R2_full_boot$t0, calc_CI(R2_full_boot$t))
+        # calc R2 for the full model
+        R2_full <- R2_full_boot$t0
+    } else {
+        R2_full <- R2_pe(mod)
+        R2_full_df <- data.frame("R2" = R2_full, "lower" = NA, "upper" = NA)
+        R2_bootlist <- NA
     }
 
-    # R2 CI for full model
-    R2_full_CI <- data.frame(t(calc_CI(R2_full_boot)))
-    R2_full_df <- data.frame("R2" = R2_full, R2_full_CI)
 
-    # predicted response
-    Yhat <- stats::predict(mod)
+
     # Structure coefficients
-    SC_pe <- function(Yhat) {
+    SC_pe <- function(mod) {
+        Yhat <- stats::predict(mod)
+        # model matrix
         mod_mat <- data.frame(stats::model.matrix(mod))
-        pred_ind <- unlist(sapply(partvars, function(x) grep(x, names(mod_mat))))
+        # grep partvars from model.matrix names -- could lead to problems due to naming
+        pred_ind <- sapply(partvars, function(x) grep(x, names(mod_mat)))
+        # correlation between yhat and the model matrix column
         out <- data.frame(stats::cor(Yhat, mod_mat[pred_ind]))
-        out
+        stats::setNames(as.numeric(out), names(out))
     }
-
-    SC <- SC_pe(Yhat)
-    # prepare in case of no bootstrapping
-    SC_boot <- NA
-    SC_CI_temp <- matrix(ncol = length(names(SC)), nrow = 2, dimnames = list(c("lower", "upper")))
-
-    cat("Bootstrapping progress for the structure coefficients: \n")
-    if (!is.null(nboot)){
-        SC_boot <- do.call(rbind, pbapply::pbapply(Ysim_full, 2, SC_pe))
-        SC_CI_temp <- data.frame(apply(SC_boot, 2, calc_CI))
+    # bootstrap
+    if (!is.null(nboot)) {
+        SC_boot <- lme4::bootMer(mod, SC_pe, nsim = nboot, type = "parametric", verbose = TRUE)
+        SC_bootlist <- data.frame(SC_boot$t)
+        # tidy data
+        SC_all_CIs <- do.call(rbind, apply(SC_boot$t, 2, calc_CI))
+        SC_df <- data.frame("pred" = names(SC_boot$t0), "SC" = SC_boot$t0, SC_all_CIs)
+        rownames(SC_df) <- NULL
+    } else {
+        SC <- SC_pe(mod)
+        SC_df <- data.frame("pred" = names(SC), "SC" = SC, "lower" = NA, "upper" = NA)
+        SC_bootlist <- data.frame(matrix(ncol = length(SC)))
+        names(SC_bootlist) <- names(SC)
     }
-    SC_df <- data.frame("pred" = names(SC),"SC" = t(SC), t(SC_CI_temp), row.names = NULL)
 
 
     # unique and common effects
@@ -152,41 +154,41 @@ partGaussian <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NUL
         # reduced model R2
         R2_red <- R2_pe(mod_red)
 
+        # without bootstrapping
         if (is.null(nboot)){
             R2_diff <- R2_full - R2_red
             return(R2 = data.frame(R2_diff, "lower" = NA, "upper" = NA))
         }
 
-        Ysim_red <- as.matrix(stats::simulate(mod_red, nsim = nboot))
+        # with bootstrapping
         # bootstrap R2 red model
         cat(paste("Bootstrap progress for", paste(partvar, collapse = "&"), "\n"))
-        boot_R2_red <- pbapply::pbapply(Ysim_red, 2, function(x) R2_pe(lme4::refit(mod_red, newresp = x)))
+        R2_red_boot <- lme4::bootMer(mod_red, R2_pe, nsim = nboot, type = "parametric",
+            verbose = verbose)
 
+        # R2 difference
         R2_diff <- R2_full - R2_red
-        # difference
-        boot_R2_diff <- R2_full_boot - boot_R2_red
-        R2_diff_CI <- as.data.frame(t(calc_CI(boot_R2_diff)))
-        names(R2_diff_CI) <- c("lower", "upper")
-        out <- data.frame(R2_diff, R2_diff_CI)
+        # differences between bootstraps
+        boot_R2_diff <- R2_full_boot$t - R2_red_boot$t
+        # calculate CIs
+        R2_diff_CI <- calc_CI(boot_R2_diff)
     }
 
-
-    R2_out <- do.call(rbind, lapply(all_comb, diff_R2, mod))
-    # all_vars <- lapply(all_comb3, function(x) gsub('(a|e|i|o|u)', '', x))
+    # CCs
+    CC_CIs <- do.call(rbind, lapply(all_comb, diff_R2, mod))
     all_comb_names <- unlist(lapply(all_comb, function(x) paste(x, collapse = " & ")))
-
-    out <- data.frame("combinations" = all_comb_names, R2_out)
+    CC_df <- data.frame("combinations" = all_comb_names,  CC_CIs)
 
     res <- list(call = mod@call,
-                datatype = "gaussian",
-                R2_type = R2_type,
-                R2_df = R2_full_df,
-                R2_boot = R2_full_boot,
-                CC_df = out,
-                SC_df = SC_df,
-                SC_boot = SC_boot,
-                partvars = partvars,
-                CI = CI)
+        datatype = "gaussian",
+        R2_type = R2_type,
+        R2_df = R2_full_df,
+        R2_boot = R2_bootlist ,
+        CC_df = CC_df,
+        SC_df = SC_df,
+        SC_boot = SC_bootlist,
+        partvars = partvars,
+        CI = CI)
     class(res) <- "partR2"
     return(res)
 }
