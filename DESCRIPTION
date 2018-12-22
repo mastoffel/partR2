@@ -13,7 +13,9 @@ Imports:
     stats,
     lme4,
     pbapply,
-    ggplot2
+    ggplot2,
+    broom.mixed,
+    broom
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1

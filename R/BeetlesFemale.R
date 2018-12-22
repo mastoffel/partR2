@@ -1,4 +1,4 @@
-#' BeetlesBody dataset
+#' BeetlesFemale dataset
 #'
 #' @details This is an simulated dataset which was used as a toy example for a different purpose
 #' (Nakagawa & Schielzeth 2013).
@@ -12,8 +12,8 @@
 #' Beetle larvae were sampled from 12 populations (`Population`) with samples taken from two
 #' discrete microhabitats at each location (`Habitat`). Samples were split in equal proportion
 #' and raised in two dietary treatments (`Treatment`). Beetles were sexed at the pupal stage (`Sex`)
-#' and pupae were kept in sex-homogeneous containers (`Container`). The phenotype
-#' in this dataset is body length (`BodyL`).
+#' and pupae were kept in sex-homogeneous containers (`Container`).
+#' The phenotype in this dataset is the number of eggs laid by female beetles (`Egg`).
 #'
 #' @references
 #' Nakagawa, S. & Schielzeth, H. (2013) \emph{A general and simple method for obtaining R2
@@ -21,5 +21,5 @@
 #'
 #'
 #' @keywords datasets
-#' @name BeetlesBody
+#' @name BeetlesFemale
 NULL
