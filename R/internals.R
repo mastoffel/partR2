@@ -33,17 +33,17 @@ group_vars <- function(grname, var_comps, mod){
 #' @keywords internal
 #'
 #
-model_overdisp <- function(mod) UseMethod("overdisp")
-
-overdisp.merMod <- function(mod) {
-    data <- model.frame(mod)
+# model_overdisp <- function(mod) UseMethod("overdisp")
+# overdisp.merMod
+model_overdisp <- function(mod, data) {
+    # data <- model.frame(mod)
     mod_formula <- formula(mod)
 
     # check if it's already there
     if (!any(sapply(mod@flist, nlevels) == nobs(mod))) {
         Overdispersion <- factor(1:nobs(mod))
         data_overdisp <- cbind(data, Overdispersion)
-        formula_overdisp <- stats::update( mod_formula,  ~ . + (1|Overdispersion))
+        formula_overdisp <- stats::update(mod_formula,  ~ . + (1|Overdispersion))
         new_mod <- update(mod, formula. = formula_overdisp, data = data_overdisp )
     }
 }

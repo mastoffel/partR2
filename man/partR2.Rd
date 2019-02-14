@@ -6,8 +6,8 @@
 \alias{partR2-package}
 \title{R2, commonality coefficients and structure coefficients for mixed models}
 \usage{
-partR2(mod, partvars = NULL, R2_type = "marginal", nboot = 10,
-  CI = 0.95, parallel = FALSE, ncpus = NULL)
+partR2(mod, partvars = NULL, data = NULL, R2_type = "marginal",
+  nboot = 10, CI = 0.95, parallel = FALSE, ncpus = NULL)
 }
 \arguments{
 \item{mod}{Gaussian merMod object from lme4::lmer.}
@@ -46,18 +46,36 @@ data(BeetlesBody)
 library(lme4)
 mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
             data = BeetlesBody)
-(R2 <- partR2(mod, partvars = c("Treatment", "Sex", "Habitat"),
+(R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"), data = BeetlesBody,
                    R2_type = "marginal", nboot = 5, CI = 0.95))
 mod <- lmer(BodyL ~ Treatment + Sex + (1 + Treatment|Population),
              data=BeetlesBody)
-(R2 <- partR2(mod, partvars = c( "Sex"),
+(R2 <- partR2(mod, partvars = c( "Sex"), data = BeetlesBody,
                    R2_type = "marginal", nboot = 5, CI = 0.95))
 
 data(BeetlesFemale)
 mod <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population),
                   data = BeetlesFemale, family = poisson)
-(R2 <- partR2(mod, partvars = c("Treatment", "Habitat"), R2_type = "marginal", nboot = 5, CI = 0.95))
+(R2 <- partR2(mod, partvars = c("Treatment", "Habitat"), data = BeetlesFemale,
+              R2_type = "marginal", nboot = 5, CI = 0.95))
 
+
+data(BeetlesMale)
+
+mod <- glmer(Colour ~ Treatment + (1|Container) + (1|Population), data = BeetlesMale,
+             family = binomial)
+(R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal", nboot = 5, CI = 0.95))
+
+# prepare proportion data // doesn't work yet, as data is difficult to retrieve, don't know yet
+how to solve this. (Maybe just add data argument?)
+BeetlesMale$Dark <- BeetlesMale$Colour
+BeetlesMale$Reddish <- (BeetlesMale$Colour-1)*-1
+BeetlesColour <- aggregate(cbind(Dark, Reddish) ~ Treatment + Population + Container,
+     data=BeetlesMale, FUN=sum)
+
+mod <- glmer(cbind(Dark, Reddish) ~ Treatment + (1|Container) + (1|Population),
+             data = BeetlesMale, family = binomial)
+(R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal", nboot = 5, CI = 0.95))
 
 }
 \references{

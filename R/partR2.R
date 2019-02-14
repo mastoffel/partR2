@@ -1,9 +1,9 @@
 #' Partition the R2 for Gaussian mixed models
 #'
 #' R2, commonality coefficients and structure coefficients for gaussian lme4 models.
-#'
-#' @param mod Gaussian merMod object from lme4::lmer.
+#' @param mod merMod object fitted with lme4.
 #' @param partvars Character vector specifying the predictors for which to partition the R2.
+#' @param data dataframe used for lme4 model fit.
 #' @param R2_type "marginal" or "conditional"
 #' @param nboot Number of parametric bootstraps for interval estimation
 #'        (defaults to NULL). Larger numbers of bootstraps give a better
@@ -11,6 +11,8 @@
 #'        \code{nboot = 1000}.
 #' @param CI Width of the required confidence interval between 0 and 1 (defaults to
 #'        0.95).
+#' @param parallel If TRUE, computation runs in parallel, leaving one CPU free, except ncpus is specified.
+#' @param ncpus number of cpus for parallel computation
 #'
 #'
 #' @return
@@ -38,26 +40,53 @@
 #'
 #' data(BeetlesBody)
 #' library(lme4)
+#'
+#' # Gaussian data
 #' mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
 #'             data = BeetlesBody)
-#' (R2 <- partR2(mod, partvars = c("Treatment", "Sex", "Habitat"),
+#' (R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"), data = BeetlesBody,
 #'                    R2_type = "marginal", nboot = 5, CI = 0.95))
 #' mod <- lmer(BodyL ~ Treatment + Sex + (1 + Treatment|Population),
 #'              data=BeetlesBody)
-#' (R2 <- partR2(mod, partvars = c( "Sex"),
+#' (R2 <- partR2(mod, partvars = c( "Sex"), data = BeetlesBody,
 #'                    R2_type = "marginal", nboot = 5, CI = 0.95))
 #'
+#' # poisson data
 #' data(BeetlesFemale)
 #' mod <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population),
 #'                   data = BeetlesFemale, family = poisson)
-#' (R2 <- partR2(mod, partvars = c("Treatment", "Habitat"), R2_type = "marginal", nboot = 5, CI = 0.95))
+#' (R2 <- partR2(mod, partvars = c("Treatment", "Habitat"), data = BeetlesFemale,
+#'               R2_type = "marginal", nboot = 5, CI = 0.95))
 #'
+#' # binomial data
+#'
+#' # binary
+#' data(BeetlesMale)
+#' mod <- glmer(Colour ~ Treatment + (1|Container) + (1|Population), data = BeetlesMale,
+#'              family = binomial)
+#' (R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal", data = BeetlesMale,
+#'              nboot = 5, CI = 0.95))
+#'
+#' # proportion
+#' BeetlesMale$Dark <- BeetlesMale$Colour
+#' BeetlesMale$Reddish <- (BeetlesMale$Colour-1)*-1
+#' BeetlesColour <- aggregate(cbind(Dark, Reddish) ~ Treatment + Population + Container,
+#'      data=BeetlesMale, FUN=sum)
+#'
+#' mod <- glmer(cbind(Dark, Reddish) ~ Treatment + (1|Container) + (1|Population),
+#'              data = BeetlesColour, family = binomial)
+#' (R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal",  data = BeetlesColour,
+#'              nboot = 5, CI = 0.95))
 #'
 #' @export
 
-partR2 <- function(mod, partvars = NULL, R2_type = "marginal", nboot = 10,
+partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboot = 10,
                                CI = 0.95, parallel = FALSE, ncpus = NULL){
 
+    # should be possible without providing data, but not sure how at the moment,
+    # mainly because of proportion binomial
+
+    if (is.null(data)) stop("please provide the original dataframe used to fit the model")
     if(!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
     if (is.null(partvars)) stop("partvars has to contain the variables for the commonality analysis")
     if (!is.null(nboot)) {
@@ -80,14 +109,16 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", nboot = 10,
     }
 
     # full model
-    mod_full <- mod
-
+    mod_original <- mod
+    data_original <- data
     # family
     fam <- family(mod)$family
 
     # add OLRE to model Overdispersion
+    Overdispersion <- factor(1:nobs(mod))
     if (fam == "poisson") {
-        mod <- model_overdisp(mod) # add OLRE and refit
+        mod <- model_overdisp(mod, data) # add OLRE and refit
+        data <- cbind(data_original, Overdispersion)
     }
     binary_resp <- FALSE
     if (fam == "binomial") {
@@ -95,7 +126,8 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", nboot = 10,
         if ((length(unique(stats::na.omit(mod@resp$y))) < 3)) {
             binary_resp <- TRUE
         } else {
-            mod <- model_overdisp(mod)
+            mod <- model_overdisp(mod, data)
+            data <- cbind(data_original, Overdispersion)
         }
 
     }
@@ -115,7 +147,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", nboot = 10,
         var_res <- calc_var_r(mod)
         # add OLRE variance if applicable and seperate overdispersion from other random effects
         if (any(names(var_rand) == "Overdispersion")) {
-            var_overdisp <- var_rand["Overdispersion"]
+            var_overdisp <- unname(var_rand["Overdispersion"])
             var_rand <- var_rand[!(names(var_rand) == "Overdispersion")]
             var_res <- var_res + var_overdisp
         }
@@ -124,8 +156,8 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", nboot = 10,
         # var_comps <- tidy(mod, effects = "ran_pars", scales = "vcov")
 
         # Calculation of the variance in predicted values based on fixed effects alone
-        var_fix <- stats::var(broom.mixed::augment(mod)[, ".fixed"])
-
+       # var_fix <- stats::var(broom.mixed::augment(mod)[, ".fixed"])
+        var_fix <- stats::var(stats::predict(mod, re.form=NA))
         # denominator variance
         var_d <- sum(var_rand) + var_res + var_fix
 
@@ -140,7 +172,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", nboot = 10,
     }
 
     # calc R2 for the full model
-   # R2_full <- R2_pe(mod_full)
+   # R2_full <- R2_pe(mod)
 
     # makes reduced mod R2s
     R2_red_mods <- function(partvar, mod) {
@@ -150,7 +182,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", nboot = 10,
         # reduced formula
         formula_red <- stats::update(formula_with_overdisp, paste(". ~ . ", to_del, sep=""))
         # reduced model
-        mod_red <-  stats::update(mod, formula. = formula_red, data = model.frame(mod)) # double check this data = model.frame(mod)
+        mod_red <-  stats::update(mod, formula. = formula_red, data = data) # could be done with model.frame(mod), but hard with proportion
         # reduced model R2
         R2_red <- R2_pe(mod_red)
         # out <- setNames(R2_red, paste(partvar, collapse = "_"))
@@ -158,7 +190,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", nboot = 10,
     }
 
     # calculates R2s for full model and R2s unique to each subset
-    boot_R2s <- function(mod, all_comb_vars) {
+    part_R2s <- function(mod) {
 
         R2_full_boot <- R2_pe(mod)
         R2s_red <- lapply(all_comb, R2_red_mods, mod)
@@ -169,14 +201,24 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", nboot = 10,
     }
 
     # parametric bootstrapping // which type of parametric bootstrapping? see help file, two possibilities
-    booted_r2s <- bootMer(mod,  boot_R2s, nsim = nboot, type = "parametric", .progress = "txt",
-                          PBargs = list(style=3), parallel = parallel_option, ncpus = ncpus)
-    # make dataframe,
-    # booted r2 columns get names according to the variance components they represent
-    booted_r2s_df <- setNames(as.data.frame(booted_r2s$t),
-                              c("Full", unlist(lapply(all_comb, paste, collapse = "+"))))
+    if (!is.null(nboot)) {
+        booted_r2s <- bootMer(mod,  part_R2s, nsim = nboot, type = "parametric", .progress = "txt",
+            PBargs = list(style=3), parallel = parallel_option, ncpus = ncpus)
+        # make dataframe,
+        # booted r2 columns get names according to the variance components they represent
+        booted_r2s_df <- setNames(as.data.frame(booted_r2s$t),
+            c("Full", unlist(lapply(all_comb, paste, collapse = "+"))))
 
-    full_r2_df <- data.frame(R2 = boot_R2s(mod), do.call(rbind, lapply(booted_r2s_df, calc_CI, CI)))
+        full_r2_df <- data.frame(R2 = part_R2s(mod), do.call(rbind, lapply(booted_r2s_df, calc_CI, CI))) %>%
+                        tibble::rownames_to_column(var = "model_part")
+
+    } else {
+        booted_r2s <- NA
+        full_r2_df <- data.frame(model_part = c("Full", sapply(all_comb, paste, collapse = "+")),
+                      R2 = part_R2s(mod), lower_ci = NA, upper_ci = NA)
+    }
+
+
 
     ## Structure coefficients
     # # predicted response

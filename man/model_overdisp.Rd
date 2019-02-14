@@ -4,7 +4,7 @@
 \alias{model_overdisp}
 \title{Adds an observational level random effect to a model}
 \usage{
-model_overdisp(mod)
+model_overdisp(mod, data)
 }
 \arguments{
 \item{mod}{The model.}
