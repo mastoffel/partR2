@@ -2,8 +2,5 @@
 
 S3method(plot,partR2)
 S3method(print,partR2)
-export(partGaussian)
-export(partGaussian_broom)
-export(partGaussian_test)
-export(partPoisson_broom)
+export(partR2)
 import(ggplot2)

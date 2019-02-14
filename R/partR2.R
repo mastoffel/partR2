@@ -1,0 +1,216 @@
+#' Partition the R2 for Gaussian mixed models
+#'
+#' R2, commonality coefficients and structure coefficients for gaussian lme4 models.
+#'
+#' @param mod Gaussian merMod object from lme4::lmer.
+#' @param partvars Character vector specifying the predictors for which to partition the R2.
+#' @param R2_type "marginal" or "conditional"
+#' @param nboot Number of parametric bootstraps for interval estimation
+#'        (defaults to NULL). Larger numbers of bootstraps give a better
+#'        asymtotic CI, but may be time-consuming. Bootstrapping can be switch on by setting
+#'        \code{nboot = 1000}.
+#' @param CI Width of the required confidence interval between 0 and 1 (defaults to
+#'        0.95).
+#'
+#'
+#' @return
+#' Returns an object of class \code{partR2} that is a a list with the following elements:
+#' \item{call}{model call}
+#' \item{datatype}{Response distribution (here: 'Gaussian').}
+#' \item{R2_type}{Marginal or conditional R2}
+#' \item{R2_df}{R2 and confidence interval}
+#' \item{R2_boot}{Parametric bootstrap samples for R2}
+#' \item{CC_df}{Commonality coefficients (unique and common R2) and confidence intervals}
+#' \item{SC_df}{Structure coefficients (correlation between predicted response Yhat and the predictors specified in partvars) and confidence intervals}
+#' \item{SC_boot}{Parametric bootstrap samples for the SCs}
+#' \item{partvars}{predictors to partition}
+#' \item{CI}{Coverage of the confidence interval as specified by the \code{CI} argument.}
+#'
+#' @references
+#'
+#' Nakagawa, S., & Schielzeth, H. (2013). \emph{A general and simple method for obtaining R2 from
+#' generalized linear mixed‐effects models}. Methods in Ecology and Evolution, 4(2), 133-142.
+#'
+#' Newton, R. G., & Spurrell, D. J. (1967).  \emph{A development of multiple regression for the
+#' analysis of routine data. Applied Statistics}. 51-64.
+#'
+#' @examples
+#'
+#' data(BeetlesBody)
+#' library(lme4)
+#' mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
+#'             data = BeetlesBody)
+#' (R2 <- partR2(mod, partvars = c("Treatment", "Sex", "Habitat"),
+#'                    R2_type = "marginal", nboot = 5, CI = 0.95))
+#' mod <- lmer(BodyL ~ Treatment + Sex + (1 + Treatment|Population),
+#'              data=BeetlesBody)
+#' (R2 <- partR2(mod, partvars = c( "Sex"),
+#'                    R2_type = "marginal", nboot = 5, CI = 0.95))
+#'
+#' data(BeetlesFemale)
+#' mod <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population),
+#'                   data = BeetlesFemale, family = poisson)
+#' (R2 <- partR2(mod, partvars = c("Treatment", "Habitat"), R2_type = "marginal", nboot = 5, CI = 0.95))
+#'
+#'
+#' @export
+
+partR2 <- function(mod, partvars = NULL, R2_type = "marginal", nboot = 10,
+                               CI = 0.95, parallel = FALSE, ncpus = NULL){
+
+    if(!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
+    if (is.null(partvars)) stop("partvars has to contain the variables for the commonality analysis")
+    if (!is.null(nboot)) {
+        if (nboot < 2) stop("nboot has to be greater than 1")
+    }
+    if (isTRUE(parallel)) {
+        parallel_option <- "multicore"
+        if (is.null(ncpus)) ncpus <- parallel::detectCores()-1
+    } else { # for bootMer
+        parallel_option <- "no"
+    }
+
+    # create list of all unique combinations except for the full model
+    if (length(partvars > 1)){
+        all_comb <- unlist(lapply(1:(length(partvars)),
+            function(x) utils::combn(partvars, x, simplify = FALSE)),
+            recursive = FALSE)
+    } else {
+        all_comb <- as.list(partvars)
+    }
+
+    # full model
+    mod_full <- mod
+
+    # family
+    fam <- family(mod)$family
+
+    # add OLRE to model Overdispersion
+    if (fam == "poisson") {
+        mod <- model_overdisp(mod) # add OLRE and refit
+    }
+    binary_resp <- FALSE
+    if (fam == "binomial") {
+        # check for binary, if not binary, add OLRE // double check whether this is sensible
+        if ((length(unique(stats::na.omit(mod@resp$y))) < 3)) {
+            binary_resp <- TRUE
+        } else {
+            mod <- model_overdisp(mod)
+        }
+
+    }
+
+    # formula
+    formula_with_overdisp <- stats::formula(mod)
+
+    R2_pe <- function(mod) {
+
+        # random slopes
+        # This code to calc random effect variances is specific to lme4 at the moment. Maybe change in the future
+        var_comps <- lme4::VarCorr(mod)
+        # group_vars handles the random slopes
+        var_rand <- unlist(lapply(names(var_comps), group_vars, var_comps, mod))
+        names(var_rand) <- names(var_comps)
+        # residual / distribution specific variance
+        var_res <- calc_var_r(mod)
+        # add OLRE variance if applicable and seperate overdispersion from other random effects
+        if (any(names(var_rand) == "Overdispersion")) {
+            var_overdisp <- var_rand["Overdispersion"]
+            var_rand <- var_rand[!(names(var_rand) == "Overdispersion")]
+            var_res <- var_res + var_overdisp
+        }
+
+        # random effect variances and residual variance with broom
+        # var_comps <- tidy(mod, effects = "ran_pars", scales = "vcov")
+
+        # Calculation of the variance in predicted values based on fixed effects alone
+        var_fix <- stats::var(broom.mixed::augment(mod)[, ".fixed"])
+
+        # denominator variance
+        var_d <- sum(var_rand) + var_res + var_fix
+
+        # R2 marginal
+        if (R2_type == "marginal") {
+            R2 <- var_fix / var_d
+        }  else if (R2_type == "conditional") {
+            R2 <- (var_fix + sum(var_rand)) / var_d
+        }
+
+        R2
+    }
+
+    # calc R2 for the full model
+   # R2_full <- R2_pe(mod_full)
+
+    # makes reduced mod R2s
+    R2_red_mods <- function(partvar, mod) {
+
+        # which variables to reduce?
+        to_del <- paste(paste("-", partvar, sep= ""), collapse = " ")
+        # reduced formula
+        formula_red <- stats::update(formula_with_overdisp, paste(". ~ . ", to_del, sep=""))
+        # reduced model
+        mod_red <-  stats::update(mod, formula. = formula_red, data = model.frame(mod)) # double check this data = model.frame(mod)
+        # reduced model R2
+        R2_red <- R2_pe(mod_red)
+        # out <- setNames(R2_red, paste(partvar, collapse = "_"))
+
+    }
+
+    # calculates R2s for full model and R2s unique to each subset
+    boot_R2s <- function(mod, all_comb_vars) {
+
+        R2_full_boot <- R2_pe(mod)
+        R2s_red <- lapply(all_comb, R2_red_mods, mod)
+        # give back bootstraps from full model and the unique contribution of each part,
+        # which are the unique fixed predictors and their combinations
+        R2s <- c(R2_full_boot, R2_full_boot - unlist(R2s_red))
+
+    }
+
+    # parametric bootstrapping // which type of parametric bootstrapping? see help file, two possibilities
+    booted_r2s <- bootMer(mod,  boot_R2s, nsim = nboot, type = "parametric", .progress = "txt",
+                          PBargs = list(style=3), parallel = parallel_option, ncpus = ncpus)
+    # make dataframe,
+    # booted r2 columns get names according to the variance components they represent
+    booted_r2s_df <- setNames(as.data.frame(booted_r2s$t),
+                              c("Full", unlist(lapply(all_comb, paste, collapse = "+"))))
+
+    full_r2_df <- data.frame(R2 = boot_R2s(mod), do.call(rbind, lapply(booted_r2s_df, calc_CI, CI)))
+
+    ## Structure coefficients
+    # # predicted response
+    # Yhat <- stats::predict(mod)
+    # # Structure coefficients
+    # SC_pe <- function(Yhat) {
+    #     mod_mat <- data.frame(stats::model.matrix(mod))
+    #     pred_ind <- unlist(sapply(partvars, function(x) grep(x, names(mod_mat))))
+    #     # how to calc structure coefficient for categorical variables? Still correlation?
+    #     out <- data.frame(stats::cor(Yhat, mod_mat[pred_ind]))
+    #     out
+    # }
+    #
+    # SC <- SC_pe(Yhat)
+    # # prepare in case of no bootstrapping
+    # SC_boot <- NA
+    # SC_CI_temp <- matrix(ncol = length(names(SC)), nrow = 2, dimnames = list(c("lower", "upper")))
+    #
+    # cat("Bootstrapping progress for the structure coefficients: \n")
+    # if (!is.null(nboot)){
+    #     SC_boot <- do.call(rbind, pbapply::pbapply(Ysim_full, 2, SC_pe))
+    #     SC_CI_temp <- data.frame(apply(SC_boot, 2, calc_CI))
+    # }
+    # SC_df <- data.frame("pred" = names(SC),"SC" = t(SC), t(SC_CI_temp), row.names = NULL)
+
+
+    res <- list(call = mod@call,
+        datatype = "gaussian",
+        R2_type = R2_type,
+        R2_pe_ci =   full_r2_df,
+        R2_boot = booted_r2s_df,
+        # CC_df = out,
+        partvars = partvars,
+        CI = CI)
+    # class(res) <- "partR2"
+    return(res)
+}
