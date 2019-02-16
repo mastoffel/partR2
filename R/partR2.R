@@ -18,15 +18,15 @@
 #' @return
 #' Returns an object of class \code{partR2} that is a a list with the following elements:
 #' \item{call}{model call}
-#' \item{datatype}{Response distribution (here: 'Gaussian').}
+#' \item{datatype}{GLMM Family.}
 #' \item{R2_type}{Marginal or conditional R2}
-#' \item{R2_df}{R2 and confidence interval}
-#' \item{R2_boot}{Parametric bootstrap samples for R2}
-#' \item{CC_df}{Commonality coefficients (unique and common R2) and confidence intervals}
-#' \item{SC_df}{Structure coefficients (correlation between predicted response Yhat and the predictors specified in partvars) and confidence intervals}
-#' \item{SC_boot}{Parametric bootstrap samples for the SCs}
+#' \item{R2_pe_ci}{R2 and confidence intervals for full model and partitions}
+#' \item{R2_boot}{Parametric bootstrap samples for R2 for full model and partitions}
 #' \item{partvars}{predictors to partition}
 #' \item{CI}{Coverage of the confidence interval as specified by the \code{CI} argument.}
+# \item{CC_df}{Commonality coefficients (unique and common R2) and confidence intervals}
+# \item{SC_df}{Structure coefficients (correlation between predicted response Yhat and the predictors specified in partvars) and confidence intervals}
+# \item{SC_boot}{Parametric bootstrap samples for the SCs}
 #'
 #' @references
 #'
@@ -44,12 +44,15 @@
 #' # Gaussian data
 #' mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
 #'             data = BeetlesBody)
+#' (R2 <- partR2(mod,  data = BeetlesBody, R2_type = "marginal", nboot = 5, CI = 0.95))
 #' (R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"), data = BeetlesBody,
 #'                    R2_type = "marginal", nboot = 5, CI = 0.95))
+#'
+#' # Random slope (fixed effect Treatment can't be removed separately)
 #' mod <- lmer(BodyL ~ Treatment + Sex + (1 + Treatment|Population),
 #'              data=BeetlesBody)
-#' (R2 <- partR2(mod, partvars = c( "Sex"), data = BeetlesBody,
-#'                    R2_type = "marginal", nboot = 5, CI = 0.95))
+#' (R2 <- partR2(mod, partvars = c("Sex"), data = BeetlesBody,
+#'                    R2_type = "marginal"))
 #'
 #' # poisson data
 #' data(BeetlesFemale)
@@ -80,7 +83,8 @@
 #'
 #' @export
 
-partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboot = 10,
+
+partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboot = NULL,
                                CI = 0.95, parallel = FALSE, ncpus = NULL){
 
     # should be possible without providing data, but not sure how at the moment,
@@ -88,7 +92,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboo
 
     if (is.null(data)) stop("please provide the original dataframe used to fit the model")
     if(!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
-    if (is.null(partvars)) stop("partvars has to contain the variables for the commonality analysis")
+   # if (is.null(partvars)) stop("partvars has to contain the variables for the commonality analysis")
     if (!is.null(nboot)) {
         if (nboot < 2) stop("nboot has to be greater than 1")
     }
@@ -100,17 +104,20 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboo
     }
 
     # create list of all unique combinations except for the full model
-    if (length(partvars > 1)){
-        all_comb <- unlist(lapply(1:(length(partvars)),
-            function(x) utils::combn(partvars, x, simplify = FALSE)),
-            recursive = FALSE)
-    } else {
-        all_comb <- as.list(partvars)
+    if (!is.null(partvars)) {
+        if (length(partvars > 1)){
+            all_comb <- unlist(lapply(1:(length(partvars)),
+                function(x) utils::combn(partvars, x, simplify = FALSE)),
+                recursive = FALSE)
+        } else {
+            all_comb <- as.list(partvars)
+        }
     }
 
     # full model
     mod_original <- mod
     data_original <- data
+
     # family
     fam <- family(mod)$family
 
@@ -133,7 +140,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboo
     }
 
     # formula
-    formula_with_overdisp <- stats::formula(mod)
+  formula_full <- stats::formula(mod)
 
     R2_pe <- function(mod) {
 
@@ -180,7 +187,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboo
         # which variables to reduce?
         to_del <- paste(paste("-", partvar, sep= ""), collapse = " ")
         # reduced formula
-        formula_red <- stats::update(formula_with_overdisp, paste(". ~ . ", to_del, sep=""))
+        formula_red <- stats::update(formula_full, paste(". ~ . ", to_del, sep=""))
         # reduced model
         mod_red <-  stats::update(mod, formula. = formula_red, data = data) # could be done with model.frame(mod), but hard with proportion
         # reduced model R2
@@ -189,16 +196,26 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboo
 
     }
 
-    # calculates R2s for full model and R2s unique to each subset
-    part_R2s <- function(mod) {
 
-        R2_full_boot <- R2_pe(mod)
-        R2s_red <- lapply(all_comb, R2_red_mods, mod)
-        # give back bootstraps from full model and the unique contribution of each part,
-        # which are the unique fixed predictors and their combinations
-        R2s <- c(R2_full_boot, R2_full_boot - unlist(R2s_red))
-
+    if (partition) {
+        part_R2s <- function(mod){
+            R2_full_boot <- R2_pe(mod)
+            R2s_red <- lapply(all_comb, R2_red_mods, mod)
+            # give back bootstraps from full model and the unique contribution of each part,
+            # which are the unique fixed predictors and their combinations
+            ##### this occasionally gives negative R2s but why? --> R2 must decrease when adding predictor
+            R2s <- c(R2_full_boot, R2_full_boot - unlist(R2s_red))
+        }
     }
+    if (!partition) {
+        part_R2s <- function(mod){
+            R2_full_boot <- R2_pe(mod)
+        }
+    }
+
+
+
+
 
     # parametric bootstrapping // which type of parametric bootstrapping? see help file, two possibilities
     if (!is.null(nboot)) {
@@ -206,19 +223,27 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboo
             PBargs = list(style=3), parallel = parallel_option, ncpus = ncpus)
         # make dataframe,
         # booted r2 columns get names according to the variance components they represent
-        booted_r2s_df <- setNames(as.data.frame(booted_r2s$t),
-            c("Full", unlist(lapply(all_comb, paste, collapse = "+"))))
+        if (partition) {
+            booted_r2s_df <- setNames(as.data.frame(booted_r2s$t),
+                c("Full", unlist(lapply(all_comb, paste, collapse = "+"))))
+        } else {
+            booted_r2s_df <- setNames(as.data.frame(booted_r2s$t), "Full")
+        }
+
 
         full_r2_df <- data.frame(R2 = part_R2s(mod), do.call(rbind, lapply(booted_r2s_df, calc_CI, CI))) %>%
                         tibble::rownames_to_column(var = "model_part")
 
     } else {
-        booted_r2s <- NA
-        full_r2_df <- data.frame(model_part = c("Full", sapply(all_comb, paste, collapse = "+")),
+        booted_r2s_df <- NA
+        if (partition) {
+            full_r2_df <- data.frame(model_part = c("Full", sapply(all_comb, paste, collapse = "+")),
                       R2 = part_R2s(mod), lower_ci = NA, upper_ci = NA)
+        } else {
+            full_r2_df <- data.frame(model_part = c("Full"),
+                      R2 = part_R2s(mod), lower_ci = NA, upper_ci = NA)
+        }
     }
-
-
 
     ## Structure coefficients
     # # predicted response
@@ -253,6 +278,6 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboo
         # CC_df = out,
         partvars = partvars,
         CI = CI)
-    # class(res) <- "partR2"
+    class(res) <- "partR2"
     return(res)
 }

@@ -7,12 +7,14 @@
 \title{R2, commonality coefficients and structure coefficients for mixed models}
 \usage{
 partR2(mod, partvars = NULL, data = NULL, R2_type = "marginal",
-  nboot = 10, CI = 0.95, parallel = FALSE, ncpus = NULL)
+  nboot = NULL, CI = 0.95, parallel = FALSE, ncpus = NULL)
 }
 \arguments{
-\item{mod}{Gaussian merMod object from lme4::lmer.}
+\item{mod}{merMod object fitted with lme4.}
 
 \item{partvars}{Character vector specifying the predictors for which to partition the R2.}
+
+\item{data}{dataframe used for lme4 model fit.}
 
 \item{R2_type}{"marginal" or "conditional"}
 
@@ -23,17 +25,18 @@ asymtotic CI, but may be time-consuming. Bootstrapping can be switch on by setti
 
 \item{CI}{Width of the required confidence interval between 0 and 1 (defaults to
 0.95).}
+
+\item{parallel}{If TRUE, computation runs in parallel, leaving one CPU free, except ncpus is specified.}
+
+\item{ncpus}{number of cpus for parallel computation}
 }
 \value{
 Returns an object of class \code{partR2} that is a a list with the following elements:
 \item{call}{model call}
-\item{datatype}{Response distribution (here: 'Gaussian').}
+\item{datatype}{GLMM Family.}
 \item{R2_type}{Marginal or conditional R2}
-\item{R2_df}{R2 and confidence interval}
-\item{R2_boot}{Parametric bootstrap samples for R2}
-\item{CC_df}{Commonality coefficients (unique and common R2) and confidence intervals}
-\item{SC_df}{Structure coefficients (correlation between predicted response Yhat and the predictors specified in partvars) and confidence intervals}
-\item{SC_boot}{Parametric bootstrap samples for the SCs}
+\item{R2_pe_ci}{R2 and confidence intervals for full model and partitions}
+\item{R2_boot}{Parametric bootstrap samples for R2 for full model and partitions}
 \item{partvars}{predictors to partition}
 \item{CI}{Coverage of the confidence interval as specified by the \code{CI} argument.}
 }
@@ -44,38 +47,46 @@ R2, commonality coefficients and structure coefficients for gaussian lme4 models
 
 data(BeetlesBody)
 library(lme4)
+
+# Gaussian data
 mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
             data = BeetlesBody)
+(R2 <- partR2(mod,  data = BeetlesBody, R2_type = "marginal", nboot = 5, CI = 0.95))
 (R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"), data = BeetlesBody,
                    R2_type = "marginal", nboot = 5, CI = 0.95))
+
+# Random slope (fixed effect Treatment can't be removed separately)
 mod <- lmer(BodyL ~ Treatment + Sex + (1 + Treatment|Population),
              data=BeetlesBody)
-(R2 <- partR2(mod, partvars = c( "Sex"), data = BeetlesBody,
-                   R2_type = "marginal", nboot = 5, CI = 0.95))
+(R2 <- partR2(mod, partvars = c("Sex"), data = BeetlesBody,
+                   R2_type = "marginal"))
 
+# poisson data
 data(BeetlesFemale)
 mod <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population),
                   data = BeetlesFemale, family = poisson)
 (R2 <- partR2(mod, partvars = c("Treatment", "Habitat"), data = BeetlesFemale,
               R2_type = "marginal", nboot = 5, CI = 0.95))
 
+# binomial data
 
+# binary
 data(BeetlesMale)
-
 mod <- glmer(Colour ~ Treatment + (1|Container) + (1|Population), data = BeetlesMale,
              family = binomial)
-(R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal", nboot = 5, CI = 0.95))
+(R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal", data = BeetlesMale,
+             nboot = 5, CI = 0.95))
 
-# prepare proportion data // doesn't work yet, as data is difficult to retrieve, don't know yet
-how to solve this. (Maybe just add data argument?)
+# proportion
 BeetlesMale$Dark <- BeetlesMale$Colour
 BeetlesMale$Reddish <- (BeetlesMale$Colour-1)*-1
 BeetlesColour <- aggregate(cbind(Dark, Reddish) ~ Treatment + Population + Container,
      data=BeetlesMale, FUN=sum)
 
 mod <- glmer(cbind(Dark, Reddish) ~ Treatment + (1|Container) + (1|Population),
-             data = BeetlesMale, family = binomial)
-(R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal", nboot = 5, CI = 0.95))
+             data = BeetlesColour, family = binomial)
+(R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal",  data = BeetlesColour,
+             nboot = 5, CI = 0.95))
 
 }
 \references{

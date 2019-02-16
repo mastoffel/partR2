@@ -5,14 +5,6 @@
 #' @param x An partR2 object returned from one of the partR2 functions
 #' @param \dots Additional arguments; none are used in this method.
 #'
-#' @return
-#' Abbreviations in the print.rpt output:
-#' \item{R}{Repeatability.}
-#' \item{SE}{Standard error of R.}
-#' \item{CI}{Confidence interval of R derived from parametric bootstrapping.}
-#' \item{P}{P-value}
-#' \item{LRT}{Likelihood-ratio test}
-#' \item{Permutation}{Permutation of residuals}
 #'
 #' @references
 #'
@@ -37,23 +29,23 @@ print.partR2 <- function(x, ...) {
 
     # prep
     CI_range <- paste0(sub('.*\\.', '', x$CI), "%")
-    names(x$R2_df) <- c("R2", "CI_lower" ,"CI_upper")
-    names(x$CC_df) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper")
-    names(x$SC_df) <- c("Predictor", "r(Yhat,x)", "CI_lower", "CI_upper")
+    names(x$R2_pe_ci) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper")
+    # names(x$CC_df) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper")
+    #names(x$SC_df) <- c("Predictor", "r(Yhat,x)", "CI_lower", "CI_upper")
 
     cat("\n\n")
     cat(paste0("R2 (", x$R2_type, ") and CI (",CI_range ,") for the full model: \n"))
-    print(x$R2_df, row.names = FALSE, digits = 3, right = FALSE)
+    print(x$R2_pe_ci[1, 2:4], row.names = FALSE, digits = 3, right = FALSE)
     #cat(paste0("R2 = ", round(x$R2$R2, 3), ", CI = [", round(x$R2$lower, 3), ", ", round(x$R2$upper, 3), "]"))
     cat("\n")
     cat("----------")
     cat("\n\n")
-    cat("Unique and common R2:\n")
-    print(x$CC_df, row.names = FALSE, digits = 3, right = FALSE)
+    cat("Partitioned R2s:\n")
+    print(x$R2_pe_ci[2:nrow(x$R2_pe_ci), ], row.names = FALSE, digits = 3, right = FALSE)
     cat("\n")
     cat("----------")
     cat("\n\n")
-    cat("Structure coefficients:\n")
-    print(x$SC_df, row.names = FALSE, digits = 3, right = FALSE)
+    #cat("Structure coefficients:\n")
+    #print(x$SC_df, row.names = FALSE, digits = 3, right = FALSE)
 
 }
