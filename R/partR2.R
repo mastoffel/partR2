@@ -44,11 +44,13 @@
 #' # Gaussian data
 #' mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
 #'             data = BeetlesBody)
-#' (R2 <- partR2(mod,  data = BeetlesBody, R2_type = "marginal", nboot = 5, CI = 0.95))
+#' # Only R2 with CI
+#' (R2 <- partR2(mod,  data = BeetlesBody, R2_type = "marginal", nboot = 15, CI = 0.95))
+#' # Partitioned R2
 #' (R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"), data = BeetlesBody,
-#'                    R2_type = "marginal", nboot = 5, CI = 0.95))
+#'                    R2_type = "marginal", nboot = 10, CI = 0.95))
 #'
-#' # Random slope (fixed effect Treatment can't be removed separately)
+#' # Random slopes (fixed effect Treatment can't be removed separately)
 #' mod <- lmer(BodyL ~ Treatment + Sex + (1 + Treatment|Population),
 #'              data=BeetlesBody)
 #' (R2 <- partR2(mod, partvars = c("Sex"), data = BeetlesBody,
@@ -81,6 +83,7 @@
 #' (R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal",  data = BeetlesColour,
 #'              nboot = 5, CI = 0.95))
 #'
+#' @import dplyr
 #' @export
 
 
@@ -92,7 +95,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboo
 
     if (is.null(data)) stop("please provide the original dataframe used to fit the model")
     if(!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
-   # if (is.null(partvars)) stop("partvars has to contain the variables for the commonality analysis")
+    partition <- ifelse(is.null(partvars), FALSE, TRUE)
     if (!is.null(nboot)) {
         if (nboot < 2) stop("nboot has to be greater than 1")
     }
@@ -119,10 +122,10 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboo
     data_original <- data
 
     # family
-    fam <- family(mod)$family
+    fam <- stats::family(mod)$family
 
     # add OLRE to model Overdispersion
-    Overdispersion <- factor(1:nobs(mod))
+    Overdispersion <- factor(1:stats::nobs(mod))
     if (fam == "poisson") {
         mod <- model_overdisp(mod, data) # add OLRE and refit
         data <- cbind(data_original, Overdispersion)
@@ -219,15 +222,16 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboo
 
     # parametric bootstrapping // which type of parametric bootstrapping? see help file, two possibilities
     if (!is.null(nboot)) {
-        booted_r2s <- bootMer(mod,  part_R2s, nsim = nboot, type = "parametric", .progress = "txt",
-            PBargs = list(style=3), parallel = parallel_option, ncpus = ncpus)
+        booted_r2s <- lme4::bootMer(mod,  part_R2s, nsim = nboot, type = "parametric", .progress = "txt",
+            PBargs = list(style=3), parallel = parallel_option, ncpus = ncpus, use.u = TRUE)
         # make dataframe,
         # booted r2 columns get names according to the variance components they represent
         if (partition) {
-            booted_r2s_df <- setNames(as.data.frame(booted_r2s$t),
+            booted_r2s_df <- stats::setNames(as.data.frame(booted_r2s$t),
                 c("Full", unlist(lapply(all_comb, paste, collapse = "+"))))
-        } else {
-            booted_r2s_df <- setNames(as.data.frame(booted_r2s$t), "Full")
+        }
+        if (!partition) {
+            booted_r2s_df <- stats::setNames(as.data.frame(booted_r2s$t), "Full")
         }
 
 
@@ -239,7 +243,8 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", nboo
         if (partition) {
             full_r2_df <- data.frame(model_part = c("Full", sapply(all_comb, paste, collapse = "+")),
                       R2 = part_R2s(mod), lower_ci = NA, upper_ci = NA)
-        } else {
+        }
+        if (!partition) {
             full_r2_df <- data.frame(model_part = c("Full"),
                       R2 = part_R2s(mod), lower_ci = NA, upper_ci = NA)
         }

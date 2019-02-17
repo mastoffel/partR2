@@ -16,7 +16,8 @@ Imports:
     ggplot2,
     broom.mixed,
     dplyr,
-    magrittr
+    magrittr,
+    tibble
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1

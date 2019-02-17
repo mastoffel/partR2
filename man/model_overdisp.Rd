@@ -8,6 +8,8 @@ model_overdisp(mod, data)
 }
 \arguments{
 \item{mod}{The model.}
+
+\item{data}{The data.frame which has been provided to fit the model in lme4.}
 }
 \description{
 Adds an observational level random effect to a model

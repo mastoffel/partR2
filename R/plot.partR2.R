@@ -3,7 +3,7 @@
 #' Forestplot of the partR2 results
 #'
 #' @param x A partR2 object.
-#' @param toplot Commonality coefficients ("CC") or structure coefficients ("SC")
+# #' @param toplot Commonality coefficients ("CC") or structure coefficients ("SC")
 #'
 #'
 #' @author Martin Stoffel (martin.adam.stoffel@@gmail.com),
@@ -19,15 +19,16 @@
 #'
 
 
-plot.partR2 <- function(x, toplot) {
+forestplot.partR2 <- function(x) {
 
    #  if (toplot == "CC") mod_out <- x$CC_df
     mod_out <- x$R2_pe_ci
     names(mod_out) <- c("combs", "pe", "cilow", "cihigh")
     mod_out$combs <- factor(mod_out$combs, levels = rev(mod_out$combs))
 
-    if (!is.na(x$R2_boot)) {
-        ggplot(aes(pe, combs, xmax = cihigh, xmin = cilow), data = mod_out) +
+    # only check whether there is NA in the first df element, then nboot wasn't specified
+    if (!is.na(x$R2_boot[1,1])) {
+        ggplot(aes_string("pe", "combs", xmax = "cihigh", xmin = "cilow"), data = mod_out) +
             # geom_point(size = 3, color = "grey69") + # abc_out
             geom_errorbarh(alpha=0.4, color="black",height = 0) +
             geom_point(size = 3, shape = 21, col = "black", fill = "grey69") +
@@ -42,7 +43,7 @@ plot.partR2 <- function(x, toplot) {
             xlab("R2") +
             geom_vline(xintercept = 0, color = "black", alpha = 0.1)
     } else {
-        ggplot(aes(pe, combs), data = mod_out) +
+        ggplot(aes_string("pe", "combs"), data = mod_out) +
             geom_point(size = 3, shape = 21, col = "black", fill = "grey69") +
             # geom_errorbarh(alpha=0.4, color="black",height = 0) +
             theme_minimal() +

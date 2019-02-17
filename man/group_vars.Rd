@@ -7,10 +7,9 @@
 group_vars(grname, var_comps, mod)
 }
 \arguments{
-\item{grname}{The name of a grouping factor, usually accessed by looping over the
-grname argument of the rptR functions.}
+\item{grname}{Random effect term, accessed by looping over the RE list produced by lme4::VarCorr().}
 
-\item{var_comps}{A list. Output of the lme4::VarCorr function.}
+\item{var_comps}{A list. Output of the lme4::VarCorr() function.}
 
 \item{mod}{An lme4 model object.}
 }

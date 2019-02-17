@@ -51,11 +51,13 @@ library(lme4)
 # Gaussian data
 mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
             data = BeetlesBody)
-(R2 <- partR2(mod,  data = BeetlesBody, R2_type = "marginal", nboot = 5, CI = 0.95))
+# Only R2 with CI
+(R2 <- partR2(mod,  data = BeetlesBody, R2_type = "marginal", nboot = 15, CI = 0.95))
+# Partitioned R2
 (R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"), data = BeetlesBody,
-                   R2_type = "marginal", nboot = 5, CI = 0.95))
+                   R2_type = "marginal", nboot = 10, CI = 0.95))
 
-# Random slope (fixed effect Treatment can't be removed separately)
+# Random slopes (fixed effect Treatment can't be removed separately)
 mod <- lmer(BodyL ~ Treatment + Sex + (1 + Treatment|Population),
              data=BeetlesBody)
 (R2 <- partR2(mod, partvars = c("Sex"), data = BeetlesBody,
