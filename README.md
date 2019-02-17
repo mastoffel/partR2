@@ -25,11 +25,16 @@ Example
 library(partR2)
 library(lme4)
 #> Loading required package: Matrix
-data(BeetlesBody)
 
+?partR2
+
+# load data
+data(BeetlesBody)
+# fit lme4 model
 mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
             data = BeetlesBody)
 
+# partition R2
 R2 <- partR2(mod, partvars = c("Sex", "Treatment", "Habitat"), data = BeetlesBody,
                    R2_type = "marginal", nboot = 50, CI = 0.95)
 R2
