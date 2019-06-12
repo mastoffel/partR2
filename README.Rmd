@@ -32,7 +32,7 @@ devtools::install_github("mastoffel/partR2")
 
 ## Example
 
-```{r example, results = FALSE}
+```{r example, results = FALSE, warning=FALSE}
 library(partR2)
 library(lme4)
 
