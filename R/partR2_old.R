@@ -10,8 +10,8 @@
 #'        \code{nboot = 1000}.
 #' @param CI Width of the required confidence interval between 0 and 1 (defaults to
 #'        0.95).
-#' @param parallel If TRUE, computation runs in parallel, leaving one CPU free, except ncores is specified.
-#' @param ncores number of cpus for parallel computation
+#' @param parallel If TRUE, computation runs in parallel, leaving one CPU free, except ncpus is specified.
+#' @param ncpus number of cpus for parallel computation
 #'
 #'
 #' @return
@@ -46,8 +46,9 @@
 #' # Only R2 with CI
 #' (R2 <- partR2(mod, R2_type = "marginal", nboot = 15, CI = 0.95))
 #' # Partitioned R2
-#' (R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"),
+#' (R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat", "Sex:Treatment"),
 #'               R2_type = "marginal", nboot = 10, CI = 0.95))
+#'
 #'
 #' # Random slopes (fixed effect Treatment can't be removed separately)
 #' mod <- lmer(BodyL ~ Treatment + Sex + (1 + Treatment|Population),
@@ -86,91 +87,102 @@
 #' @export
 
 
-partR2_2nd <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NULL, #data
-                   CI = 0.95, parallel = FALSE, ncores = NULL){
+partR2_old <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NULL, #data
+                               CI = 0.95, parallel = FALSE, ncpus = NULL){
 
-    # initial checks
+    # should be possible without providing data, but not sure how at the moment,
+    # mainly because of proportion binomial
+
+   # if (is.null(data)) stop("please provide the original dataframe used to fit the model")
     if(!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
     partition <- ifelse(is.null(partvars), FALSE, TRUE)
-
     if (!is.null(nboot)) {
-        if (nboot < 2) stop("nboot has to be greater than 1 or NULL")
+        if (nboot < 2) stop("nboot has to be greater than 1")
     }
-
-    if (!(R2_type %in% c("marginal", "conditional"))) stop("R2_type has to be marginal or conditional")
-
     if (isTRUE(parallel)) {
         parallel_option <- "multicore"
-        if (is.null(ncores)) ncores <- parallel::detectCores()-1
+        if (is.null(ncpus)) ncpus <- parallel::detectCores()-1
     } else { # for bootMer
         parallel_option <- "no"
     }
-
-    # checker whether partvars are fixed effects
-    fixed_terms <- insight::find_terms(mod)$conditional
-    if (!(all(partvars %in% fixed_terms))) stop("partvars have to be fixed effects")
 
     # create list of all unique combinations except for the full model
     if (!is.null(partvars)) {
         if (length(partvars > 1)){
             all_comb <- unlist(lapply(1:(length(partvars)),
-                                      function(x) utils::combn(partvars, x, simplify = FALSE)),
-                               recursive = FALSE)
+                function(x) utils::combn(partvars, x, simplify = FALSE)),
+                recursive = FALSE)
         } else {
             all_comb <- as.list(partvars)
         }
     }
 
     # full model
-    # mod_original <- mod
-    data_original <- insight::get_data(mod)
-    # terms
-    all_terms <- insight::find_terms(mod)
-
-    # check if cbind created a matrix as first data.frame column
-    if (any(grepl("cbind", names(data_original)))) {
-        data_original <- cbind(as.data.frame(data_original[[1]]),
-                               data_original[2:ncol(data_original)])
-    }
-
+    mod_original <- mod
+    data_original <- stats::model.frame(mod)
+    data <- data_original
     # family
-    fam <- insight::model_info(mod)$family
+    fam <- stats::family(mod)$family
 
-    # we probably shouldnt internally add OLRE to model Overdispersion anymore?
-    # Overdispersion <- factor(1:stats::nobs(mod))
-    # if (fam == "poisson") {
-    #     mod <- model_overdisp(mod, data_original) # add OLRE and refit
-    #     data <- cbind(data_original, Overdispersion)
-    # }
-    # binary_resp <- FALSE
-    # if (fam == "binomial") {
-    #     # check for binary, if not binary, add OLRE // double check whether this is sensible
-    #     if ((length(unique(stats::na.omit(mod@resp$y))) < 3)) {
-    #         binary_resp <- TRUE
-    #     } else {
-    #         mod <- model_overdisp(mod, data_original)
-    #         data <- cbind(data_original, Overdispersion)
-    #     }
-    # }
+    # add OLRE to model Overdispersion
+    Overdispersion <- factor(1:stats::nobs(mod))
+    if (fam == "poisson") {
+        mod <- model_overdisp(mod, data) # add OLRE and refit
+        data <- cbind(data_original, Overdispersion)
+    }
+    binary_resp <- FALSE
+    if (fam == "binomial") {
+        # check for binary, if not binary, add OLRE // double check whether this is sensible
+        if ((length(unique(stats::na.omit(mod@resp$y))) < 3)) {
+            binary_resp <- TRUE
+        } else {
+            mod <- model_overdisp(mod, data)
+            data <- cbind(data_original, Overdispersion)
+        }
+
+    }
 
     # formula
     formula_full <- stats::formula(mod)
 
-    # R2
-    if (R2_type == "marginal") {
-        R2_pe <- function(mod) {
-            out <- as.data.frame(unclass(performance::r2(mod)))["R2_marginal"]
-            rownames(out) <- NULL
-            out
+    R2_pe <- function(mod) {
+
+        # random slopes
+        # This code to calc random effect variances is specific to lme4 at the moment. Maybe change in the future
+        var_comps <- lme4::VarCorr(mod)
+        # group_vars handles the random slopes
+        var_rand <- unlist(lapply(names(var_comps), group_vars, var_comps, mod))
+        names(var_rand) <- names(var_comps)
+        # residual / distribution specific variance
+        var_res <- calc_var_r(mod)
+        # add OLRE variance if applicable and seperate overdispersion from other random effects
+        if (any(names(var_rand) == "Overdispersion")) {
+            var_overdisp <- unname(var_rand["Overdispersion"])
+            var_rand <- var_rand[!(names(var_rand) == "Overdispersion")]
+            var_res <- var_res + var_overdisp
         }
-    } else if (R2_type == "conditional") {
-        R2_pe <- function(mod) {
-            out <- as.data.frame(unclass(performance::r2(mod)))["R2_conditional"]
-            rownames(out) <- NULL
-            out
+
+        # random effect variances and residual variance with broom
+        # var_comps <- tidy(mod, effects = "ran_pars", scales = "vcov")
+
+        # Calculation of the variance in predicted values based on fixed effects alone
+       # var_fix <- stats::var(broom.mixed::augment(mod)[, ".fixed"])
+        var_fix <- stats::var(stats::predict(mod, re.form=NA))
+        # denominator variance
+        var_d <- sum(var_rand) + var_res + var_fix
+
+        # R2 marginal
+        if (R2_type == "marginal") {
+            R2 <- var_fix / var_d
+        }  else if (R2_type == "conditional") {
+            R2 <- (var_fix + sum(var_rand)) / var_d
         }
+
+        R2
     }
 
+    # calc R2 for the full model
+   # R2_full <- R2_pe(mod)
 
     # makes reduced mod R2s
     R2_red_mods <- function(partvar, mod) {
@@ -180,104 +192,60 @@ partR2_2nd <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NULL,
         # reduced formula
         formula_red <- stats::update(formula_full, paste(". ~ . ", to_del, sep=""))
         # reduced model
-        mod_red <-  stats::update(mod, formula. = formula_red, data = data_original) # could be done with model.frame(mod), but hard with proportion
+        mod_red <-  stats::update(mod, formula. = formula_red, data = data) # could be done with model.frame(mod), but hard with proportion
         # reduced model R2
         R2_red <- R2_pe(mod_red)
+        # out <- setNames(R2_red, paste(partvar, collapse = "_"))
 
     }
 
-    # partition R2
+
     if (partition) {
-        # R2 for the full model and each of its partitions
         part_R2s <- function(mod){
             R2_full_boot <- R2_pe(mod)
             R2s_red <- lapply(all_comb, R2_red_mods, mod)
-            ##### this occasionally gives negative R2s but why?
-            # calculate difference in R2 between full model and each partial model --> partial R2
-            R2s <- do.call(rbind, c(list(R2_full_boot),
-                                       lapply(R2s_red, function(x) R2_full_boot - x)))
+            # give back bootstraps from full model and the unique contribution of each part,
+            # which are the unique fixed predictors and their combinations
+            ##### this occasionally gives negative R2s but why? --> R2 must decrease when adding predictor
+            R2s <- c(R2_full_boot, R2_full_boot - unlist(R2s_red))
         }
     }
-    # or return only the R2 of the full model
     if (!partition) {
         part_R2s <- function(mod){
-            R2s <- R2_pe(mod)
+            R2_full_boot <- R2_pe(mod)
         }
     }
 
-    # parametric bootstrapping
+
+    # parametric bootstrapping // which type of parametric bootstrapping? see help file, two possibilities
     if (!is.null(nboot)) {
-
-        # simulation new responses
-        if (nboot > 0)  Ysim <- as.data.frame(stats::simulate(mod, nsim = nboot))
-
-        # main bootstrap function
-        bootstr <- function(y, mod) {
-            # at the moment lme4 specific, could be extended
-            mod_iter <- lme4::refit(mod, newresp = y)
-            out <- part_R2s(mod_iter)
-            out
+        booted_r2s <- lme4::bootMer(mod,  part_R2s, nsim = nboot, type = "parametric", .progress = "txt",
+            PBargs = list(style=3), parallel = parallel_option, ncpus = ncpus, use.u = TRUE)
+        # make dataframe,
+        # booted r2 columns get names according to the variance components they represent
+        if (partition) {
+            booted_r2s_df <- stats::setNames(as.data.frame(booted_r2s$t),
+                c("Full", unlist(lapply(all_comb, paste, collapse = "+"))))
+        }
+        if (!partition) {
+            booted_r2s_df <- stats::setNames(as.data.frame(booted_r2s$t), "Full")
         }
 
-        # refit model with new responses
-        if (!parallel) {
-            boot_r2s <- pbapply::pblapply(Ysim, bootstr, mod)
+
+        full_r2_df <- data.frame(R2 = part_R2s(mod), do.call(rbind, lapply(booted_r2s_df, calc_CI, CI))) %>%
+                        tibble::rownames_to_column(var = "model_part")
+
+    } else {
+        booted_r2s_df <- NA
+        if (partition) {
+            full_r2_df <- data.frame(model_part = c("Full", sapply(all_comb, paste, collapse = "+")),
+                      R2 = part_R2s(mod), lower_ci = NA, upper_ci = NA)
         }
-
-        if (parallel) {
-            cl <- parallel::makeCluster(ncores)
-            parallel::clusterExport(cl, c("R2_pe", "bootstr", "part_R2s", "r2",
-                                          "R2_red_mods", "all_comb", "formula_full",
-                                          "lmer", "data_original"))
-            boot_r2s <- parallel::parLapply(cl, Ysim, bootstr, mod)
-            stopCluster(cl)
+        if (!partition) {
+            full_r2_df <- data.frame(model_part = c("Full"),
+                      R2 = part_R2s(mod), lower_ci = NA, upper_ci = NA)
         }
     }
-    # if no bootstrap only return one list element
-    # the list element contains 1 row with NAs if no partition specified
-    # and x + 1 elements if x partitions specified (+1 because full model)
-    if (is.null(nboot)) {
-        boot_r2s <- list(setNames(data.frame(
-                         matrix(ncol = length(names(part_R2s(mod))),
-                                nrow = ifelse(partition, length(all_comb) + 1, 1),
-                                )), names(part_R2s(mod))))
-    }
-
-    # names for parts
-    if (partition) {
-        part_terms <- c("Full", unlist(lapply(all_comb, paste,   collapse = "+")))
-    }
-    if (!partition) part_terms <- "Full"
-
-    # add names of parts to R2s
-    boot_r2s <- lapply(boot_r2s, function(x) {
-        x$parts <- part_terms
-        x
-    })
-
-    # restructure into one data.frame per part
-    boot_r2s_df <- do.call(rbind, boot_r2s)
-    boot_r2s_list <- lapply(part_terms, function(x) {
-            out <- boot_r2s_df[boot_r2s_df$parts == x, ]
-            out$parts <- NULL
-            out
-        })
-    names(boot_r2s_list) <- part_terms
-
-    # calculate CIs
-    calc_CIs_per_col <- function(part) {
-        #col_names <- names(part)
-        cis <- data.frame(as.list(unlist(lapply(part, calc_CI, CI))))
-    }
-
-    # put all CIs into a data.frame
-    all_cis <- do.call(rbind, lapply(boot_r2s_list, calc_CIs_per_col))
-    all_cis <- cbind(data.frame(parts = rownames(all_cis)), all_cis)
-    rownames(all_cis) <- NULL
-
-    # df with point estimates and CIs
-    full_r2_df <- data.frame(part_R2s(mod), all_cis)
-    full_r2_df <- full_r2_df[sort(names(full_r2_df))]
 
     ## Structure coefficients
     # # predicted response
@@ -305,13 +273,13 @@ partR2_2nd <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NULL,
 
 
     res <- list(call = mod@call,
-                #datatype = "gaussian",
-                R2_type = R2_type,
-                R2_pe_ci =  full_r2_df,
-                R2_boot = boot_r2s_list,
-                # CC_df = out,
-                partvars = partvars,
-                CI = CI)
+        datatype = "gaussian",
+        R2_type = R2_type,
+        R2_pe_ci =   full_r2_df,
+        R2_boot = booted_r2s_df,
+        # CC_df = out,
+        partvars = partvars,
+        CI = CI)
     class(res) <- "partR2"
     return(res)
 }
