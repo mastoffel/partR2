@@ -50,16 +50,16 @@
 #'               R2_type = "marginal", nboot = 10, CI = 0.95))
 #'
 #' # Random slopes (fixed effect Treatment can't be removed separately)
-#' mod <- lmer(BodyL ~ Treatment + Sex + (1 + Treatment|Population),
+#' mod <- lmer(BodyL ~ Sex + Treatment + (1 + Treatment|Population),
 #'              data=BeetlesBody)
-#' (R2 <- partR2(mod, partvars = c("Sex"), data = BeetlesBody,
-#'                    R2_type = "marginal"))
+#' (R2 <- partR2(mod, partvars = c("Sex"), R2_type = "marginal"))
+#'
 #'
 #' # poisson data
 #' data(BeetlesFemale)
 #' mod <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population),
 #'                   data = BeetlesFemale, family = poisson)
-#' (R2 <- partR2(mod, partvars = c("Treatment", "Habitat"), data = BeetlesFemale,
+#' (R2 <- partR2(mod, partvars = c("Treatment", "Habitat"),
 #'               R2_type = "marginal", nboot = 5, CI = 0.95))
 #'
 #' # binomial data
@@ -68,8 +68,9 @@
 #' data(BeetlesMale)
 #' mod <- glmer(Colour ~ Treatment + (1|Container) + (1|Population), data = BeetlesMale,
 #'              family = binomial)
-#' (R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal", data = BeetlesMale,
+#' (R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal",
 #'              nboot = 5, CI = 0.95))
+#' (R2 <- partR2(mod, R2_type = "conditional", nboot = 10))
 #'
 #' # proportion
 #' BeetlesMale$Dark <- BeetlesMale$Colour
@@ -77,9 +78,9 @@
 #' BeetlesColour <- aggregate(cbind(Dark, Reddish) ~ Treatment + Population + Container,
 #'      data=BeetlesMale, FUN=sum)
 #'
-#' mod <- glmer(cbind(Dark,Reddish) ~ Treatment + (1|Container) + (1|Population),
+#' mod <- glmer(cbind(Dark,Reddish) ~ Treatment + (1|Population),
 #'              data = BeetlesColour, family = binomial)
-#' (R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal",  data = BeetlesColour,
+#' (R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal",
 #'              nboot = 5, CI = 0.95))
 #'
 #' @import dplyr
@@ -159,12 +160,24 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NULL, #da
     # R2
     if (R2_type == "marginal") {
         R2_pe <- function(mod) {
-            out <- as.data.frame(unclass(performance::r2(mod)))["R2_marginal"]
+            r2 <- performance::r2(mod)
+            # sometimes variance components equal zero or random
+            # effect variances cannot be computed (and neither can R2)
+            if (is.na(r2[[1]])) {
+                return(data.frame(R2_marginal = NA))
+            }
+            out <- as.data.frame(unclass(r2))["R2_marginal"]
             rownames(out) <- NULL
             out
         }
     } else if (R2_type == "conditional") {
         R2_pe <- function(mod) {
+            r2 <- performance::r2(mod)
+            # sometimes variance components equal zero or random
+            # effect variances cannot be computed (and neither can R2)
+            if (is.na(r2[[1]])) {
+                return(data.frame(R2_conditional = NA))
+            }
             out <- as.data.frame(unclass(performance::r2(mod)))["R2_conditional"]
             rownames(out) <- NULL
             out
@@ -230,17 +243,18 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", nboot = NULL, #da
                                           "R2_red_mods", "all_comb", "formula_full",
                                           "lmer", "data_original"))
             boot_r2s <- parallel::parLapply(cl, Ysim, bootstr, mod)
-            stopCluster(cl)
+            parallel::stopCluster(cl)
         }
     }
     # if no bootstrap only return one list element
     # the list element contains 1 row with NAs if no partition specified
     # and x + 1 elements if x partitions specified (+1 because full model)
     if (is.null(nboot)) {
-        boot_r2s <- list(setNames(data.frame(
+        num_rows <- ifelse(partition, length(all_comb) + 1, 1)
+        boot_r2s <- list(stats::setNames(data.frame(
                          matrix(ncol = length(names(part_R2s(mod))),
-                                nrow = ifelse(partition, length(all_comb) + 1, 1),
-                                )), names(part_R2s(mod))))
+                                nrow = num_rows)
+                                ), names(part_R2s(mod))))
     }
 
     # names for parts

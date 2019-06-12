@@ -44,7 +44,7 @@ print.partR2 <- function(x, ...) {
     if (nrow(x$R2_pe_ci) == 1) {
         print("No partitions selected.")
     } else {
-    print(x$R2_pe_ci[2:nrow(x$R2_pe_ci), ], row.names = FALSE, digits = 3, right = FALSE)
+    print(x$R2_pe_ci[2:nrow(x$R2_pe_ci), ], row.names = FALSE, digits = 2, right = FALSE)
     }
     cat("\n")
     cat("----------")

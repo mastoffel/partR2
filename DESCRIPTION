@@ -18,7 +18,8 @@ Imports:
     dplyr,
     magrittr,
     tibble,
-    insight
+    insight,
+    performance
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1

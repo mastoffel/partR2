@@ -7,7 +7,7 @@
 \title{R2, commonality coefficients and structure coefficients for mixed models}
 \usage{
 partR2(mod, partvars = NULL, R2_type = "marginal", nboot = NULL,
-  CI = 0.95, parallel = FALSE, ncpus = NULL)
+  CI = 0.95, parallel = FALSE, ncores = NULL)
 }
 \arguments{
 \item{mod}{merMod object fitted with lme4.}
@@ -24,9 +24,9 @@ asymtotic CI, but may be time-consuming. Bootstrapping can be switch on by setti
 \item{CI}{Width of the required confidence interval between 0 and 1 (defaults to
 0.95).}
 
-\item{parallel}{If TRUE, computation runs in parallel, leaving one CPU free, except ncpus is specified.}
+\item{parallel}{If TRUE, computation runs in parallel, leaving one CPU free, except ncores is specified.}
 
-\item{ncpus}{number of cpus for parallel computation}
+\item{ncores}{number of cpus for parallel computation}
 }
 \value{
 Returns an object of class \code{partR2} that is a a list with the following elements:
@@ -50,22 +50,22 @@ library(lme4)
 mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
             data = BeetlesBody)
 # Only R2 with CI
-(R2 <- partR2(mod,  data = BeetlesBody, R2_type = "marginal", nboot = 15, CI = 0.95))
+(R2 <- partR2(mod, R2_type = "marginal", nboot = 15, CI = 0.95))
 # Partitioned R2
-(R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"), data = BeetlesBody,
-                   R2_type = "marginal", nboot = 10, CI = 0.95))
+(R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"),
+              R2_type = "marginal", nboot = 10, CI = 0.95))
 
 # Random slopes (fixed effect Treatment can't be removed separately)
-mod <- lmer(BodyL ~ Treatment + Sex + (1 + Treatment|Population),
+mod <- lmer(BodyL ~ Sex + Treatment + (1 + Treatment|Population),
              data=BeetlesBody)
-(R2 <- partR2(mod, partvars = c("Sex"), data = BeetlesBody,
-                   R2_type = "marginal"))
+(R2 <- partR2(mod, partvars = c("Sex"), R2_type = "marginal"))
+
 
 # poisson data
 data(BeetlesFemale)
 mod <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population),
                   data = BeetlesFemale, family = poisson)
-(R2 <- partR2(mod, partvars = c("Treatment", "Habitat"), data = BeetlesFemale,
+(R2 <- partR2(mod, partvars = c("Treatment", "Habitat"),
               R2_type = "marginal", nboot = 5, CI = 0.95))
 
 # binomial data
@@ -74,8 +74,9 @@ mod <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population),
 data(BeetlesMale)
 mod <- glmer(Colour ~ Treatment + (1|Container) + (1|Population), data = BeetlesMale,
              family = binomial)
-(R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal", data = BeetlesMale,
+(R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal",
              nboot = 5, CI = 0.95))
+(R2 <- partR2(mod, R2_type = "conditional", nboot = 10))
 
 # proportion
 BeetlesMale$Dark <- BeetlesMale$Colour
@@ -83,9 +84,9 @@ BeetlesMale$Reddish <- (BeetlesMale$Colour-1)*-1
 BeetlesColour <- aggregate(cbind(Dark, Reddish) ~ Treatment + Population + Container,
      data=BeetlesMale, FUN=sum)
 
-mod <- glmer(cbind(Dark, Reddish) ~ Treatment + (1|Container) + (1|Population),
+mod <- glmer(cbind(Dark,Reddish) ~ Treatment + (1|Population),
              data = BeetlesColour, family = binomial)
-(R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal",  data = BeetlesColour,
+(R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal",
              nboot = 5, CI = 0.95))
 
 }
