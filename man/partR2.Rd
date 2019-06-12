@@ -6,15 +6,13 @@
 \alias{partR2-package}
 \title{R2, commonality coefficients and structure coefficients for mixed models}
 \usage{
-partR2(mod, partvars = NULL, data = NULL, R2_type = "marginal",
-  nboot = NULL, CI = 0.95, parallel = FALSE, ncpus = NULL)
+partR2(mod, partvars = NULL, R2_type = "marginal", nboot = NULL,
+  CI = 0.95, parallel = FALSE, ncpus = NULL)
 }
 \arguments{
 \item{mod}{merMod object fitted with lme4.}
 
 \item{partvars}{Character vector specifying the predictors for which to partition the R2.}
-
-\item{data}{dataframe used for lme4 model fit.}
 
 \item{R2_type}{"marginal" or "conditional"}
 
