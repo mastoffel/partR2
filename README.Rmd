@@ -17,9 +17,11 @@ knitr::opts_chunk$set(
 
 The goal of partR2 is to implement methods for LMMs and GLMMs to estimate the R2
 along with it's confidence intervals as well as partition the variation explained unique to and common
-among certain predictors, which is useful in the case of multicollinearity.
+among certain predictors, which is useful in general but particularly
+in the case of multicollinearity. All confidence intervals are estimated using
+parametric bootstrapping. 
 
-partR2 is at the beginning of its development. 
+partR2 is in an early phase of development.
 
 ## Installation
 

@@ -8,9 +8,11 @@ Status](https://travis-ci.org/mastoffel/partR2.svg?branch=master)
 The goal of partR2 is to implement methods for LMMs and GLMMs to
 estimate the R2 along with it’s confidence intervals as well as
 partition the variation explained unique to and common among certain
-predictors, which is useful in the case of multicollinearity.
+predictors, which is useful in general but particularly in the case of
+multicollinearity. All confidence intervals are estimated using
+parametric bootstrapping.
 
-partR2 is at the beginning of its development.
+partR2 is in an early phase of development.
 
 ## Installation
 
@@ -44,27 +46,27 @@ R2
 #> 
 #> R2 (marginal) and CI (95%) for the full model: 
 #>  R2    CI_lower CI_upper
-#>  0.392 0.3      0.514   
+#>  0.392 0.281    0.495   
 #> 
 #> ----------
 #> 
 #> Partitioned R2s:
 #>  Predictor(s)          R2      CI_lower CI_upper
-#>  Sex                   0.38584  0.294   0.51    
-#>  Treatment             0.00520 -0.087   0.13    
-#>  Habitat               0.00031 -0.092   0.12    
-#>  Sex+Treatment         0.39119  0.299   0.51    
-#>  Sex+Habitat           0.38626  0.294   0.51    
-#>  Treatment+Habitat     0.00573 -0.086   0.13    
-#>  Sex+Treatment+Habitat 0.39161  0.300   0.51    
+#>  Sex                   0.38584  0.28    0.49    
+#>  Treatment             0.00520 -0.11    0.11    
+#>  Habitat               0.00031 -0.11    0.10    
+#>  Sex+Treatment         0.39119  0.28    0.50    
+#>  Sex+Habitat           0.38626  0.28    0.49    
+#>  Treatment+Habitat     0.00573 -0.10    0.11    
+#>  Sex+Treatment+Habitat 0.39161  0.28    0.50    
 #> 
 #> ----------
 #> 
 #> Structure coefficients:
-#>  Predictor    r(Yhat,x) CI_lower CI_upper
-#>  SexMale      -0.7452   -0.86915 -0.627  
-#>  TreatmentExp  0.0877    0.05210  0.132  
-#>  HabitatB      0.0246   -0.00406  0.061
+#>  Predictor    r(Yhat,x) CI_lower  CI_upper
+#>  SexMale      -0.7452   -0.864314 -0.6253 
+#>  TreatmentExp  0.0877    0.048029  0.1175 
+#>  HabitatB      0.0246    0.000218  0.0666
 ```
 
 And to plot the results:
