@@ -60,7 +60,9 @@ model_overdisp <- function(mod, data) {
 # CI function
 calc_CI <- function(x, CI) {
     out <- stats::quantile(x, c((1 - CI)/2, 1 - (1 - CI)/2), na.rm = TRUE)
+    out <- as.data.frame(t(out))
     names(out) <- c("lower_ci", "upper_ci")
+    rownames(out) <- NULL
     out
 }
 

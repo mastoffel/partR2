@@ -4,17 +4,26 @@
 \name{partR2}
 \alias{partR2}
 \alias{partR2-package}
-\title{R2, commonality coefficients and structure coefficients for mixed models}
+\title{\code{partR2} package
+R2, commonality coefficients and structure coefficients for mixed models}
 \usage{
-partR2(mod, partvars = NULL, R2_type = "marginal", nboot = NULL,
-  CI = 0.95, parallel = FALSE, ncores = NULL)
+partR2(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
+  nboot = NULL, CI = 0.95, parallel = FALSE, ncores = NULL)
 }
 \arguments{
 \item{mod}{merMod object fitted with lme4.}
 
 \item{partvars}{Character vector specifying the predictors for which to partition the R2.}
 
-\item{R2_type}{"marginal" or "conditional"}
+\item{R2_type}{"marginal" or "conditional" R2.}
+
+\item{cc_level}{Level up to which commonality coefficients are calculated.
+The number of sets for which to calculate partial R2 increases exponantially,
+i.e. for 10 variables 2^10 - 1 commonality coefficients and potentially CIs
+can be calculated. To limit this number for models with many fixed effects,
+specify cc_level. cc_level = 3 would limit the number of sets to a maximum of
+triplets, i.e. calculating partial R2 for each individual fixed effect specified in
+partvars, for each pair and for each triplet.}
 
 \item{nboot}{Number of parametric bootstraps for interval estimation
 (defaults to NULL). Larger numbers of bootstraps give a better
@@ -31,10 +40,11 @@ asymtotic CI, but may be time-consuming. Bootstrapping can be switch on by setti
 \value{
 Returns an object of class \code{partR2} that is a a list with the following elements:
 \item{call}{model call}
-\item{datatype}{GLMM Family.}
 \item{R2_type}{Marginal or conditional R2}
 \item{R2_pe_ci}{R2 and confidence intervals for full model and partitions}
+\item{SC_pe_ci}{Structure coefficients and confidence intervals}
 \item{R2_boot}{Parametric bootstrap samples for R2 for full model and partitions}
+\item{SC_boot}{Parametric bootstrap samples for structure coefficients}
 \item{partvars}{predictors to partition}
 \item{CI}{Coverage of the confidence interval as specified by the \code{CI} argument.}
 }
@@ -51,43 +61,11 @@ mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
             data = BeetlesBody)
 # Only R2 with CI
 (R2 <- partR2(mod, R2_type = "marginal", nboot = 15, CI = 0.95))
+
 # Partitioned R2
 (R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"),
               R2_type = "marginal", nboot = 10, CI = 0.95))
 
-# Random slopes (fixed effect Treatment can't be removed separately)
-mod <- lmer(BodyL ~ Sex + Treatment + (1 + Treatment|Population),
-             data=BeetlesBody)
-(R2 <- partR2(mod, partvars = c("Sex"), R2_type = "marginal"))
-
-
-# poisson data
-data(BeetlesFemale)
-mod <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population),
-                  data = BeetlesFemale, family = poisson)
-(R2 <- partR2(mod, partvars = c("Treatment", "Habitat"),
-              R2_type = "marginal", nboot = 5, CI = 0.95))
-
-# binomial data
-
-# binary
-data(BeetlesMale)
-mod <- glmer(Colour ~ Treatment + (1|Container) + (1|Population), data = BeetlesMale,
-             family = binomial)
-(R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal",
-             nboot = 5, CI = 0.95))
-(R2 <- partR2(mod, R2_type = "conditional", nboot = 10))
-
-# proportion
-BeetlesMale$Dark <- BeetlesMale$Colour
-BeetlesMale$Reddish <- (BeetlesMale$Colour-1)*-1
-BeetlesColour <- aggregate(cbind(Dark, Reddish) ~ Treatment + Population + Container,
-     data=BeetlesMale, FUN=sum)
-
-mod <- glmer(cbind(Dark,Reddish) ~ Treatment + (1|Population),
-             data = BeetlesColour, family = binomial)
-(R2 <- partR2(mod, partvars = c("Treatment"), R2_type = "marginal",
-             nboot = 5, CI = 0.95))
 
 }
 \references{

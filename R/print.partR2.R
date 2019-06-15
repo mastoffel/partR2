@@ -30,8 +30,8 @@ print.partR2 <- function(x, ...) {
     # prep
     CI_range <- paste0(sub('.*\\.', '', x$CI), "%")
     names(x$R2_pe_ci) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper")
+    names(x$SC_pe_ci) <- c("Predictor", "r(Yhat,x)", "CI_lower", "CI_upper")
     # names(x$CC_df) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper")
-    #names(x$SC_df) <- c("Predictor", "r(Yhat,x)", "CI_lower", "CI_upper")
 
     cat("\n\n")
     cat(paste0("R2 (", x$R2_type, ") and CI (",CI_range ,") for the full model: \n"))
@@ -49,7 +49,8 @@ print.partR2 <- function(x, ...) {
     cat("\n")
     cat("----------")
     cat("\n\n")
-    #cat("Structure coefficients:\n")
-    #print(x$SC_df, row.names = FALSE, digits = 3, right = FALSE)
+
+    cat("Structure coefficients:\n")
+    print(x$SC_pe_ci, row.names = FALSE, digits = 3, right = FALSE)
 
 }

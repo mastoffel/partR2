@@ -1,5 +1,5 @@
+#' \code{partR2} package
 #' R2, commonality coefficients and structure coefficients for mixed models
-#'
 #'
 #' @references
 #'
@@ -11,4 +11,8 @@
 #'
 #' @docType package
 #' @name partR2
+#' @importFrom dplyr %>%
 NULL
+
+## quiets concerns of R CMD check re: the .'s that appear in pipelines
+if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
