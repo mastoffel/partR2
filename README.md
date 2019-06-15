@@ -40,4 +40,37 @@ mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
 R2 <- partR2(mod, partvars = c("Sex", "Treatment", "Habitat"), 
                    R2_type = "marginal", nboot = 50, CI = 0.95)
 R2
+#> 
+#> 
+#> R2 (marginal) and CI (95%) for the full model: 
+#>  R2    CI_lower CI_upper
+#>  0.392 0.3      0.514   
+#> 
+#> ----------
+#> 
+#> Partitioned R2s:
+#>  Predictor(s)          R2      CI_lower CI_upper
+#>  Sex                   0.38584  0.294   0.51    
+#>  Treatment             0.00520 -0.087   0.13    
+#>  Habitat               0.00031 -0.092   0.12    
+#>  Sex+Treatment         0.39119  0.299   0.51    
+#>  Sex+Habitat           0.38626  0.294   0.51    
+#>  Treatment+Habitat     0.00573 -0.086   0.13    
+#>  Sex+Treatment+Habitat 0.39161  0.300   0.51    
+#> 
+#> ----------
+#> 
+#> Structure coefficients:
+#>  Predictor    r(Yhat,x) CI_lower CI_upper
+#>  SexMale      -0.7452   -0.86915 -0.627  
+#>  TreatmentExp  0.0877    0.05210  0.132  
+#>  HabitatB      0.0246   -0.00406  0.061
 ```
+
+And to plot the results:
+
+``` r
+forestplot(R2, type = "R2")
+```
+
+![](README-plot-1.png)<!-- -->

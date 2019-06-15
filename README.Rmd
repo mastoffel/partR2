@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 
 # partR2
 
-The goal of partR2 is to implement methods for LMMs and GLMMs to estimate the R2 
+The goal of partR2 is to implement methods for LMMs and GLMMs to estimate the R2
 along with it's confidence intervals as well as partition the variation explained unique to and common
 among certain predictors, which is useful in the case of multicollinearity.
 
@@ -32,7 +32,7 @@ devtools::install_github("mastoffel/partR2")
 
 ## Example
 
-```{r example, results = FALSE, warning=FALSE}
+```{r example, results = TRUE, warning=FALSE}
 library(partR2)
 library(lme4)
 
@@ -48,4 +48,9 @@ mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
 R2 <- partR2(mod, partvars = c("Sex", "Treatment", "Habitat"), 
                    R2_type = "marginal", nboot = 50, CI = 0.95)
 R2
+```
+
+And to plot the results:
+```{r plot, results = TRUE, warning=FALSE}
+forestplot(R2, type = "R2")
 ```

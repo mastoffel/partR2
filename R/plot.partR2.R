@@ -40,8 +40,9 @@ forestplot <- function(x, type = c("R2", "SC")) {
             theme_minimal() +
             theme(panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank(),
-                axis.line.x = element_line(color = '#333333'),
-                axis.title.y = element_blank()) +
+                axis.line.x = element_line(),
+                axis.title.y = element_blank(),
+                text = element_text(size=15)) +
             #scale_y_discrete(labels = c("Breeding\nhabitat\nice vs. land", "log(Abundance)",
             #    "Sexual Size\nDimorphism")) +
             xlab(x_label) +
@@ -53,8 +54,9 @@ forestplot <- function(x, type = c("R2", "SC")) {
             theme_minimal() +
             theme(panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank(),
-                axis.line.x = element_line(color = '#333333'),
-                axis.title.y = element_blank()) +
+                axis.line.x = element_line(),
+                axis.title.y = element_blank(),
+                text = element_text(size=15)) +
             #scale_y_discrete(labels = c("Breeding\nhabitat\nice vs. land", "log(Abundance)",
             #    "Sexual Size\nDimorphism")) +
             xlab(x_label) +
