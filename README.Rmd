@@ -21,7 +21,8 @@ among certain predictors, which is useful in general but particularly
 in the case of multicollinearity. All confidence intervals are estimated using
 parametric bootstrapping. 
 
-partR2 is in an early phase of development.
+partR2 is in an early phase of development and only works with lme4 models
+for now.
 
 ## Installation
 

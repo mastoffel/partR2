@@ -12,7 +12,8 @@ predictors, which is useful in general but particularly in the case of
 multicollinearity. All confidence intervals are estimated using
 parametric bootstrapping.
 
-partR2 is in an early phase of development.
+partR2 is in an early phase of development and only works with lme4
+models for now.
 
 ## Installation
 
@@ -46,27 +47,27 @@ R2
 #> 
 #> R2 (marginal) and CI (95%) for the full model: 
 #>  R2    CI_lower CI_upper
-#>  0.392 0.281    0.495   
+#>  0.392 0.304    0.477   
 #> 
 #> ----------
 #> 
 #> Partitioned R2s:
 #>  Predictor(s)          R2      CI_lower CI_upper
-#>  Sex                   0.38584  0.28    0.49    
-#>  Treatment             0.00520 -0.11    0.11    
-#>  Habitat               0.00031 -0.11    0.10    
-#>  Sex+Treatment         0.39119  0.28    0.50    
-#>  Sex+Habitat           0.38626  0.28    0.49    
-#>  Treatment+Habitat     0.00573 -0.10    0.11    
-#>  Sex+Treatment+Habitat 0.39161  0.28    0.50    
+#>  Sex                   0.38584  0.298   0.471   
+#>  Treatment             0.00520 -0.083   0.090   
+#>  Habitat               0.00031 -0.087   0.086   
+#>  Sex+Treatment         0.39119  0.303   0.476   
+#>  Sex+Habitat           0.38626  0.299   0.472   
+#>  Treatment+Habitat     0.00573 -0.082   0.091   
+#>  Sex+Treatment+Habitat 0.39161  0.304   0.477   
 #> 
 #> ----------
 #> 
 #> Structure coefficients:
 #>  Predictor    r(Yhat,x) CI_lower  CI_upper
-#>  SexMale      -0.7452   -0.864314 -0.6253 
-#>  TreatmentExp  0.0877    0.048029  0.1175 
-#>  HabitatB      0.0246    0.000218  0.0666
+#>  SexMale      -0.7452   -8.64e-01 -0.630  
+#>  TreatmentExp  0.0877    5.18e-02  0.146  
+#>  HabitatB      0.0246    3.08e-05  0.067
 ```
 
 And to plot the results:

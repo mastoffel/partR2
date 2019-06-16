@@ -87,13 +87,15 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
 
     # create list of all unique combinations except for the full model
     if (!is.null(partvars)) {
-        if (length(partvars > 1)){
+        if (length(partvars) > 1){
             all_comb <- unlist(lapply(1:(length(partvars)),
                         function(x) utils::combn(partvars, x, simplify = FALSE)),
                         recursive = FALSE)
-        } else {
+        } else if (length(partvars) == 1) {
             all_comb <- as.list(partvars)
         }
+    }  else {
+        all_comb <- NA
     }
     # commonality coefficients up to cc_level (e.g. 3 for
     # the cc of 3 predictors)
@@ -111,7 +113,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
 
     # data
     data_original <- insight::get_data(mod)
-
+    #data_original <- stats::model.frame(mod)
     # formula
     formula_full <- stats::formula(mod)
 
@@ -202,7 +204,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         # reduced formula
         formula_red <- stats::update(formula_full, paste(". ~ . ", to_del, sep=""))
         # reduced model
-        mod_red <-  stats::update(mod, formula. = formula_red, data = data_original)
+        mod_red <-  stats::update(mod, formula. = formula_red)
         # reduced model R2
         R2_red <- R2_pe(mod_red)
 
@@ -267,7 +269,8 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
             parallel::clusterEvalQ(cl, list(library(lme4), library(insight)))
             parallel::clusterExport(cl, c("part_R2s", "R2_pe", "R2_red_mods",
                                           "all_comb", "formula_full", "data_original",
-                                          "SC_pe", "partvars", "R2_type", "partition"))
+                                          "SC_pe", "partvars", "R2_type", "partition"),
+                                          envir=environment())
             cat("Starting bootrapping in parallel (no progress bar): \n")
             boot_r2s_scs <- parallel::parLapply(cl, Ysim, bootstr, mod)
             parallel::stopCluster(cl)
