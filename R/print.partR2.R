@@ -50,7 +50,15 @@ print.partR2 <- function(x, ...) {
     cat("----------")
     cat("\n\n")
 
+    cat("Model estimates:\n")
+    print(x$Ests_pe_ci, row.names = FALSE, digits = 3, right = FALSE)
+
+    cat("\n")
+    cat("----------")
+    cat("\n\n")
+
     cat("Structure coefficients:\n")
     print(x$SC_pe_ci, row.names = FALSE, digits = 3, right = FALSE)
+
 
 }

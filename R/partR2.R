@@ -27,8 +27,11 @@
 #' \item{R2_type}{Marginal or conditional R2}
 #' \item{R2_pe_ci}{R2 and confidence intervals for full model and partitions}
 #' \item{SC_pe_ci}{Structure coefficients and confidence intervals}
+#' \item{Ests_pe_ci}{Model estimates and confidence intervals. Point estimates
+#' were extracted with broom.mixed::tidy}
 #' \item{R2_boot}{Parametric bootstrap samples for R2 for full model and partitions}
 #' \item{SC_boot}{Parametric bootstrap samples for structure coefficients}
+#' \item{Ests_pe_ci}{Parametric bootstrap samples for model estimates}
 #' \item{partvars}{predictors to partition}
 #' \item{CI}{Coverage of the confidence interval as specified by the \code{CI} argument.}
 #'
@@ -55,7 +58,7 @@
 #' (R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"),
 #'               R2_type = "marginal", nboot = 10, CI = 0.95))
 #'
-#'
+#' @importFrom rlang .data
 #' @export
 
 
@@ -111,11 +114,10 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         part_terms <- "Full"
     }
 
-    # data
+    # extract some essential infor
     data_original <- insight::get_data(mod)
-    #data_original <- stats::model.frame(mod)
-    # formula
     formula_full <- stats::formula(mod)
+    model_ests_full <- broom.mixed::tidy(mod)
 
     # check if cbind created a matrix as first data.frame column
     if (any(grepl("cbind", names(data_original)))) {
@@ -255,8 +257,11 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
             mod_iter <- lme4::refit(mod, newresp = y)
             out_r2s <- part_R2s(mod_iter)
             out_scs <- SC_pe(mod_iter)
-           # out_estimates <- broom.mixed::tidy(mod_iter)
-            out <- list(r2s = out_r2s, scs = out_scs)
+            out_ests <- broom.mixed::tidy(mod_iter)  # %>% mutate(term=ifelse(grepl("sd__(Int",term,fixed=TRUE),
+            #                                                                 paste(group,term,sep="."),
+            #                                                                 term))
+            # maybe change to list columns here?
+            out <- list(r2s = out_r2s, ests = out_ests, scs = out_scs)
         }
 
         # refit model with new responses
@@ -281,9 +286,10 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         boot_r2s <- lapply(boot_r2s_scs, function(x) x[["r2s"]]) %>%
                         lapply(function(x) stats::setNames(as.data.frame(t(x[[1]])), part_terms)) %>%
                         dplyr::bind_rows()
-
         # put all structure coefficients in a data.frame
         boot_scs <-  dplyr::bind_rows(lapply(boot_r2s_scs, function(x) x[["scs"]]))
+        # put all model estimates in a data.frame
+        boot_ests <- lapply(boot_r2s_scs, function(x) x[["ests"]])
     }
 
     # if no bootstrap return same data.frames only with NA
@@ -295,6 +301,12 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         boot_scs <- matrix(nrow = 1, ncol = ncol(SC_org)) %>%
                      as.data.frame %>%
                      stats::setNames(names(SC_org))
+        boot_ests <- model_ests_full %>%
+                        dplyr::mutate(estimate = NA) %>%
+                        # cut off std.err and statistic from broom output
+                        dplyr::select(-.data$std.error, -.data$statistic) %>%
+                        list(sim1 = .)
+
     }
 
     # calculate CIs
@@ -302,6 +314,12 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         dplyr::bind_rows(.id = "parts") %>%
         cbind(R2_org) %>%
         .[c(1,4,2,3)] # sort name and then point estimate first
+
+    ests_cis <- lapply(boot_ests, function(x) x$estimate) %>%
+                dplyr::bind_rows() %>%
+                apply(1, calc_CI, 0.95) %>%
+                dplyr::bind_rows() %>%
+                cbind(model_ests_full[1:4], .)
 
     sc_cis <- lapply(boot_scs, calc_CI, 0.95) %>%
         dplyr::bind_rows(.id = "parts") %>%
@@ -313,8 +331,10 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
                 R2_type = R2_type,
                 R2_pe_ci =  r2_cis,
                 SC_pe_ci =  sc_cis,
+                Ests_pe_ci =  ests_cis,
                 R2_boot =   boot_r2s,
                 SC_boot = boot_scs,
+                Ests_boot =   boot_ests,
                 partvars = partvars,
                 CI = CI)
     class(res) <- "partR2"

@@ -43,8 +43,11 @@ Returns an object of class \code{partR2} that is a a list with the following ele
 \item{R2_type}{Marginal or conditional R2}
 \item{R2_pe_ci}{R2 and confidence intervals for full model and partitions}
 \item{SC_pe_ci}{Structure coefficients and confidence intervals}
+\item{Ests_pe_ci}{Model estimates and confidence intervals. Point estimates
+were extracted with broom.mixed::tidy}
 \item{R2_boot}{Parametric bootstrap samples for R2 for full model and partitions}
 \item{SC_boot}{Parametric bootstrap samples for structure coefficients}
+\item{Ests_pe_ci}{Parametric bootstrap samples for model estimates}
 \item{partvars}{predictors to partition}
 \item{CI}{Coverage of the confidence interval as specified by the \code{CI} argument.}
 }
@@ -65,7 +68,6 @@ mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
 # Partitioned R2
 (R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"),
               R2_type = "marginal", nboot = 10, CI = 0.95))
-
 
 }
 \references{

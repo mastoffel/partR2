@@ -3,5 +3,7 @@
 S3method(print,partR2)
 export(forestplot)
 export(partR2)
+import(dplyr)
 import(ggplot2)
 importFrom(dplyr,"%>%")
+importFrom(rlang,.data)

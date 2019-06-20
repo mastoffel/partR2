@@ -4,7 +4,7 @@
 \alias{forestplot}
 \title{Plot a partR2 object}
 \usage{
-forestplot(x, type = c("R2", "SC"))
+forestplot(x, type = c("R2", "Ests", "SC"))
 }
 \arguments{
 \item{x}{A partR2 object.}
