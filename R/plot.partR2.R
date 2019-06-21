@@ -3,7 +3,8 @@
 #' Forestplot of the partR2 results
 #'
 #' @param x A partR2 object.
-#' @param type Plot either "R2" or "SC".
+#' @param type Plot either "R2" or "SC" or "Ests" for R2s, structure coefficients
+#' or model estimates.
 #'
 #'
 #' @author Martin Stoffel (martin.adam.stoffel@@gmail.com),

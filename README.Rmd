@@ -19,13 +19,13 @@ The goal of partR2 is to provide a simple interface for commonality analyses (CA
 mixed models. CA partitions the overall R2 of a model into the components which are unique to
 each fixed effect and shared among combinations of them, which is interesting
 in itself and particularly useful in the case of multicollinearity. In addition
-to these partitioned R2's the partR2 package calculates structure coefficients (SC)
-which show the correlation between a fixed effect and the predicted response $\hat{Y}$,
+to these partitioned R2's the partR2 package calculates structure coefficients (SC).
+SC show the correlation between a fixed effect and the predicted response 
 and give an intuition of the contribution of that fixed effect to the model
 prediction, independent of all other predictors. Finally, partR2 also reports
 the model estimates (slopes and variances). All calculations are embedded in
 a parametric bootstrapping framework which allows to estimate confidence intervals
-and which can be run in parallel. 
+and which can be run in parallel.
 
 partR2 is in an early phase of development and only works with lme4 models
 at the moment.

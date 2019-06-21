@@ -46,12 +46,6 @@ print.partR2 <- function(x, ...) {
     } else {
     print(x$R2_pe_ci[2:nrow(x$R2_pe_ci), ], row.names = FALSE, digits = 2, right = FALSE)
     }
-    cat("\n")
-    cat("----------")
-    cat("\n\n")
-
-    cat("Model estimates:\n")
-    print(x$Ests_pe_ci, row.names = FALSE, digits = 3, right = FALSE)
 
     cat("\n")
     cat("----------")
@@ -60,5 +54,11 @@ print.partR2 <- function(x, ...) {
     cat("Structure coefficients:\n")
     print(x$SC_pe_ci, row.names = FALSE, digits = 3, right = FALSE)
 
+    cat("\n")
+    cat("----------")
+    cat("\n\n")
+
+    cat("Model estimates:\n")
+    print(x$Ests_pe_ci, row.names = FALSE, digits = 3, right = FALSE)
 
 }
