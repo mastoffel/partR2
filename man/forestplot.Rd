@@ -9,7 +9,8 @@ forestplot(x, type = c("R2", "Ests", "SC"))
 \arguments{
 \item{x}{A partR2 object.}
 
-\item{type}{Plot either "R2" or "SC".}
+\item{type}{Plot either "R2" or "SC" or "Ests" for R2s, structure coefficients
+or model estimates.}
 }
 \description{
 Forestplot of the partR2 results

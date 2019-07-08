@@ -225,7 +225,9 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
     }
 
     # calculate R2 and partial R2s
-    R2_org <- part_R2s(mod)
+    warnings_org <- with_warnings({
+        R2_org <- part_R2s(mod)
+    })
 
     # structure coefficients function
     SC_pe <- function(mod) {
@@ -245,6 +247,9 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
 
     # structure coefficients
     SC_org <- SC_pe(mod)
+
+    # capture warnings
+    warnings_boot <- with_warnings({
 
     # parametric bootstrapping
     if (!is.null(nboot)) {
@@ -292,6 +297,8 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         boot_ests <- lapply(boot_r2s_scs, function(x) x[["ests"]])
     }
 
+    }) # end capture warnings
+
     # if no bootstrap return same data.frames only with NA
     if (is.null(nboot)) {
         boot_r2s <- rep(NA, length(part_terms)) %>%
@@ -336,7 +343,9 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
                 SC_boot = boot_scs,
                 Ests_boot =   boot_ests,
                 partvars = partvars,
-                CI = CI)
+                CI = CI,
+                warnings_org =  warnings_org,
+                warnings_boot = warnings_boot)
     class(res) <- "partR2"
     return(res)
 }
