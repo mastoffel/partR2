@@ -65,15 +65,12 @@ print.partR2 <- function(x, ...) {
     cat("----------")
     cat("\n\n")
 
-    if (!(is.null(x$warnings_boot) & (is.null(x$warnings_org)))) {
-        cat("Model fit warnings:\n")
-        num_warnings_org <- sum(unlist(lapply(x$warnings_org, function(x) !is.null(x))))
-        num_warnings_boot <- sum(unlist(lapply(x$warnings_boot, function(x) !is.null(x))))
-        cat(paste0("Calculating partial R2 led to ", num_warnings_org,
-                   " warning(s) with the original data\nand ", num_warnings_boot,
-                   " warning(s) with the bootstrapped data.\nSee out$num_warnings_org",
-                   " and out$num_warnings_boot for details, where out is
-                   the partR2 output object."))
+    if (!(is.null(x$boot_warnings) & (is.null(x$boot_messages)))) {
+        cat("Parametric bootstrapping resulted in warnings or messages:")
+        cat("\n")
+        cat("Check out$boot_warnings and out$boot_messages, where out is",
+        "the partR2 output object.")
+        cat("\n\n")
     }
 
 

@@ -34,6 +34,11 @@
 #' \item{Ests_pe_ci}{Parametric bootstrap samples for model estimates}
 #' \item{partvars}{predictors to partition}
 #' \item{CI}{Coverage of the confidence interval as specified by the \code{CI} argument.}
+#' \item{boot_warnings}{Potential warnings from estimating partial R2s during
+#' parametric bootstrapping}
+#' \item{boot_message}{Potential messages from estimating partial R2s
+#' during parametric bootstrapping. Common are for example singularity messages
+#' in lme4.}
 #'
 #' @references
 #'
@@ -45,18 +50,19 @@
 #'
 #' @examples
 #'
-#' data(BeetlesBody)
+#' data(biomass)
 #' library(lme4)
 #'
 #' # Gaussian data
-#' mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
-#'             data = BeetlesBody)
+#' mod <- lmer(Biomass ~  Year + Temperature * Precipitation + SpeciesDiversity + (1|Population),
+#'             data = biomass)
 #' # Only R2 with CI
 #' (R2 <- partR2(mod, R2_type = "marginal", nboot = 15, CI = 0.95))
 #'
 #' # Partitioned R2
-#' (R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"),
-#'               R2_type = "marginal", nboot = 10, CI = 0.95))
+#' (R2 <- partR2(mod,  partvars = c("SpeciesDiversity", "Temperature:Precipitation",
+#'                                  "Temperature", "Precipitation"),
+#'                                  R2_type = "marginal", nboot = 10, CI = 0.95))
 #'
 #' @importFrom rlang .data
 #' @export
@@ -179,6 +185,10 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
                 "Variance component ", names(var_comp_miss)[var_comp_miss],
                 " could not be estimated"
             ))
+            if (var_comp_miss["var.random"]) {
+                var_comps$var.random <- 0
+                warning("R2 estimated with ~0 random effect variance")
+            }
             if (R2_type == "marginal") return(data.frame(R2_marginal = NA))
             if (R2_type == "conditional") return(data.frame(R2_conditional = NA))
         }
@@ -225,9 +235,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
     }
 
     # calculate R2 and partial R2s
-    warnings_org <- with_warnings({
-        R2_org <- part_R2s(mod)
-    })
+    R2_org <- part_R2s(mod)
 
     # structure coefficients function
     SC_pe <- function(mod) {
@@ -248,9 +256,6 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
     # structure coefficients
     SC_org <- SC_pe(mod)
 
-    # capture warnings
-    warnings_boot <- with_warnings({
-
     # parametric bootstrapping
     if (!is.null(nboot)) {
 
@@ -268,10 +273,12 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
             # maybe change to list columns here?
             out <- list(r2s = out_r2s, ests = out_ests, scs = out_scs)
         }
+        # capture warnings and messages
+        bootstr_quiet <- purrr::quietly(bootstr)
 
         # refit model with new responses
         if (!parallel) {
-            boot_r2s_scs <- pbapply::pblapply(Ysim, bootstr, mod)
+            boot_r2s_scs <- pbapply::pblapply(Ysim, bootstr_quiet, mod)
         }
 
         if (parallel) {
@@ -282,22 +289,23 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
                                           "SC_pe", "partvars", "R2_type", "partition"),
                                           envir=environment())
             cat("Starting bootrapping in parallel (no progress bar): \n")
-            boot_r2s_scs <- parallel::parLapply(cl, Ysim, bootstr, mod)
+            boot_r2s_scs <- parallel::parLapply(cl, Ysim, bootstr_quiet, mod)
             parallel::stopCluster(cl)
         }
 
         # reshaping bootstrap output
         # put all commonality coefficients in one data.frame
-        boot_r2s <- lapply(boot_r2s_scs, function(x) x[["r2s"]]) %>%
+        boot_r2s <- lapply(boot_r2s_scs, function(x) x$result[["r2s"]]) %>%
                         lapply(function(x) stats::setNames(as.data.frame(t(x[[1]])), part_terms)) %>%
                         dplyr::bind_rows()
         # put all structure coefficients in a data.frame
-        boot_scs <-  dplyr::bind_rows(lapply(boot_r2s_scs, function(x) x[["scs"]]))
+        boot_scs <-  dplyr::bind_rows(lapply(boot_r2s_scs, function(x) x$result[["scs"]]))
         # put all model estimates in a data.frame
-        boot_ests <- lapply(boot_r2s_scs, function(x) x[["ests"]])
+        boot_ests <- lapply(boot_r2s_scs, function(x) x$result[["ests"]])
+        # warnings and messages
+        boot_warnings <- purrr::map(boot_r2s_scs, function(x) x$warnings)
+        boot_messages <- purrr::map(boot_r2s_scs, function(x) x$messages)
     }
-
-    }) # end capture warnings
 
     # if no bootstrap return same data.frames only with NA
     if (is.null(nboot)) {
@@ -313,7 +321,8 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
                         # cut off std.err and statistic from broom output
                         dplyr::select(-.data$std.error, -.data$statistic) %>%
                         list(sim1 = .)
-
+        boot_warnings <- character(0)
+        boot_messages <- character(0)
     }
 
     # calculate CIs
@@ -344,8 +353,9 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
                 Ests_boot =   boot_ests,
                 partvars = partvars,
                 CI = CI,
-                warnings_org =  warnings_org,
-                warnings_boot = warnings_boot)
+                boot_warnings = boot_warnings ,
+                boot_messages = boot_messages)
+
     class(res) <- "partR2"
     return(res)
 }

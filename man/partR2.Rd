@@ -50,24 +50,30 @@ were extracted with broom.mixed::tidy}
 \item{Ests_pe_ci}{Parametric bootstrap samples for model estimates}
 \item{partvars}{predictors to partition}
 \item{CI}{Coverage of the confidence interval as specified by the \code{CI} argument.}
+\item{boot_warnings}{Potential warnings from estimating partial R2s during
+parametric bootstrapping}
+\item{boot_message}{Potential messages from estimating partial R2s
+during parametric bootstrapping. Common are for example singularity messages
+in lme4.}
 }
 \description{
 R2, commonality coefficients and structure coefficients for gaussian lme4 models.
 }
 \examples{
 
-data(BeetlesBody)
+data(biomass)
 library(lme4)
 
 # Gaussian data
-mod <- lmer(BodyL ~ Sex + Treatment + Habitat + (1|Container) + (1|Population),
-            data = BeetlesBody)
+mod <- lmer(Biomass ~  Year + Temperature * Precipitation + SpeciesDiversity + (1|Population),
+            data = biomass)
 # Only R2 with CI
 (R2 <- partR2(mod, R2_type = "marginal", nboot = 15, CI = 0.95))
 
 # Partitioned R2
-(R2 <- partR2(mod,  partvars = c("Treatment", "Sex", "Habitat"),
-              R2_type = "marginal", nboot = 10, CI = 0.95))
+(R2 <- partR2(mod,  partvars = c("SpeciesDiversity", "Temperature:Precipitation",
+                                 "Temperature", "Precipitation"),
+                                 R2_type = "marginal", nboot = 10, CI = 0.95))
 
 }
 \references{

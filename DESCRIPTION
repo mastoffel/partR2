@@ -16,9 +16,8 @@ Imports:
     ggplot2,
     broom.mixed,
     dplyr,
-    magrittr,
-    tibble,
     insight,
+    purrr,
     performance,
     rlang
 Encoding: UTF-8

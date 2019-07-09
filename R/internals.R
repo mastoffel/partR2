@@ -10,6 +10,7 @@
 
 with_warnings <- function(expr) {
     myWarnings <- NULL
+    myMessages <- NULL
     wHandler <- function(w) {
         myWarnings <<- c(myWarnings, list(w))
         invokeRestart("muffleWarning")
