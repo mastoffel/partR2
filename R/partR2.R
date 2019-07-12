@@ -245,9 +245,14 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         mod_mat <- data.frame(stats::model.matrix(mod))
         # only return SCs specified in partvars
         #pred_ind <- unlist(sapply(partvars, function(x) grep(x, names(mod_mat))))
-        # always return all SCs insight::find_predictors(mod)
-        pred_ind <- unlist(sapply(insight::find_predictors(mod)[[1]],
-                                  function(x) grep(x, names(mod_mat))))
+
+        if (length(grep("Intercept", names(mod_mat))) != 0){
+            pred_ind <- names(mod_mat)[-c(grep("Intercept", names(mod_mat)))]
+        } else {
+            pred_ind <- names(mod_mat)
+        }
+
+        #names(mod_mat[, grep(x, names(mod_mat))])
         out <- data.frame(stats::cor(Yhat, mod_mat[pred_ind]))
         out
 
