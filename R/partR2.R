@@ -65,6 +65,8 @@
 #'                                  R2_type = "marginal", nboot = 10, CI = 0.95))
 #'
 #' @importFrom rlang .data
+#' @importFrom dplyr `%>%`
+#' @import tibble
 #' @export
 
 
@@ -126,6 +128,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
     model_ests_full <- broom.mixed::tidy(mod)
 
     # check if cbind created a matrix as first data.frame column
+    ## this has to be checked
     if (any(grepl("cbind", names(data_original)))) {
         data_original <- cbind(as.data.frame(data_original[[1]]),
                                data_original[2:ncol(data_original)])
@@ -174,15 +177,17 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
     R2_pe <- function(mod) {
 
         # get variance components
-        var_comps <- insight::get_variance(mod)
+        var_comps <- as_tibble(insight::get_variance(mod))
 
         # check whether var comps have been calculated
-        var_comp_miss <- sapply(c("var.fixed", "var.random", "var.residual"),
-                                function(x) is.null(var_comps[[x]]))
+        main_comps <- c("var.fixed", "var.random", "var.residual")
+        var_comp_miss <- purrr::map_lgl(main_comps,
+                                function(x) is.null(var_comps[[x]])) %>%
+                         stats::setNames(main_comps)
 
         if (any(var_comp_miss)) {
             warning(paste0(
-                "Variance component ", names(var_comp_miss)[var_comp_miss],
+                "Variance component ",  main_comps[var_comp_miss],
                 " could not be estimated"
             ))
             if (var_comp_miss["var.random"]) {
@@ -193,20 +198,16 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
             if (R2_type == "conditional") return(data.frame(R2_conditional = NA))
         }
 
-        # calculate marginal R2
         if (R2_type == "marginal") {
-            R2 <- var_comps$var.fixed /
-                (var_comps$var.fixed + var_comps$var.random + var_comps$var.residual)
-            R2_out <- data.frame(R2_marginal = R2)
+            R2_out <- var_comps %>%
+                mutate(R2_marginal = var.fixed /(var.fixed + var.random + var.residual)) %>%
+                dplyr::select(R2_marginal)
+        } else if (R2_type == "conditional") {
+            R2_out <- var_comps %>%
+                mutate(R2_conditional = (var.fixed + var.random) /
+                           (var.fixed + var.random + var.residual)) %>%
+                dplyr::select(R2_marginal)
         }
-        # calculate conditional R2
-        if (R2_type == "conditional") {
-            R2 <- (var_comps$var.fixed + var_comps$var.random) /
-                (var_comps$var.fixed + var_comps$var.random + var_comps$var.residual)
-            R2_out <- data.frame(R2_conditional = R2)
-        }
-        R2_out
-    }
 
     # reduced model R2 (mod without partvar)
     R2_red_mods <- function(partvar, mod, formula_full) {
