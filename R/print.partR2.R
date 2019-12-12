@@ -41,6 +41,7 @@ print.partR2 <- function(x, ...) {
     cat("----------")
     cat("\n\n")
     cat("Partitioned R2s:\n")
+
     if (nrow(x$R2_pe_ci) == 1) {
         print("No partitions selected.")
     } else {
@@ -68,12 +69,8 @@ print.partR2 <- function(x, ...) {
     if (!(is.null(x$boot_warnings) & (is.null(x$boot_messages)))) {
         cat("Parametric bootstrapping resulted in warnings or messages:")
         cat("\n")
-        cat("Check out$boot_warnings and out$boot_messages, where out is",
-        "the partR2 output object.")
+        cat("Check out$boot_warnings and out$boot_messages, where out is the partR2 output object.")
         cat("\n\n")
     }
-
-
-
 
 }
