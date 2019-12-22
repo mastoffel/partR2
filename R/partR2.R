@@ -64,6 +64,7 @@
 #'                                  "Temperature", "Precipitation"),
 #'                                  R2_type = "marginal", nboot = 10, CI = 0.95))
 #'
+#'
 #' @importFrom rlang .data
 #' @import tibble
 #' @export
@@ -89,8 +90,8 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
     }
 
     # check whether partvars are fixed effects
-    fixed_terms <- insight::find_terms(mod)$conditional
     # don't look at interactions for now
+    fixed_terms <- names(lme4::fixef(mod))
     if (!(all(partvars[-grep(":", partvars)] %in% fixed_terms))) {
         stop("partvars have to be fixed effects")
     }
@@ -107,10 +108,11 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
     }  else {
         all_comb <- NA
     }
+
     # commonality coefficients up to cc_level (e.g. 3 for
     # the cc of 3 predictors)
     if (!is.null(cc_level)) {
-        remove_combs <- sapply(all_comb, function(x) length(x) > cc_level)
+        remove_combs <- purrr::map_lgl(all_comb, function(x) length(x) > cc_level)
         all_comb[remove_combs] <- NULL
     }
 
@@ -121,11 +123,11 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         part_terms <- "Full"
     }
 
-    # extract some essential infor
-    data_original <- insight::get_data(mod)
-    formula_full <- stats::formula(mod)
-    model_ests_full <- broom.mixed::tidy(mod)
-
+    # get data
+    data_original <- stats::model.frame(mod)
+    # Family and response variable
+    mod_fam <- stats::family(mod)[[1]]
+    resp <- lme4::getME(mod, "y")
     # check if cbind created a matrix as first data.frame column
     ## this has to be checked
     if (any(grepl("cbind", names(data_original)))) {
@@ -133,104 +135,45 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
                                data_original[2:ncol(data_original)])
     }
 
-    # Give hint to OLRE when there is overdispersion
-    mod_fam <- stats::family(mod)[[1]]
-    resp <- insight::get_response(mod)
-    # check if poisson on binomial and not binary
+    # add OLRE
     if (mod_fam == "poisson" | ((mod_fam == "binomial") & (length(table(resp)) > 3))) {
-        message("Consider checking for overdisperion and potentially fitting
-                an observational level random effect")
-       # od <- (performance::check_overdispersion(mod))
-       # if (od$p_value < 0.05) {
-       #     message(
-       #         paste(
-       #             "Overdispersion detected with dispersion ratio = ",
-       #             round(od$dispersion_ratio, 2), " Pearson's Chi-Squared = ",
-       #             round(od$chisq_statistic, 2), " and p-val =", round(od$p_value, 2),
-       #             ". See check_overdispersion() from the performance package",
-       #             " for more infos. We suggest adding an Observational Level ",
-       #             " Random Effect or to use a different distribution.",
-       #             sep = ""
-       #         )
-       #     )
-       # }
+        # check if OLRE already there
+        overdisp_term <- lme4::getME(mod, "l_i") == nrow(data_original)
+        # if so, get variable name
+        if (sum(overdisp_term) == 1) {
+            overdisp <- names(overdisp_term)[overdisp_term]
+        } else if ((sum(overdisp_term) == 0)) {
+            data_original$overdisp <- as.factor(1:nrow(data_original))
+            mod <- stats::update(mod, . ~ . + (1 | overdisp), data = data_original)
+            message("An observational level random-effect has been fitted
+to account for overdispersion.")
+        }
     }
 
-    # we probably shouldnt internally add OLRE to model Overdispersion anymore? -------
-    # Overdispersion <- factor(1:stats::nobs(mod))
-    # if (fam == "poisson") {
-    #     mod <- model_overdisp(mod, data_original) # add OLRE and refit
-    #     data <- cbind(data_original, Overdispersion)
-    # }
-    # binary_resp <- FALSE
-    # if (fam == "binomial") {
-    #     # check for binary, if not binary, add OLRE // double check whether this is sensible
-    #     if ((length(unique(stats::na.omit(mod@resp$y))) < 3)) {
-    #         binary_resp <- TRUE
-    #     } else {
-    #         mod <- model_overdisp(mod, data_original)
-    #         data <- cbind(data_original, Overdispersion)
-    #     }
-    # }
-    #-------------------------------------------------------------------------
+    # extract some essential infor
+    formula_full <- stats::formula(mod)
+    model_ests_full <- broom.mixed::tidy(mod)
 
     # R2
     R2_pe <- function(mod) {
 
         # get variance components
-        main_comps <- c("var.fixed", "var.random", "var.residual")
-
-        # extract variance components
-        var_comps <- insight::get_variance(mod) %>%
-                     .[names(.) %in% main_comps] %>%
-                     tibble::as_tibble()
-
-        # check whether var comps have been calculated
-        var_comp_miss <- purrr::map_lgl(main_comps,
-                                function(x) is.null(var_comps[[x]])) %>%
-                         stats::setNames(main_comps)
-
-        if (any(var_comp_miss)) {
-            warning(paste0(
-                "Variance component ",  main_comps[var_comp_miss],
-                " could not be estimated"
-            ))
-            if (var_comp_miss["var.random"]) {
-                var_comps$var.random <- 0
-                warning("R2 estimated with ~0 random effect variance")
-            }
-            # potentially return NA when a component couldnt be estimated
-            #if (R2_type == "marginal") return(data.frame(R2_marginal = NA))
-            #if (R2_type == "conditional") return(data.frame(R2_conditional = NA))
-        }
+        var_comps <- get_var_comps(mod, expect)
 
         if (R2_type == "marginal") {
             R2_out <- var_comps %>%
-                dplyr::mutate(R2_marginal = var.fixed /(var.fixed + var.random + var.residual)) %>%
+                dplyr::mutate(R2_marginal = var_fix /
+                                  (var_fix + var_ran + var_res)) %>%
                 dplyr::select(R2_marginal)
         } else if (R2_type == "conditional") {
             R2_out <- var_comps %>%
-                dplyr::mutate(R2_conditional = (var.fixed + var.random) /
-                           (var.fixed + var.random + var.residual)) %>%
+                dplyr::mutate(R2_conditional = (var_fix  + var_ran) /
+                           (var_fix + var_ran + var_res)) %>%
                 dplyr::select(R2_conditional)
         }
-
         R2_out
     }
 
-    # reduced model R2 (mod without partvar)
-    R2_red_mods <- function(partvar, mod, formula_full) {
-
-        # which variables to reduce?
-        to_del <- paste(paste("-", partvar, sep= ""), collapse = " ")
-        # reduced formula
-        formula_red <- stats::update(formula_full, paste(". ~ . ", to_del, sep=""))
-        # fit reduced model
-        mod_red <-  stats::update(mod, formula. = formula_red)
-        # reduced model R2
-        R2_red <- R2_pe(mod_red)
-
-    }
 
     # partition R2
     part_R2s <- function(mod) {
@@ -238,7 +181,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         R2_full <- R2_pe(mod)
         if (!partition) return(R2_full)
         # calculate R2s of reduced models and difference with full model
-        R2s_red <- purrr::map_df(all_comb, R2_red_mods, mod, formula_full) %>%
+        R2s_red <- purrr::map_df(all_comb, R2_of_red_mod, mod) %>%
                    dplyr::mutate(R2_marginal = R2_full$R2_marginal - R2_marginal) %>%
                    dplyr::bind_rows(R2_full, .)
     }
@@ -246,7 +189,8 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
     # calculate R2 and partial R2s
     R2_org <- part_R2s(mod)
 
-    # structure coefficients function
+    # SC to be discussed
+    # # structure coefficients function
     SC_pe <- function(mod) {
         # question: always return all structure coefficients?
         if (is.null(partvars)) return(data.frame(no_partvars = NA))
@@ -254,8 +198,8 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         mod_mat <-stats::model.matrix(mod)
         # only calculate SC for partvars
         mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop=FALSE]
-        warning("SC for factors with more than two levels do not make sense at the moment")
-        out <- data.frame(stats::cor(Yhat, mod_mat[, fixed_terms %in% partvars]))
+        message("SC for factors with more than two levels do not make sense at the moment")
+        out <- data.frame(stats::cor(Yhat, mod_mat))
     }
 
     # structure coefficients
@@ -272,10 +216,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
             mod_iter <- lme4::refit(mod, newresp = y)
             out_r2s <- part_R2s(mod_iter)
             out_scs <- SC_pe(mod_iter)
-            out_ests <- broom.mixed::tidy(mod_iter)  # %>% mutate(term=ifelse(grepl("sd__(Int",term,fixed=TRUE),
-            #                                                                 paste(group,term,sep="."),
-            #                                                                 term))
-            # maybe change to list columns here?
+            out_ests <- broom.mixed::tidy(mod_iter)
             out <- list(r2s = out_r2s, ests = out_ests, scs = out_scs)
         }
         # capture warnings and messages
@@ -283,20 +224,20 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
 
         # refit model with new responses
         if (!parallel) {
-            boot_r2s_scs <- pbapply::pblapply(Ysim, bootstr_quiet, mod)
-            #boot_r2s_scs <- future_map(Ysim, bootstr_quiet, mod, .progress = TRUE)
+            boot_r2s_scs_ests <- pbapply::pblapply(Ysim, bootstr_quiet, mod)
+           # boot_r2s_scs <- future_map(Ysim, bootstr_quiet, mod, .progress = TRUE)
         }
 
         if (parallel) {
             cl <- parallel::makeCluster(ncores)
-            parallel::clusterEvalQ(cl, list(library(lme4), library(insight), library(tibble),
+            parallel::clusterEvalQ(cl, list(library(lme4), library(tibble),
                                             library(dplyr)))
             parallel::clusterExport(cl, c("part_R2s", "R2_pe", "R2_red_mods",
                                           "all_comb", "formula_full", "data_original",
                                           "SC_pe", "partvars", "R2_type", "partition"),
                                           envir=environment())
             cat("Starting bootrapping in parallel (no progress bar): \n")
-            boot_r2s_scs <- parallel::parLapply(cl, Ysim, bootstr_quiet, mod)
+            boot_r2s_scs_ests <- parallel::parLapply(cl, Ysim, bootstr_quiet, mod)
             parallel::stopCluster(cl)
         }
 
