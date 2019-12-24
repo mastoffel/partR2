@@ -8,7 +8,8 @@
 R2, commonality coefficients and structure coefficients for mixed models}
 \usage{
 partR2(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
-  nboot = NULL, CI = 0.95, parallel = FALSE, ncores = NULL)
+  nboot = NULL, CI = 0.95, parallel = FALSE, ncores = NULL,
+  expct = "meanobs")
 }
 \arguments{
 \item{mod}{merMod object fitted with lme4.}
@@ -36,6 +37,15 @@ asymtotic CI, but may be time-consuming. Bootstrapping can be switch on by setti
 \item{parallel}{If TRUE, computation runs in parallel, leaving one CPU free, except ncores is specified.}
 
 \item{ncores}{number of cpus for parallel computation}
+
+\item{expct}{A string specifying the method for estimating the expectation in Poisson models
+with log link and in Binomial models with logit link (in all other cases the agrument is ignored).
+The only valid terms are 'meanobs' and 'latent' (and 'liability for binary and proportion data).
+With the default 'meanobs', the expectation is estimated as the mean of the observations in the sample.
+With 'latent', the expectation is estimated from estiamtes of the intercept and variances on the link scale.
+While this is a preferred solution, it is susceptible to the distribution of fixed effect covariates and gives
+appropriate results typically only when all covariances are centered to zero. With 'liability'
+estimates follow formulae as presented in Nakagawa & Schielzeth (2010).}
 }
 \value{
 Returns an object of class \code{partR2} that is a a list with the following elements:
@@ -74,6 +84,25 @@ mod <- lmer(Biomass ~  Year + Temperature * Precipitation + SpeciesDiversity + (
 (R2 <- partR2(mod,  partvars = c("SpeciesDiversity", "Temperature:Precipitation",
                                  "Temperature", "Precipitation"),
                                  R2_type = "marginal", nboot = 10, CI = 0.95))
+
+# poisson
+data(BeetlesFemale)
+mod2 <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population),
+             data = BeetlesFemale, family = poisson)
+(partR2(mod2, partvars = c("Habitat", "Treatment"), nboot = 5))
+
+# binomial
+data(BeetlesMale)
+BeetlesMale$Dark <- BeetlesMale$Colour
+BeetlesMale$Reddish <- (BeetlesMale$Colour-1)*-1
+BeetlesColour <- aggregate(cbind(Dark, Reddish) ~ Treatment + Population + Container,
+                          data=BeetlesMale, FUN=sum)
+
+mod3 <- glmer(cbind(Dark,Reddish) ~ Treatment + (1|Population),
+             data = BeetlesColour, family = binomial)
+
+(partR2(mod3, partvars = c("Treatment"), nboot = 5))
+
 
 }
 \references{

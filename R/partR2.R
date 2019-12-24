@@ -19,6 +19,14 @@
 #'        0.95).
 #' @param parallel If TRUE, computation runs in parallel, leaving one CPU free, except ncores is specified.
 #' @param ncores number of cpus for parallel computation
+#' @param expct A string specifying the method for estimating the expectation in Poisson models
+#'        with log link and in Binomial models with logit link (in all other cases the agrument is ignored).
+#'        The only valid terms are 'meanobs' and 'latent' (and 'liability for binary and proportion data).
+#'        With the default 'meanobs', the expectation is estimated as the mean of the observations in the sample.
+#'        With 'latent', the expectation is estimated from estiamtes of the intercept and variances on the link scale.
+#'        While this is a preferred solution, it is susceptible to the distribution of fixed effect covariates and gives
+#'        appropriate results typically only when all covariances are centered to zero. With 'liability'
+#'        estimates follow formulae as presented in Nakagawa & Schielzeth (2010).
 #'
 #'
 #' @return
@@ -64,6 +72,24 @@
 #'                                  "Temperature", "Precipitation"),
 #'                                  R2_type = "marginal", nboot = 10, CI = 0.95))
 #'
+#' # poisson
+#' data(BeetlesFemale)
+#' mod2 <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population),
+#'              data = BeetlesFemale, family = poisson)
+#' (partR2(mod2, partvars = c("Habitat", "Treatment"), nboot = 5))
+#'
+#' # binomial
+#' data(BeetlesMale)
+#' BeetlesMale$Dark <- BeetlesMale$Colour
+#' BeetlesMale$Reddish <- (BeetlesMale$Colour-1)*-1
+#' BeetlesColour <- aggregate(cbind(Dark, Reddish) ~ Treatment + Population + Container,
+#'                           data=BeetlesMale, FUN=sum)
+#'
+#' mod3 <- glmer(cbind(Dark,Reddish) ~ Treatment + (1|Population),
+#'              data = BeetlesColour, family = binomial)
+#'
+#' (partR2(mod3, partvars = c("Treatment"), nboot = 5))
+#'
 #'
 #' @importFrom rlang .data
 #' @import tibble
@@ -71,7 +97,8 @@
 
 
 partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
-                   nboot = NULL, CI = 0.95, parallel = FALSE, ncores = NULL){
+                   nboot = NULL, CI = 0.95, parallel = FALSE, ncores = NULL,
+                   expct = "meanobs"){
 
     # initial checks
     if(!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
@@ -123,71 +150,62 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         part_terms <- "Full"
     }
 
-    # get data
+    # get data, family and response variable
     data_original <- stats::model.frame(mod)
-    # Family and response variable
     mod_fam <- stats::family(mod)[[1]]
     resp <- lme4::getME(mod, "y")
+
     # check if cbind created a matrix as first data.frame column
     ## this has to be checked
-    if (any(grepl("cbind", names(data_original)))) {
-        data_original <- cbind(as.data.frame(data_original[[1]]),
-                               data_original[2:ncol(data_original)])
+    any_mat <- purrr::map_lgl(data_original, is.matrix)
+    if (any(any_mat)) {
+        data_original <- cbind(as.data.frame(data_original[[which(any_mat)]]),
+                               data_original[(which(any_mat)+1):ncol(data_original)])
     }
 
-    # add OLRE
-    if (mod_fam == "poisson" | ((mod_fam == "binomial") & (length(table(resp)) > 3))) {
-        # check if OLRE already there
-        overdisp_term <- lme4::getME(mod, "l_i") == nrow(data_original)
-        # if so, get variable name
-        if (sum(overdisp_term) == 1) {
-            overdisp <- names(overdisp_term)[overdisp_term]
-        } else if ((sum(overdisp_term) == 0)) {
-            data_original$overdisp <- as.factor(1:nrow(data_original))
-            mod <- stats::update(mod, . ~ . + (1 | overdisp), data = data_original)
-            message("An observational level random-effect has been fitted
-to account for overdispersion.")
-        }
-    }
+    # overdispersion
+    overdisp_out <- model_overdisp(mod, dat = data_original)
+    mod <- overdisp_out$mod
+    data_original <- overdisp_out$dat
 
     # extract some essential infor
     formula_full <- stats::formula(mod)
     model_ests_full <- broom.mixed::tidy(mod)
 
     # R2
-    R2_pe <- function(mod) {
+    R2_pe <- function(mod, expct) {
 
         # get variance components
-        var_comps <- get_var_comps(mod, expect)
+        var_comps <- get_var_comps(mod, expct)
 
         if (R2_type == "marginal") {
             R2_out <- var_comps %>%
-                dplyr::mutate(R2_marginal = var_fix /
+                dplyr::mutate(R2 = var_fix /
                                   (var_fix + var_ran + var_res)) %>%
-                dplyr::select(R2_marginal)
+                dplyr::select(R2)
         } else if (R2_type == "conditional") {
             R2_out <- var_comps %>%
-                dplyr::mutate(R2_conditional = (var_fix  + var_ran) /
+                dplyr::mutate(R2 = (var_fix  + var_ran) /
                            (var_fix + var_ran + var_res)) %>%
-                dplyr::select(R2_conditional)
+                dplyr::select(R2)
         }
         R2_out
     }
 
 
     # partition R2
-    part_R2s <- function(mod) {
+    part_R2s <- function(mod, expct) {
         # calculate full model R2
-        R2_full <- R2_pe(mod)
+        R2_full <- R2_pe(mod, expct)
         if (!partition) return(R2_full)
         # calculate R2s of reduced models and difference with full model
-        R2s_red <- purrr::map_df(all_comb, R2_of_red_mod, mod) %>%
-                   dplyr::mutate(R2_marginal = R2_full$R2_marginal - R2_marginal) %>%
+        R2s_red <- purrr::map_df(all_comb, R2_of_red_mod, mod, R2_pe, expct) %>%
+                   dplyr::mutate(R2 = R2_full$R2 - R2) %>%
                    dplyr::bind_rows(R2_full, .)
     }
 
     # calculate R2 and partial R2s
-    R2_org <- part_R2s(mod)
+    R2_org <- part_R2s(mod, expct)
 
     # SC to be discussed
     # # structure coefficients function
@@ -211,10 +229,10 @@ to account for overdispersion.")
         # simulation new responses
         if (nboot > 0)  Ysim <- as.data.frame(stats::simulate(mod, nsim = nboot))
         # main bootstrap function
-        bootstr <- function(y, mod) {
+        bootstr <- function(y, mod, expct) {
             # at the moment lme4 specific, could be extended
             mod_iter <- lme4::refit(mod, newresp = y)
-            out_r2s <- part_R2s(mod_iter)
+            out_r2s <- part_R2s(mod_iter, expct)
             out_scs <- SC_pe(mod_iter)
             out_ests <- broom.mixed::tidy(mod_iter)
             out <- list(r2s = out_r2s, ests = out_ests, scs = out_scs)
@@ -224,35 +242,27 @@ to account for overdispersion.")
 
         # refit model with new responses
         if (!parallel) {
-            boot_r2s_scs_ests <- pbapply::pblapply(Ysim, bootstr_quiet, mod)
+            boot_r2s_scs_ests <- pbapply::pblapply(Ysim, bootstr_quiet, mod, expct)
            # boot_r2s_scs <- future_map(Ysim, bootstr_quiet, mod, .progress = TRUE)
         }
 
         if (parallel) {
-            cl <- parallel::makeCluster(ncores)
-            parallel::clusterEvalQ(cl, list(library(lme4), library(tibble),
-                                            library(dplyr)))
-            parallel::clusterExport(cl, c("part_R2s", "R2_pe", "R2_red_mods",
-                                          "all_comb", "formula_full", "data_original",
-                                          "SC_pe", "partvars", "R2_type", "partition"),
-                                          envir=environment())
-            cat("Starting bootrapping in parallel (no progress bar): \n")
-            boot_r2s_scs_ests <- parallel::parLapply(cl, Ysim, bootstr_quiet, mod)
-            parallel::stopCluster(cl)
+            if (is.null(ncores)) ncores <- parallel::detectCores()-1
+            future::plan(future::multiprocess, workers = ncores)
+            boot_r2s_scs_ests <- furrr::future_map(Ysim, bootstr_quiet, mod, expct)
         }
 
         # reshaping bootstrap output
         # put all commonality coefficients in one data.frame
-        boot_r2s <- lapply(boot_r2s_scs, function(x) x$result[["r2s"]]) %>%
-                        lapply(function(x) stats::setNames(as.data.frame(t(x[[1]])), part_terms)) %>%
-                        dplyr::bind_rows()
+        boot_r2s <- purrr::map(boot_r2s_scs_ests , function(x) x$result[["r2s"]]) %>%
+                    purrr::map_df(function(x) stats::setNames(as.data.frame(t(x[[1]])), part_terms))
         # put all structure coefficients in a data.frame
-        boot_scs <-  dplyr::bind_rows(lapply(boot_r2s_scs, function(x) x$result[["scs"]]))
+        boot_scs <- purrr::map_df(boot_r2s_scs_ests, function(x) x$result[["scs"]])
         # put all model estimates in a data.frame
-        boot_ests <- lapply(boot_r2s_scs, function(x) x$result[["ests"]])
+        boot_ests <- purrr::map(boot_r2s_scs_ests, function(x) x$result[["ests"]])
         # warnings and messages
-        boot_warnings <- purrr::map(boot_r2s_scs, function(x) x$warnings)
-        boot_messages <- purrr::map(boot_r2s_scs, function(x) x$messages)
+        boot_warnings <- purrr::map(boot_r2s_scs_ests, function(x) x$warnings)
+        boot_messages <- purrr::map(boot_r2s_scs_ests, function(x) x$messages)
     }
 
     # if no bootstrap return same data.frames only with NA
@@ -262,7 +272,7 @@ to account for overdispersion.")
                             as.data.frame() %>%
                             stats::setNames(part_terms)
         boot_scs <- matrix(nrow = 1, ncol = ncol(SC_org)) %>%
-                     as.data.frame %>%
+                     as.data.frame() %>%
                      stats::setNames(names(SC_org))
         boot_ests <- model_ests_full %>%
                         dplyr::mutate(estimate = NA) %>%
@@ -274,21 +284,15 @@ to account for overdispersion.")
     }
 
     # calculate CIs
-    r2_cis <- lapply(boot_r2s, calc_CI, 0.95) %>%
-        dplyr::bind_rows(.id = "parts") %>%
-        cbind(R2_org) %>%
-        .[c(1,4,2,3)] # sort name and then point estimate first
+    r2_cis <- purrr::map_df(boot_r2s, calc_CI, CI, .id = "parts") %>%
+              tibble::add_column(R2 = as.numeric(unlist(R2_org)), .after = "parts")
 
-    ests_cis <- lapply(boot_ests, function(x) x$estimate) %>%
-                dplyr::bind_rows() %>%
-                apply(1, calc_CI, 0.95) %>%
-                dplyr::bind_rows() %>%
+    ests_cis <- purrr::map_df(boot_ests, "estimate") %>%
+                purrr::pmap_df(function(...) calc_CI(c(...), CI)) %>%
                 cbind(model_ests_full[1:4], .)
 
-    sc_cis <- lapply(boot_scs, calc_CI, 0.95) %>%
-        dplyr::bind_rows(.id = "parts") %>%
-        dplyr::mutate(SC = unlist(SC_org)) %>%
-        .[c(1,4,2,3)]
+    sc_cis <- purrr::map_df(boot_scs, calc_CI, 0.95, .id = "parts") %>%
+              tibble::add_column(SC = as.numeric(SC_org), .after = "parts")
 
     res <- list(call = mod@call,
                 #datatype = "gaussian",

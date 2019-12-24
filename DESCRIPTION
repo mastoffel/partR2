@@ -16,13 +16,13 @@ Imports:
     ggplot2,
     broom.mixed,
     dplyr,
-    insight,
     purrr,
-    performance,
     rlang,
     tibble,
     glue,
-    magrittr
+    magrittr,
+    future,
+    furrr
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
