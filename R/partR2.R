@@ -72,23 +72,6 @@
 #'                                  "Temperature", "Precipitation"),
 #'                                  R2_type = "marginal", nboot = 10, CI = 0.95))
 #'
-#' # poisson
-#' data(BeetlesFemale)
-#' mod2 <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population),
-#'              data = BeetlesFemale, family = poisson)
-#' (partR2(mod2, partvars = c("Habitat", "Treatment"), nboot = 5))
-#'
-#' # binomial
-#' data(BeetlesMale)
-#' BeetlesMale$Dark <- BeetlesMale$Colour
-#' BeetlesMale$Reddish <- (BeetlesMale$Colour-1)*-1
-#' BeetlesColour <- aggregate(cbind(Dark, Reddish) ~ Treatment + Population + Container,
-#'                           data=BeetlesMale, FUN=sum)
-#'
-#' mod3 <- glmer(cbind(Dark,Reddish) ~ Treatment + (1|Population),
-#'              data = BeetlesColour, family = binomial)
-#'
-#' (partR2(mod3, partvars = c("Treatment"), nboot = 5))
 #'
 #'
 #' @importFrom rlang .data
@@ -216,7 +199,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         mod_mat <-stats::model.matrix(mod)
         # only calculate SC for partvars
         mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop=FALSE]
-        message("SC for factors with more than two levels do not make sense at the moment")
+        #message("SC for factors with more than two levels do not make sense at the moment")
         out <- data.frame(stats::cor(Yhat, mod_mat))
     }
 

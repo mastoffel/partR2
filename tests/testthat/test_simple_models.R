@@ -16,6 +16,7 @@ r2_mod1_4 <- partR2(mod1, partvars = c("SpeciesDiversity", "Year"))
 r2_mod1_5 <- partR2(mod1, partvars = c("Temperature:Precipitation"))
 r2_mod1_6 <- partR2(mod1, partvars = c("Temperature*Precipitation",
                                        "Year", "SpeciesDiversity"))
+r2_mod1_7 <-  partR2(mod1, nboot = 4, parallel = TRUE)
 
 #r2_mod1_6 <- partR2(mod1, partvars = c("Temperature*Precipitation"))
 test_that("Gaussian models with increasing complexity do not throw errors", {
@@ -34,6 +35,7 @@ test_that("Gaussian models with increasing complexity do not throw errors", {
     # all together same as marginal
     expect_equal(r2_mod1_6$R2_pe_ci$R2[length(r2_mod1_6$R2_pe_ci$R2)],
                  r2_mod1_6$R2_pe_ci$R2[1], tolerance = 0.001)
+    # parallel
 
 })
 
