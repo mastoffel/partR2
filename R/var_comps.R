@@ -43,17 +43,9 @@ var_comps_gaussian <- function(mod, ...) {
 
     # random effect variance
     var_ran <- sum(get_ran_var(mod)$estimate)
-    # old
-    # var_ran <- broom.mixed::tidy(mod, scales = "vcov",  effects = "ran_pars") %>%
-    #     dplyr::filter(.data$group != "Residual") %>%
-    #     dplyr::summarise(sum(.data$estimate)) %>%
-    #     unname() %>%
-    #     unlist()
 
     # residual variance
-    var_res <- broom.mixed::tidy(mod, scales = "vcov",  effects = "ran_pars") %>%
-        dplyr::filter(.data$group == "Residual") %>%
-        .[["estimate"]]
+    var_res <- attr(lme4::VarCorr(mod), "sc")^2
 
     # fixed effect variance
     var_fix <- stats::var(stats::predict(mod, re.form=NA))
@@ -78,8 +70,6 @@ var_comps_poisson <- function(mod, expct) {
 
     # random effects
     var_ran <- get_ran_var(mod)
-    #old
-    #var_ran <- broom.mixed::tidy(mod, scales = "vcov", effects = "ran_pars")
 
     # fixed effect variance
     var_fix <- stats::var(stats::predict(mod, re.form=NA))
@@ -121,14 +111,6 @@ var_comps_poisson <- function(mod, expct) {
 #' @export
 #'
 var_comps_proportion <- function(mod, expct) {
-
-    # random effect variance
-    var_ran <- broom.mixed::tidy(mod, scales = "vcov",  effects = "ran_pars") %>%
-        # unclear whether overdisp is in or excluded here!
-        dplyr::filter(.data$group != "overdisp") %>%
-        dplyr::summarise(sum(.data$estimate)) %>%
-        unname() %>%
-        unlist()
 
     # random effects
     var_ran <- get_ran_var(mod)
