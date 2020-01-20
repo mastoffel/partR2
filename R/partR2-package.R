@@ -1,5 +1,21 @@
-#' \code{partR2} package
-#' R2, commonality coefficients and structure coefficients for mixed models
+#' partR2: partitioning R2 in mixed models
+#'
+#' partR2 provides R2, partitioned R2s, structure coefficients and
+#' estimates for for mixed models.
+#'
+#' It's main goals are:
+#'
+#' \itemize{
+#' \item Estimate marginal and conditional R2 for LMMs and GLMMs.
+#' \item Partition the R2 into variance explained uniquely by each predictor
+#' and variance explained by a combination of predictors.
+#' \item Provide structure coefficients (the correlation between each
+#' predictor and the predicted response, independent of the other predictors)
+#' \item Report model estimates (based on the broom.mixed package)
+#' \item Use parametric bootstrapping to get confidence intervals for
+#' all estimates.
+#' }
+#'
 #'
 #' @references
 #'
@@ -9,10 +25,12 @@
 #' Newton, R. G., & Spurrell, D. J. (1967).  \emph{A development of multiple regression for the
 #' analysis of routine data. Applied Statistics}. 51-64.
 #'
+#' @importFrom rlang .data
+#'
 #' @docType package
-#' @name partR2
-#' @importFrom dplyr %>%
-NULL
+#'
+#' @aliases partR2-package
+"_PACKAGE"
 
 ## quiets concerns of R CMD check re: the .'s that appear in pipelines
 if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
