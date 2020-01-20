@@ -180,14 +180,14 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
 
         if (R2_type == "marginal") {
             R2_out <- var_comps %>%
-                dplyr::mutate(R2 = var_fix /
-                                  (var_fix + var_ran + var_res)) %>%
-                dplyr::select(R2)
+                dplyr::mutate(R2 = .data$var_fix /
+                             (.data$var_fix + .data$var_ran + .data$var_res)) %>%
+                dplyr::select(.data$R2)
         } else if (R2_type == "conditional") {
             R2_out <- var_comps %>%
-                dplyr::mutate(R2 = (var_fix  + var_ran) /
-                           (var_fix + var_ran + var_res)) %>%
-                dplyr::select(R2)
+                dplyr::mutate(R2 = (.data$var_fix  + .data$var_ran) /
+                             (.data$var_fix + .data$var_ran + .data$var_res)) %>%
+                dplyr::select(.data$R2)
         }
         R2_out
     }
@@ -200,7 +200,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         if (!partition) return(R2_full)
         # calculate R2s of reduced models and difference with full model
         R2s_red <- purrr::map_df(all_comb, R2_of_red_mod, mod, R2_pe, expct) %>%
-                   dplyr::mutate(R2 = R2_full$R2 - R2) %>%
+                   dplyr::mutate(R2 = R2_full$R2 - .data$R2) %>%
                    dplyr::bind_rows(R2_full, .)
     }
 

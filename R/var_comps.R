@@ -44,13 +44,13 @@ var_comps_proportion <- function(mod, expct) {
     # random effect variance
     var_ran <- broom.mixed::tidy(mod, scales = "vcov",  effects = "ran_pars") %>%
         # unclear whether overdisp is in or excluded here!
-        dplyr::filter(group != "overdisp") %>%
-        dplyr::summarise(sum(estimate)) %>%
+        dplyr::filter(.data$group != "overdisp") %>%
+        dplyr::summarise(sum(.data$estimate)) %>%
         unname() %>%
         unlist()
 
     var_overdisp <- broom.mixed::tidy(mod, scales = "vcov",  effects = "ran_pars") %>%
-        dplyr::filter(group == "overdisp") %>%
+        dplyr::filter(.data$group == "overdisp") %>%
         .$estimate
 
     # intercept on link scale
@@ -78,6 +78,11 @@ var_comps_proportion <- function(mod, expct) {
         }
         var_res <- var_overdisp + estdv_link
     }
+
+    # Helper function
+    # inverf based on posting by sundar on R-help
+    # https://stat.ethz.ch/pipermail/r-help/2006-June/108153.html
+    inverf <- function(x) stats::qnorm((x + 1)/2)/sqrt(2)
 
     if (mod_fam[["link"]] == "probit"){
         if (expct == "latent") {
@@ -114,7 +119,7 @@ var_comps_binary <- function(mod, expct) {
 
     # random effect variance
     var_ran <- broom.mixed::tidy(mod, scales = "vcov",  effects = "ran_pars") %>%
-        dplyr::summarise(sum(estimate)) %>%
+        dplyr::summarise(sum(.data$estimate)) %>%
         unname() %>%
         unlist()
 
@@ -128,7 +133,6 @@ var_comps_binary <- function(mod, expct) {
     mod_fam <- stats::family(mod)
 
     if (mod_fam[["link"]] == "logit") {
-        # if(expct=="latent") Ep <- stats::plogis(beta0*sqrt(1+((16*sqrt(3))/(15*pi))^2*(sum(VarComps[,"vcov"])+var_f))^-1)
         if (expct=="latent") {
             Ep <- stats::plogis(beta0*sqrt(1+((16*sqrt(3))/(15*pi))^2*(var_ran + var_fix))^-1)
             estdv_link <- 1 / (Ep*(1-Ep))
@@ -143,6 +147,11 @@ var_comps_binary <- function(mod, expct) {
         }
         var_res <-  estdv_link
     }
+
+    # Helper function
+    # inverf based on posting by sundar on R-help
+    # https://stat.ethz.ch/pipermail/r-help/2006-June/108153.html
+    inverf <- function(x) stats::qnorm((x + 1)/2)/sqrt(2)
 
     if (mod_fam[["link"]] == "probit"){
         if (expct == "latent") {
@@ -179,14 +188,14 @@ var_comps_gaussian <- function(mod, ...) {
 
     # random effect variance
     var_ran <- broom.mixed::tidy(mod, scales = "vcov",  effects = "ran_pars") %>%
-        dplyr::filter(group != "Residual") %>%
-        dplyr::summarise(sum(estimate)) %>%
+        dplyr::filter(.data$group != "Residual") %>%
+        dplyr::summarise(sum(.data$estimate)) %>%
         unname() %>%
         unlist()
 
     # residual variance
     var_res <- broom.mixed::tidy(mod, scales = "vcov",  effects = "ran_pars") %>%
-        dplyr::filter(group == "Residual") %>%
+        dplyr::filter(.data$group == "Residual") %>%
         .[["estimate"]]
 
     # fixed effect variance
@@ -228,15 +237,15 @@ var_comps_poisson <- function(mod, expct) {
     if (mod_fam[["link"]] == "log") {
         if(expct=="meanobs") EY <- mean(mod@resp$y, na.rm=TRUE)
         # should overdisp be included here? probably yes
-        if(expct=="latent") EY <- exp(beta0 + (sum(var_ran$estimate) + var_f)/2)
+        if(expct=="latent") EY <- exp(beta0 + (sum(var_ran$estimate) + var_fix)/2)
         # residual variance
         var_res <- overdisp_est + log(1/EY+1)
     }
 
     # random effect variance without overdispersion
     var_ran_wo_overdisp <- var_ran %>%
-        dplyr::filter(group != "overdisp") %>%
-        dplyr::summarise(sum(estimate)) %>%
+        dplyr::filter(.data$group != "overdisp") %>%
+        dplyr::summarise(sum(.data$estimate)) %>%
         unname() %>%
         unlist()
 

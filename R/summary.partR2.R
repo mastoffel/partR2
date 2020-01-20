@@ -1,8 +1,9 @@
-#' Print a partR2 object
+#' Complete summary of a partR2 object
 #'
-#' Displays the results a partR2object (i.e. the result of a partR2 function call) in a nice form.
+#' Displays the complete results a partR2object (i.e. the result of a partR2 function call)
+#' which includes R2, partial R2, model estimates and structure coefficients.
 #'
-#' @param x An partR2 object returned from one of the partR2 functions
+#' @param object An partR2 object returned from one of the partR2 functions
 #' @param \dots Additional arguments; none are used in this method.
 #'
 #'
@@ -25,7 +26,7 @@
 #'
 #'
 #'
-print.partR2 <- function(x, ...) {
+summary.partR2 <- function(object, ...) {
 
     # prep
     CI_range <- paste0(sub('.*\\.', '', x$CI), "%")
@@ -37,19 +38,42 @@ print.partR2 <- function(x, ...) {
     cat(paste0("R2 (", x$R2_type, ") and CI (",CI_range ,") for the full model: \n"))
     print(x$R2_pe_ci[1, 2:4], row.names = FALSE, digits = 3, right = FALSE)
     #cat(paste0("R2 = ", round(x$R2$R2, 3), ", CI = [", round(x$R2$lower, 3), ", ", round(x$R2$upper, 3), "]"))
+
     cat("\n")
     cat("----------")
     cat("\n\n")
+
+    cat("Model estimates:\n")
+    print(x$Ests_pe_ci, row.names = FALSE, digits = 3, right = FALSE)
+
+    cat("\n")
+    cat("----------")
+    cat("\n\n")
+
     cat("Partitioned R2s:\n")
 
     if (nrow(x$R2_pe_ci) == 1) {
         print("No partitions selected.")
     } else {
-    print(x$R2_pe_ci[2:nrow(x$R2_pe_ci), ], row.names = FALSE, digits = 2, right = FALSE)
+        print(x$R2_pe_ci[2:nrow(x$R2_pe_ci), ], row.names = FALSE, digits = 2, right = FALSE)
     }
-#
-#     cat("\n")
-#     cat("----------")
-#     cat("\n\n")
+
+    cat("\n")
+    cat("----------")
+    cat("\n\n")
+
+    cat("Structure coefficients:\n")
+    print(x$SC_pe_ci, row.names = FALSE, digits = 3, right = FALSE)
+
+    cat("\n")
+    cat("----------")
+    cat("\n\n")
+
+    if (!(is.null(x$boot_warnings) & (is.null(x$boot_messages)))) {
+        cat("Parametric bootstrapping resulted in warnings or messages:")
+        cat("\n")
+        cat("Check out$boot_warnings and out$boot_messages, where out is the partR2 output object.")
+        cat("\n\n")
+    }
 
 }
