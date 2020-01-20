@@ -30,6 +30,7 @@
 #' @docType package
 #'
 #' @aliases partR2-package
+#'
 "_PACKAGE"
 
 ## quiets concerns of R CMD check re: the .'s that appear in pipelines
