@@ -31,33 +31,6 @@ with_warnings <- function(expr) {
 }
 
 
-#' Calculates / extracts variance components from random effects and random slopes
-#'
-#' This function uses the method from Paul Johnson to compute the average group
-#' variance across the levels of a covariate.
-#'
-#' @param grname Random effect term, accessed by looping over the RE list produced by lme4::VarCorr().
-#' @param var_comps A list. Output of the lme4::VarCorr() function.
-#' @param mod An lme4 model object.
-#' @keywords internal
-#'
-group_vars <- function(grname, var_comps, mod){
-    # check whether component is a matrix (--> random slopes)
-    if (sum(dim(var_comps[[grname]])) > 2 ){
-        sigma <- var_comps[[grname]]
-        # design matrix subsetted for the elements of sigma
-        if (sum(colnames(sigma) %in% colnames(stats::model.matrix(mod))) != 2) stop("cannot remove
-            the fixed effect for which also random slopes are estimated")
-        Z <- stats::model.matrix(mod)[, colnames(sigma)]
-        # average variance across covariate
-        var_grname <- sum(rowSums((Z %*% sigma) * Z))/stats::nobs(mod)
-    } else {
-        var_grname <- as.numeric(var_comps[[grname]])
-    }
-    var_grname
-}
-
-
 #' Adds an observational level random effect to a model
 #'
 #'
@@ -77,9 +50,11 @@ model_overdisp <- function(mod, dat) {
         # if so, get variable name
         if (sum(overdisp_term) == 1) {
             overdisp <- names(overdisp_term)[overdisp_term]
-            names(data_original[overdisp]) <- "overdisp"
-            message("As an overdispersion term has been fitted already,
-it has been renamed to 'overdisp' for consistency")
+            # rename OLRE to overdisp if not done so already
+            if (!overdisp == "overdisp") {
+                names(data_original[overdisp]) <- "overdisp"
+                message("The OLRE or overdispersion term has been renamed to 'overdisp'")
+            }
         } else if ((sum(overdisp_term) == 0)) {
             data_original$overdisp <- as.factor(1:nrow(data_original))
             mod <- stats::update(mod, . ~ . + (1 | overdisp), data = data_original)

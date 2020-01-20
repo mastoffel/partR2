@@ -85,23 +85,6 @@ mod <- lmer(Biomass ~  Year + Temperature * Precipitation + SpeciesDiversity + (
                                  "Temperature", "Precipitation"),
                                  R2_type = "marginal", nboot = 10, CI = 0.95))
 
-# poisson
-data(BeetlesFemale)
-mod2 <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population),
-             data = BeetlesFemale, family = poisson)
-(partR2(mod2, partvars = c("Habitat", "Treatment"), nboot = 5))
-
-# binomial
-data(BeetlesMale)
-BeetlesMale$Dark <- BeetlesMale$Colour
-BeetlesMale$Reddish <- (BeetlesMale$Colour-1)*-1
-BeetlesColour <- aggregate(cbind(Dark, Reddish) ~ Treatment + Population + Container,
-                          data=BeetlesMale, FUN=sum)
-
-mod3 <- glmer(cbind(Dark,Reddish) ~ Treatment + (1|Population),
-             data = BeetlesColour, family = binomial)
-
-(partR2(mod3, partvars = c("Treatment"), nboot = 5))
 
 
 }

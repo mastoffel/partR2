@@ -42,7 +42,7 @@ get_var_comps <- function(mod, expct) {
 var_comps_gaussian <- function(mod, ...) {
 
     # random effect variance
-    var_ran <- sum(get_ran_var(mod))
+    var_ran <- sum(get_ran_var(mod)$estimate)
     # old
     # var_ran <- broom.mixed::tidy(mod, scales = "vcov",  effects = "ran_pars") %>%
     #     dplyr::filter(.data$group != "Residual") %>%
@@ -77,7 +77,9 @@ var_comps_poisson <- function(mod, expct) {
     beta0 <- unname(lme4::fixef(mod)[1])
 
     # random effects
-    var_ran <- broom.mixed::tidy(mod, scales = "vcov", effects = "ran_pars")
+    var_ran <- get_ran_var(mod)
+    #old
+    #var_ran <- broom.mixed::tidy(mod, scales = "vcov", effects = "ran_pars")
 
     # fixed effect variance
     var_fix <- stats::var(stats::predict(mod, re.form=NA))
@@ -86,25 +88,24 @@ var_comps_poisson <- function(mod, expct) {
     mod_fam <- stats::family(mod)
 
     # overdispersion estimate
-    overdisp_est <- var_ran[var_ran$group == "overdisp", ][["estimate"]]
+    var_overdisp <- var_ran[var_ran$group == "overdisp", ][["estimate"]]
+
+    # remove overdisp from var_ran
+    var_ran <- var_ran[!(var_ran$group == "overdisp"), ]
 
     if (mod_fam[["link"]] == "sqrt") {
-        var_res <- overdisp_est + 0.25
+        var_res <- var_overdisp + 0.25
     }
     if (mod_fam[["link"]] == "log") {
         if(expct=="meanobs") EY <- mean(mod@resp$y, na.rm=TRUE)
-        # should overdisp be included here? probably yes
+        # no overdisp in var_ran
         if(expct=="latent") EY <- exp(beta0 + (sum(var_ran$estimate) + var_fix)/2)
         # residual variance
-        var_res <- overdisp_est + log(1/EY+1)
+        var_res <- var_overdisp + log(1/EY+1)
     }
 
     # random effect variance without overdispersion
-    var_ran_wo_overdisp <- var_ran %>%
-        dplyr::filter(.data$group != "overdisp") %>%
-        dplyr::summarise(sum(.data$estimate)) %>%
-        unname() %>%
-        unlist()
+    var_ran_wo_overdisp <- sum(var_ran$estimate)
 
     out <- data.frame(var_fix = var_fix,
                       var_ran = var_ran_wo_overdisp,
@@ -129,9 +130,14 @@ var_comps_proportion <- function(mod, expct) {
         unname() %>%
         unlist()
 
-    var_overdisp <- broom.mixed::tidy(mod, scales = "vcov",  effects = "ran_pars") %>%
-        dplyr::filter(.data$group == "overdisp") %>%
-        .$estimate
+    # random effects
+    var_ran <- get_ran_var(mod)
+
+    # overdisp
+    var_overdisp <- var_ran[var_ran$group == "overdisp", "estimate"]
+
+    # remove overdisp from var_ran
+    var_ran <- var_ran[!(var_ran$group == "overdisp"), ]
 
     # intercept on link scale
     beta0 <- unname(lme4::fixef(mod)[1])
@@ -145,7 +151,8 @@ var_comps_proportion <- function(mod, expct) {
     if (mod_fam[["link"]] == "logit") {
         # if(expct=="latent") Ep <- stats::plogis(beta0*sqrt(1+((16*sqrt(3))/(15*pi))^2*(sum(VarComps[,"vcov"])+var_f))^-1)
         if (expct=="latent") {
-            Ep <- stats::plogis(beta0*sqrt(1+((16*sqrt(3))/(15*pi))^2*(var_ran + var_fix))^-1)
+            # should overdisp be included here? probably yes #### check
+            Ep <- stats::plogis(beta0*sqrt(1+((16*sqrt(3))/(15*pi))^2*(sum(var_ran$estimate) + var_fix))^-1)
             estdv_link <- 1 / (Ep*(1-Ep))
         }
         if (expct=="meanobs") {
@@ -198,10 +205,7 @@ var_comps_proportion <- function(mod, expct) {
 var_comps_binary <- function(mod, expct) {
 
     # random effect variance
-    var_ran <- broom.mixed::tidy(mod, scales = "vcov",  effects = "ran_pars") %>%
-        dplyr::summarise(sum(.data$estimate)) %>%
-        unname() %>%
-        unlist()
+    var_ran <- sum(get_ran_var(mod)$estimate)
 
     # intercept on link scale
     beta0 <- unname(lme4::fixef(mod)[1])
@@ -256,9 +260,6 @@ var_comps_binary <- function(mod, expct) {
 }
 
 
-
-
-
 #' Estimates random effect variance from random slope models
 #'
 #' This function computes the sum of random effect variances where one
@@ -289,9 +290,9 @@ get_ran_var <- function(mod){
         var_grname
     }
 
-    # sum up all random effect variances
-    var_raneffs <- stats::setNames(purrr::map_dbl(grnames, var_raneff, var_comps),
-                                   grnames)
+    # random effect variances
+    var_raneffs <- data.frame(group = grnames,
+                              estimate = purrr::map_dbl(grnames, var_raneff, var_comps))
 
     var_raneffs
 

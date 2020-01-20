@@ -28,6 +28,7 @@
 #'
 summary.partR2 <- function(object, ...) {
 
+    x <- object
     # prep
     CI_range <- paste0(sub('.*\\.', '', x$CI), "%")
     names(x$R2_pe_ci) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper")
