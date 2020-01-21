@@ -44,6 +44,7 @@ model_overdisp <- function(mod, dat) {
     mod_fam <- stats::family(mod)[[1]]
     resp <- lme4::getME(mod, "y")
     data_original <- dat
+
     if (mod_fam == "poisson" | ((mod_fam == "binomial") & (length(table(resp)) > 2))) {
         # check if OLRE already there
         overdisp_term <- lme4::getME(mod, "l_i") == nrow(data_original)
@@ -64,6 +65,7 @@ to account for overdispersion.")
     }
     out <- list(mod = mod, dat = data_original)
 }
+
 
 
 #' Calculates CI from bootstrap replicates
@@ -112,5 +114,40 @@ R2_of_red_mod <- function(partvar, mod, R2_pe, expct) {
 
 
 
+
+#Adds an observational level random effect to a model
+#
+#
+##' @param mod merMod object.
+##' @param dat The underlying data.frame
+##' @keywords internal
+##' @export
+##'
+#model_overdisp2 <- function(mod) {
+#    # family
+#    mod_fam <- stats::family(mod)[[1]]
+#    resp <- lme4::getME(mod, "y")
+#
+#    if (mod_fam == "poisson" | ((mod_fam == "binomial") & (length(table(resp)) > 2))) {
+#        # check if OLRE already there
+#        overdisp_term <- lme4::getME(mod, "l_i") == stats::nobs(mod)
+#        # if so, get variable name
+#        if (sum(overdisp_term) == 1) {
+#            overdisp_name <- names(overdisp_term)[overdisp_term]
+#            mod <- stats::update(mod, eval(paste(". ~ . ", paste("- (1 |", overdisp_name, ")"))))
+#            overdisp <- as.factor(1:stats::nobs(mod))
+#            mod <- stats::update(mod, . ~ . + (1 | overdisp))
+#            # rename OLRE to overdisp if not done so already
+#            message("The OLRE or overdispersion term has been renamed to 'overdisp',
+#                    it is recommended to call it overdisp from the start.")
+#        } else if ((sum(overdisp_term) == 0)) {
+#            overdisp <- as.factor(1:stats::nobs(mod))
+#            mod <- stats::update(mod, . ~ . + (1 | overdisp))
+#            message("An observational level random-effect has been fitted
+#to account for overdispersion.")
+#        }
+#    }
+#    return(mod)
+#}
 
 

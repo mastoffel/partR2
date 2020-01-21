@@ -86,8 +86,9 @@ var_comps_poisson <- function(mod, expct) {
     # overdispersion estimate
     var_overdisp <- var_ran[var_ran$group == "overdisp", ][["estimate"]]
 
-    # remove overdisp from var_ran
+    # remove overdisp from var_ran and sum up
     var_ran <- var_ran[!(var_ran$group == "overdisp"), ]
+    var_ran <- sum(var_ran$estimate)
 
     if (mod_fam[["link"]] == "sqrt") {
         var_res <- var_overdisp + 0.25
@@ -95,16 +96,13 @@ var_comps_poisson <- function(mod, expct) {
     if (mod_fam[["link"]] == "log") {
         if(expct=="meanobs") EY <- mean(mod@resp$y, na.rm=TRUE)
         # no overdisp in var_ran
-        if(expct=="latent") EY <- exp(beta0 + (sum(var_ran$estimate) + var_fix)/2)
+        if(expct=="latent") EY <- exp(beta0 + (var_ran + var_fix)/2)
         # residual variance
         var_res <- var_overdisp + log(1/EY+1)
     }
 
-    # random effect variance without overdispersion
-    var_ran_wo_overdisp <- sum(var_ran$estimate)
-
     out <- data.frame(var_fix = var_fix,
-                      var_ran = var_ran_wo_overdisp,
+                      var_ran = var_ran,
                       var_res = var_res)
 }
 
@@ -126,6 +124,8 @@ var_comps_proportion <- function(mod, expct) {
 
     # remove overdisp from var_ran
     var_ran <- var_ran[!(var_ran$group == "overdisp"), ]
+    # calc sum
+    var_ran <- sum(var_ran$estimate)
 
     # intercept on link scale
     beta0 <- unname(lme4::fixef(mod)[1])
@@ -140,7 +140,7 @@ var_comps_proportion <- function(mod, expct) {
         # if(expct=="latent") Ep <- stats::plogis(beta0*sqrt(1+((16*sqrt(3))/(15*pi))^2*(sum(VarComps[,"vcov"])+var_f))^-1)
         if (expct=="latent") {
             # should overdisp be included here? probably yes #### check
-            Ep <- stats::plogis(beta0*sqrt(1+((16*sqrt(3))/(15*pi))^2*(sum(var_ran$estimate) + var_fix))^-1)
+            Ep <- stats::plogis(beta0*sqrt(1+((16*sqrt(3))/(15*pi))^2*(var_ran + var_fix))^-1)
             estdv_link <- 1 / (Ep*(1-Ep))
         }
         if (expct=="meanobs") {

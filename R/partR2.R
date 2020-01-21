@@ -138,7 +138,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
     resp <- lme4::getME(mod, "y")
 
     # check if cbind created a matrix as first data.frame column
-    ## this has to be checked
+    # this has to be checked
     any_mat <- purrr::map_lgl(data_original, is.matrix)
     if (any(any_mat)) {
         data_original <- cbind(as.data.frame(data_original[[which(any_mat)]]),
@@ -273,7 +273,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
                 purrr::pmap_df(function(...) calc_CI(c(...), CI)) %>%
                 cbind(model_ests_full[1:4], .)
 
-    sc_cis <- purrr::map_df(boot_scs, calc_CI, 0.95, .id = "parts") %>%
+    sc_cis <- purrr::map_df(boot_scs, calc_CI, CI, .id = "parts") %>%
               tibble::add_column(SC = as.numeric(SC_org), .after = "parts")
 
     res <- list(call = mod@call,

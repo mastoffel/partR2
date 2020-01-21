@@ -18,7 +18,7 @@ test_that("Binary models with increasing complexity do not throw errors", {
     expect_equal(r2_mod1_1$R2_pe_ci$R2, 0.067, tolerance = 0.01)
     # ci
     expect_equal(r2_mod1_2$R2_pe_ci$CI_lower, 0.044, tolerance = 0.01)
-    expect_equal(r2_mod1_2$R2_pe_ci$CI_upper, 0.093, tolerance = 0.01)
+    expect_equal(r2_mod1_2$R2_pe_ci$CI_upper, 0.126, tolerance = 0.01)
     # R2 one partvar
     expect_equal(r2_mod1_3$R2_pe_ci$R2, c(0.067, 0.047), tolerance = 0.01)
     # R2 two partvars
@@ -28,4 +28,28 @@ test_that("Binary models with increasing complexity do not throw errors", {
     expect_equal(r2_mod1_4$R2_pe_ci$R2[length(r2_mod1_4$R2_pe_ci$R2)],
                  r2_mod1_4$R2_pe_ci$R2[1], tolerance = 0.001)
 })
+
+# proportion
+data(BeetlesMale)
+
+# prepare proportion data
+BeetlesMale$Dark <- BeetlesMale$Colour
+BeetlesMale$Reddish <- (BeetlesMale$Colour-1)*-1
+BeetlesColour <- aggregate(cbind(Dark, Reddish) ~ Treatment + Population + Container,
+     data=BeetlesMale, FUN=sum)
+
+mod2 <- glmer(cbind(Dark, Reddish) ~ Treatment + (1|Container) + (1|Population),
+              family = "binomial", data = BeetlesColour)
+
+set.seed(134)
+# only R2 pe
+r2_mod2_1 <- partR2(mod2)
+r2_mod2_2 <- partR2(mod2, nboot = 10)
+
+
+
+
+
+
+
 
