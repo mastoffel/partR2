@@ -12,6 +12,10 @@ get_var_comps <- function(mod, expct) {
     fam <- stats::family(mod)[["family"]]
     #if (is.null(expct)) expct <- "meanobs"
 
+    if (!(fam %in% c("gaussian", "poisson", "binomial"))) {
+        stop("Currently, only gaussian, poisson and binomial models are supported")
+    }
+
     if (fam == "gaussian") {
         out <- var_comps_gaussian(mod)
     }
@@ -19,10 +23,12 @@ get_var_comps <- function(mod, expct) {
         out <- var_comps_poisson(mod, expct)
     }
     if (fam == "binomial"){
-        if (length(table(lme4::getME(mod, "y")) < 3)) {
+        # check if binary
+        if (length(table(lme4::getME(mod, "y"))) < 3) {
             out <- var_comps_binary(mod, expct)
         }
-        if (length(table(lme4::getME(mod, "y")) > 2)) {
+        # if not binary
+        if (length(table(lme4::getME(mod, "y"))) >= 3) {
             out <- var_comps_proportion(mod, expct)
         }
     }

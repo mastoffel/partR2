@@ -98,7 +98,8 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
     }
 
     # check whether partvars are fixed effects
-    # don't look at interactions for now
+    # check fixed effect names
+    # This is wrong
     fixed_terms <- names(lme4::fixef(mod))
     if (!(all(partvars[-grep(":", partvars)] %in% fixed_terms))) {
         stop("partvars have to be fixed effects")
@@ -126,7 +127,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
 
     # names for partitions
     if (partition) {
-        part_terms <- c("Full", unlist(lapply(all_comb, paste,   collapse = "+")))
+        part_terms <- c("Full", unlist(lapply(all_comb, paste, collapse = "+")))
     } else if (!partition) {
         part_terms <- "Full"
     }
@@ -149,7 +150,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
     mod <- overdisp_out$mod
     data_original <- overdisp_out$dat
 
-    # extract some essential infor
+    # extract some essential info
     formula_full <- stats::formula(mod)
     model_ests_full <- broom.mixed::tidy(mod)
 

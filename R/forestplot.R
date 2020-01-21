@@ -15,13 +15,12 @@
 #' @keywords models
 #'
 #' @import ggplot2 dplyr
-#' @importFrom rlang .data
 #' @export
 #'
 #'
 
 
-forestplot.partR2 <- function(x, type = c("R2", "Ests", "SC")) {
+forestplot <- function(x, type = c("R2", "Ests", "SC")) {
 
     if (length(type) > 1) type <- type[1]
     to_plot <- paste0(type, "_pe_ci")

@@ -39,3 +39,4 @@ test_that("Gaussian models with increasing complexity do not throw errors", {
 
 })
 
+
