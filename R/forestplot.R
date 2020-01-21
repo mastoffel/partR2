@@ -53,13 +53,13 @@ forestplot <- function(x, type = c("R2", "Ests", "SC")) {
         geom_vline(xintercept = 0, color = "black", alpha = 0.1) +
         geom_point(size = 3, shape = 21, col = "black", fill = "grey69",
                    alpha = 1) +
-        theme_minimal(base_size = 10) +
+        theme_minimal(base_size = 11) +
         theme(
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
             axis.line.x = element_line(),
             axis.title.y = element_blank(),
-            text = element_text(size = 15)
+            text = element_text(size = 11)
         ) +
         xlab(x_label)
     # if bootstrap plot errorbars

@@ -193,7 +193,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
     # # structure coefficients function
     SC_pe <- function(mod) {
         # question: always return all structure coefficients?
-        if (is.null(partvars)) return(data.frame(no_partvars = NA))
+        # if (is.null(partvars)) return(data.frame(no_partvars = NA))
         Yhat <- stats::predict(mod)
         mod_mat <-stats::model.matrix(mod)
         # only calculate SC for partvars
