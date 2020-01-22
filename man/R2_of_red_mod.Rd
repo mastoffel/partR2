@@ -4,7 +4,7 @@
 \alias{R2_of_red_mod}
 \title{Calculate R2 from a reduced model}
 \usage{
-R2_of_red_mod(partvar, mod, R2_pe, expct)
+R2_of_red_mod(partvar, mod, R2_pe, data, expct)
 }
 \arguments{
 \item{partvar}{One or more fixed effect variables which are taken out

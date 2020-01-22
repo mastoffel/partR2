@@ -65,6 +65,7 @@ var_comps_gaussian <- function(mod, ...) {
 #'
 #' @param mod merMod object with poisson family.
 #' @param expct "meanobs" or "latent". "latent" recommended.
+#'
 #' @keywords internal
 #' @return Fixed, random and residual variance
 #' @export
@@ -86,9 +87,12 @@ var_comps_poisson <- function(mod, expct) {
     # overdispersion estimate
     var_overdisp <- var_ran[var_ran$group == "overdisp", ][["estimate"]]
 
-    # remove overdisp from var_ran and sum up
-    var_ran <- var_ran[!(var_ran$group == "overdisp"), ]
+    # sum up random effects
     var_ran <- sum(var_ran$estimate)
+
+    # remove overdisp from var_ran and sum up
+    # var_ran <- var_ran[!(var_ran$group == "overdisp"), ]
+    # var_ran <- sum(var_ran$estimate)
 
     if (mod_fam[["link"]] == "sqrt") {
         var_res <- var_overdisp + 0.25
@@ -123,7 +127,7 @@ var_comps_proportion <- function(mod, expct) {
     var_overdisp <- var_ran[var_ran$group == "overdisp", "estimate"]
 
     # remove overdisp from var_ran
-    var_ran <- var_ran[!(var_ran$group == "overdisp"), ]
+    # var_ran <- var_ran[!(var_ran$group == "overdisp"), ]
     # calc sum
     var_ran <- sum(var_ran$estimate)
 

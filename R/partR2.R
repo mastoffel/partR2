@@ -3,6 +3,8 @@
 #' R2, commonality coefficients and structure coefficients for gaussian lme4 models.
 #' @param mod merMod object fitted with lme4.
 #' @param partvars Character vector specifying the predictors for which to partition the R2.
+#' @param data data.frame used to fit the lme4 model. Has to be provided because
+#' the model is refitted to calculate partial R2s.
 #' @param R2_type "marginal" or "conditional" R2.
 #' @param cc_level Level up to which commonality coefficients are calculated.
 #'        The number of sets for which to calculate partial R2 increases exponantially,
@@ -65,19 +67,20 @@
 #' mod <- lmer(Biomass ~  Year + Temperature * Precipitation + SpeciesDiversity + (1|Population),
 #'             data = biomass)
 #' # Only R2 with CI
-#' (R2 <- partR2(mod, R2_type = "marginal", nboot = 15, CI = 0.95))
+#' (R2 <- partR2(mod, data = biomass, R2_type = "marginal", nboot = 15, CI = 0.95))
 #'
 #' # Partitioned R2
-#' (R2 <- partR2(mod,  partvars = c("SpeciesDiversity", "Temperature:Precipitation",
-#'                                  "Temperature", "Precipitation"),
-#'                                  R2_type = "marginal", nboot = 10, CI = 0.95))
+#' (R2 <- partR2(mod,  data = biomass,
+#'              partvars = c("SpeciesDiversity", "Temperature:Precipitation",
+#'                           "Temperature", "Precipitation"),
+#'              R2_type = "marginal", nboot = 10, CI = 0.95))
 #'
 #'
 #'
 #' @export
 
 
-partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
+partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_level = NULL,
                    nboot = NULL, CI = 0.95, parallel = FALSE, ncores = NULL,
                    expct = "meanobs"){
 
@@ -97,9 +100,16 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         if (is.null(ncores)) ncores <- parallel::detectCores()-1
     }
 
+    # check if data is there
+    if (is.null(data)) {
+        dat_name <- deparse(mod@call$data)
+        stop(paste0("data ", dat_name, " cannot be found. Please provide data argument"))
+    }
+   data_org <- data
+
     # check whether partvars are fixed effects
     # check fixed effect names
-    # This is wrong
+    # This has to be checked, dont think it works ATM
     fixed_terms <- names(lme4::fixef(mod))
     if (!(all(partvars[-grep(":", partvars)] %in% fixed_terms))) {
         stop("partvars have to be fixed effects")
@@ -132,26 +142,24 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         part_terms <- "Full"
     }
 
-    # get data, family and response variable
-    data_original <- stats::model.frame(mod)
+    # get family and response variable
     mod_fam <- stats::family(mod)[[1]]
     resp <- lme4::getME(mod, "y")
 
     # check if cbind created a matrix as first data.frame column
     # this has to be checked
-    any_mat <- purrr::map_lgl(data_original, is.matrix)
-    if (any(any_mat)) {
-        data_original <- cbind(as.data.frame(data_original[[which(any_mat)]]),
-                               data_original[(which(any_mat)+1):ncol(data_original)])
-    }
+    # any_mat <- purrr::map_lgl(data_org, is.matrix)
+    # if (any(any_mat)) {
+    #     data_org <- cbind(as.data.frame(data_org[[which(any_mat)]]),
+    #                            data_org[(which(any_mat)+1):ncol(data_org)])
+    # }
 
     # overdispersion
-    overdisp_out <- model_overdisp(mod, dat = data_original)
+    overdisp_out <- model_overdisp(mod = mod, dat = data_org)
     mod <- overdisp_out$mod
-    data_original <- overdisp_out$dat
+    data_mod <- overdisp_out$dat
 
     # extract some essential info
-    formula_full <- stats::formula(mod)
     model_ests_full <- broom.mixed::tidy(mod)
 
     # R2
@@ -181,7 +189,8 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         R2_full <- R2_pe(mod, expct)
         if (!partition) return(R2_full)
         # calculate R2s of reduced models and difference with full model
-        R2s_red <- purrr::map_df(all_comb, R2_of_red_mod, mod, R2_pe, expct) %>%
+        R2s_red <- purrr::map_df(all_comb, R2_of_red_mod, mod = mod,
+                                 R2_pe = R2_pe, data = data_mod, expct = expct) %>%
                    dplyr::mutate(R2 = R2_full$R2 - .data$R2) %>%
                    dplyr::bind_rows(R2_full, .)
     }
@@ -195,7 +204,7 @@ partR2 <- function(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
         # question: always return all structure coefficients?
         # if (is.null(partvars)) return(data.frame(no_partvars = NA))
         Yhat <- stats::predict(mod)
-        mod_mat <-stats::model.matrix(mod)
+        mod_mat <- stats::model.matrix(mod)
         # only calculate SC for partvars
         mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop=FALSE]
         #message("SC for factors with more than two levels do not make sense at the moment")

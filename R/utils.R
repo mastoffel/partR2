@@ -43,27 +43,26 @@ model_overdisp <- function(mod, dat) {
     # family
     mod_fam <- stats::family(mod)[[1]]
     resp <- lme4::getME(mod, "y")
-    data_original <- dat
 
     if (mod_fam == "poisson" | ((mod_fam == "binomial") & (length(table(resp)) > 2))) {
         # check if OLRE already there
-        overdisp_term <- lme4::getME(mod, "l_i") == nrow(data_original)
+        overdisp_term <- lme4::getME(mod, "l_i") == nrow(dat)
         # if so, get variable name
         if (sum(overdisp_term) == 1) {
             overdisp <- names(overdisp_term)[overdisp_term]
             # rename OLRE to overdisp if not done so already
             if (!overdisp == "overdisp") {
-                names(data_original[overdisp]) <- "overdisp"
+                names(dat[overdisp]) <- "overdisp"
                 message("The OLRE or overdispersion term has been renamed to 'overdisp'")
             }
         } else if ((sum(overdisp_term) == 0)) {
-            data_original$overdisp <- as.factor(1:nrow(data_original))
-            mod <- stats::update(mod, . ~ . + (1 | overdisp), data = data_original)
+            dat$overdisp <- as.factor(1:nrow(dat))
+            mod <- stats::update(mod, . ~ . + (1 | overdisp), data = dat)
             message("An observational level random-effect has been fitted
 to account for overdispersion.")
         }
     }
-    out <- list(mod = mod, dat = data_original)
+    out <- list(mod = mod, dat = dat)
 }
 
 
@@ -98,14 +97,14 @@ calc_CI <- function(x, CI) {
 #' @return R2 of reduced model.
 #' @export
 #'
-R2_of_red_mod <- function(partvar, mod, R2_pe, expct) {
+R2_of_red_mod <- function(partvar, mod, R2_pe, data, expct) {
 
     # which variables to reduce?
     to_del <- paste(paste("-", partvar, sep= ""), collapse = " ")
     # reduced formula
     formula_red <- stats::update(stats::formula(mod), paste(". ~ . ", to_del, sep=""))
     # fit reduced model
-    mod_red <-  stats::update(mod, formula. = formula_red)
+    mod_red <-  stats::update(mod, formula. = formula_red, data = data)
     # reduced model R2
     R2_red <- R2_pe(mod_red, expct)
 

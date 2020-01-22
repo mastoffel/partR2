@@ -4,14 +4,17 @@
 \alias{partR2}
 \title{Partition the R2 for Gaussian mixed models}
 \usage{
-partR2(mod, partvars = NULL, R2_type = "marginal", cc_level = NULL,
-  nboot = NULL, CI = 0.95, parallel = FALSE, ncores = NULL,
-  expct = "meanobs")
+partR2(mod, partvars = NULL, data = NULL, R2_type = "marginal",
+  cc_level = NULL, nboot = NULL, CI = 0.95, parallel = FALSE,
+  ncores = NULL, expct = "meanobs")
 }
 \arguments{
 \item{mod}{merMod object fitted with lme4.}
 
 \item{partvars}{Character vector specifying the predictors for which to partition the R2.}
+
+\item{data}{data.frame used to fit the lme4 model. Has to be provided because
+the model is refitted to calculate partial R2s.}
 
 \item{R2_type}{"marginal" or "conditional" R2.}
 
@@ -75,12 +78,13 @@ library(lme4)
 mod <- lmer(Biomass ~  Year + Temperature * Precipitation + SpeciesDiversity + (1|Population),
             data = biomass)
 # Only R2 with CI
-(R2 <- partR2(mod, R2_type = "marginal", nboot = 15, CI = 0.95))
+(R2 <- partR2(mod, data = biomass, R2_type = "marginal", nboot = 15, CI = 0.95))
 
 # Partitioned R2
-(R2 <- partR2(mod,  partvars = c("SpeciesDiversity", "Temperature:Precipitation",
-                                 "Temperature", "Precipitation"),
-                                 R2_type = "marginal", nboot = 10, CI = 0.95))
+(R2 <- partR2(mod,  data = biomass,
+             partvars = c("SpeciesDiversity", "Temperature:Precipitation",
+                          "Temperature", "Precipitation"),
+             R2_type = "marginal", nboot = 10, CI = 0.95))
 
 
 

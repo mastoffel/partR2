@@ -9,14 +9,14 @@ mod1 <- lmer(Biomass ~  Year + Temperature * Precipitation + SpeciesDiversity + 
 
 set.seed(923)
 # only R2 pe
-r2_mod1_1 <- partR2(mod1)
-r2_mod1_2 <- partR2(mod1, nboot = 10)
-r2_mod1_3 <- partR2(mod1, partvars = c("SpeciesDiversity"))
-r2_mod1_4 <- partR2(mod1, partvars = c("SpeciesDiversity", "Year"))
-r2_mod1_5 <- partR2(mod1, partvars = c("Temperature:Precipitation"))
-r2_mod1_6 <- partR2(mod1, partvars = c("Temperature*Precipitation",
+r2_mod1_1 <- partR2(mod1, data = biomass)
+r2_mod1_2 <- partR2(mod1, nboot = 10, data = biomass)
+r2_mod1_3 <- partR2(mod1, data = biomass, partvars = c("SpeciesDiversity"))
+r2_mod1_4 <- partR2(mod1, data = biomass, partvars = c("SpeciesDiversity", "Year"))
+r2_mod1_5 <- partR2(mod1, data = biomass, partvars = c("Temperature:Precipitation"))
+r2_mod1_6 <- partR2(mod1, data = biomass, partvars = c("Temperature*Precipitation",
                                        "Year", "SpeciesDiversity"))
-r2_mod1_7 <-  partR2(mod1, nboot = 4, parallel = TRUE)
+r2_mod1_7 <-  partR2(mod1, data = biomass, nboot = 4, parallel = TRUE)
 
 #r2_mod1_6 <- partR2(mod1, partvars = c("Temperature*Precipitation"))
 test_that("Gaussian models with increasing complexity do not throw errors", {
