@@ -49,9 +49,9 @@ r2_mod2_2 <- partR2(mod2, data = BeetlesColour, nboot = 10)
 r2_mod2_3 <- partR2(mod2, data = BeetlesColour, partvars = c("Treatment"))
 r2_mod2_4 <- partR2(mod2, data = BeetlesColour, nboot = 10, parallel = TRUE)
 
-test_that("Binary models with increasing complexity give correct answers", {
+test_that("Proportion models with increasing complexity give correct answers", {
     # pe
-    expect_equal(r2_mod2_1$R2_pe_ci$R2, 0.0455, tolerance = 0.01)
+    expect_equal(r2_mod2_1$R2_pe_ci$R2, 0.0457, tolerance = 0.01)
     # ci
     expect_equal(r2_mod2_2$R2_pe_ci$CI_lower, 0.013, tolerance = 0.01)
     expect_equal(r2_mod2_2$R2_pe_ci$CI_upper, 0.071, tolerance = 0.01)

@@ -22,6 +22,11 @@
 
 forestplot <- function(x, type = c("R2", "Ests", "SC")) {
 
+    if (!requireNamespace("ggplot2", quietly = TRUE)) {
+        stop("Package \"ggplot2\" needed for this function to work. Please install it.",
+             call. = FALSE)
+    }
+
     if (length(type) > 1) type <- type[1]
     to_plot <- paste0(type, "_pe_ci")
     mod_out <- x[[to_plot]]

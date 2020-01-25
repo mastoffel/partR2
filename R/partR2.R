@@ -238,6 +238,10 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
         }
 
         if (parallel) {
+            if (!requireNamespace("furrr", quietly = TRUE)) {
+                stop("Package \"furrr\" needed for this function to work. Please install it.",
+                     call. = FALSE)
+            }
             if (is.null(ncores)) ncores <- parallel::detectCores()-1
             future::plan(future::multiprocess, workers = ncores)
             boot_r2s_scs_ests <- furrr::future_map(Ysim, bootstr_quiet, mod, expct)

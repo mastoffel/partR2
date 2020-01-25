@@ -45,7 +45,7 @@ summary.partR2 <- function(object, ...) {
     cat("\n\n")
 
     cat("Model estimates:\n")
-    print(x$Ests_pe_ci, row.names = FALSE, digits = 3, right = FALSE)
+    format(x$Ests_pe_ci,  scientific = FALSE, digits = 3)
 
     cat("\n")
     cat("----------")

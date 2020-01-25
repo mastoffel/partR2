@@ -19,7 +19,7 @@ r2_mod1_6 <- partR2(mod1, data = biomass, partvars = c("Temperature*Precipitatio
 r2_mod1_7 <-  partR2(mod1, data = biomass, nboot = 4, parallel = TRUE)
 
 #r2_mod1_6 <- partR2(mod1, partvars = c("Temperature*Precipitation"))
-test_that("Gaussian models with increasing complexity do not throw errors", {
+test_that("Gaussian models with increasing complexity give correct R2s", {
     # pe
     expect_equal(r2_mod1_1$R2_pe_ci$R2, 0.729, tolerance = 0.01)
     # ci
@@ -39,4 +39,18 @@ test_that("Gaussian models with increasing complexity do not throw errors", {
 
 })
 
+# Gaussian data
+mod2 <- lmer(Biomass ~  log(Year) + I(Temperature^2) * Precipitation + SpeciesDiversity + (1|Population),
+             data = biomass)
 
+r2_mod2_1 <- partR2(mod2, data = biomass)
+r2_mod2_2 <-    partR2(mod2, data = biomass, partvars = c("log(Year)", "Precipitation",
+                                                          "I(Temperature^2)",
+                                                          "I(Temperature^2):Precipitation", "SpeciesDiversity"))
+test_that("Predictor manipulation in formula works", {
+    expect_equal(r2_mod2_1$R2_pe_ci$R2, 0.729, tolerance = 0.01)
+    # all together same as marginal
+    expect_equal(r2_mod2_2$R2_pe_ci$R2[length(r2_mod2_2$R2_pe_ci$R2)],
+                 r2_mod2_2$R2_pe_ci$R2[1], tolerance = 0.001)
+
+})

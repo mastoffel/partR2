@@ -1,29 +1,32 @@
 Package: partR2
-Title: Partitioning the R2 in GLMMs
+Title: Partitioning R2 in GLMMs
 Version: 0.1.0
 Depends: R (>= 3.4.0)
 Author: Martin Stoffel <martin.adam.stoffel@gmail.com>,
-         Shinichi Nakagawa <s.nakagawa@unsw.edu.au>,
-         Holger Schielzeth <holger.schielzeth@uni-jena.de>
+          Shinichi Nakagawa <s.nakagawa@unsw.edu.au>,
+          Holger Schielzeth <holger.schielzeth@uni-jena.de>
 Maintainer: Martin Stoffel <martin.adam.stoffel@gmail.com>
-Description: Partitioning the R2 of GLMMs into unique and common variation.
+Description: Partitioning the R2 of GLMMs into variation unique to each predictor and shared among predictors.
 License: GPL (>= 2)
 Imports: 
     methods,
     stats,
     lme4,
     pbapply,
-    ggplot2,
     broom.mixed,
     dplyr,
     purrr,
     rlang,
     tibble,
     magrittr,
-    future,
-    furrr
+    ggplot2
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
 Suggests: 
-    testthat
+    testthat,
+    future,
+    furrr,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
