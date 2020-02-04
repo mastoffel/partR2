@@ -160,7 +160,9 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
     data_mod <- overdisp_out$dat
 
     # extract some essential info
-    model_ests_full <- broom.mixed::tidy(mod)
+    # we suppress messages here to avoid the notice that broom.mixed
+    # overwrites the broom S3 methods.
+    model_ests_full <- suppressMessages(broom.mixed::tidy(mod))
 
     # R2
     R2_pe <- function(mod, expct) {
@@ -192,6 +194,8 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
         R2s_red <- purrr::map_df(all_comb, R2_of_red_mod, mod = mod,
                                  R2_pe = R2_pe, data = data_mod, expct = expct) %>%
                    dplyr::mutate(R2 = R2_full$R2 - .data$R2) %>%
+                   # if by chance part R2 drops below 0, make it 0
+                   dplyr::mutate(R2 = ifelse(.data$R2 < 0, 0, .data$R2)) %>%
                    dplyr::bind_rows(R2_full, .)
     }
 
@@ -239,7 +243,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
 
         if (parallel) {
             if (!requireNamespace("furrr", quietly = TRUE)) {
-                stop("Package \"furrr\" needed for this function to work. Please install it.",
+                stop("Package \"furrr\" needed for parallelisation. Please install it.",
                      call. = FALSE)
             }
             if (is.null(ncores)) ncores <- parallel::detectCores()-1
