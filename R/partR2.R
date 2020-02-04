@@ -110,10 +110,10 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
     # check whether partvars are fixed effects
     # check fixed effect names
     # This has to be checked, dont think it works ATM
-    fixed_terms <- names(lme4::fixef(mod))
-    if (!(all(partvars[-grep(":", partvars)] %in% fixed_terms))) {
-        stop("partvars have to be fixed effects")
-    }
+    # fixed_terms <- names(lme4::fixef(mod))
+    # if (!(all(partvars[-grep(":", partvars)] %in% fixed_terms))) {
+    #     stop("partvars have to be fixed effects")
+    # }
 
     # create list of all unique combinations except for the full model
     if (!is.null(partvars)) {

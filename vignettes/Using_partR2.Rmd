@@ -35,6 +35,7 @@ hist(biomass2$Biomass, main = "Biomass")
 ```
 
 That looks alright. Next, we fit a linear mixed model in `lme4`. We assume, that the biomass depends on the year and temperature and precipitation as well as their interaction. 
+
 ```{r, warning=FALSE}
 mod1 <- lmer(Biomass ~ Year + Temperature * Precipitation + SpeciesDiversity + (1|Population), 
              data = biomass2)
@@ -55,7 +56,7 @@ R2_mod1_part1 <- partR2(mod1, partvars = c("Year", "Temperature", "Precipitation
 R2_mod1_part1
 ```
 
-The main effects of the different predictors do not seem to explain very much! Maybe we should look at the combined main effects and interaction which is specified with the `*` in a lme4 formula. 
+The main effects of the different predictors do not seem to explain very much! The combined R^2^ of all four main effects is only 12%, which is still quite far away from the marginal R^2^ of the full model. Maybe we should look at the interaction term.
 
 ```{r, warning=FALSE}
 R2_mod1_part2 <- partR2(mod1, partvars = c("Temperature*Precipitation"), 
@@ -64,8 +65,13 @@ R2_mod1_part2 <- partR2(mod1, partvars = c("Temperature*Precipitation"),
 R2_mod1_part2
 ```
 
-So it seems that most variance in biomass is explained by the "Temperature*Precipitation" effect, which includes both main effects and the interaction.
+So it seems that most variance in biomass is explained by the `Temperature * Precipitation` effect, which includes the main effects of temperature and precipitation and the interaction.
 
+We can now also dive in a bit deeper and look at the model estimates and the structure coefficients.
+
+```{r, warning=FALSE}
+summary(R2_mod1_part2)
+```
 
 
 
