@@ -23,7 +23,6 @@ Before we go through some examples, we load the package and the biomass2 dataset
 ```{r setup, message=FALSE}
 library(partR2)
 library(lme4)
-library(tidyverse)
 data("biomass2")
 head(biomass2)
 ```

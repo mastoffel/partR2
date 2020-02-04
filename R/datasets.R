@@ -13,6 +13,21 @@
 #' @name biomass
 NULL
 
+#' biomass2 dataset
+#'
+#' @details This is an simulated dataset about grassland biodiversity and biomass.
+#'
+#' In brief the imaginary sampling design of the simulated dataset is as follows.
+#' Invertebrates were sampled once every year over 10 successive years (`Year`) from 20
+#' different populations (`Population`). For each sample, the temperature (`Temperature`)
+#' and (`Precipitation`) were measured and overall species diversity (`SpeciesDiversity`)
+#' and biomass were recorded (`Biomass`).
+#'
+#'
+#' @keywords datasets
+#' @name biomass2
+NULL
+
 
 #' BeetlesMale dataset
 #'
