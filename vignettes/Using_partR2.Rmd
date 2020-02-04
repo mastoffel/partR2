@@ -1,0 +1,73 @@
+---
+title: "Using partR2"
+author: "Martin A. Stoffel, Shinichi Nakagawa, Holger Schielzeth"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using_partR2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+The aims of `partR2` are to partition the R^2^ of generalised linear mixed models into the R^2^ unique to each fixed effect and shared among fixed effects. It also reports structure coefficients, which are simply the correlation between a predictor and the fitted response. Finally, we also report the model estimates, summarised by `broom.mixed` . The user can get confidence intervals for everything through parametric bootstrapping and easily parallelise computations across many cores. `partR2` builds upon `lme4`, so the user has to first fit a model in `lme4` and then pass the fitted model object to `partR2`. 
+
+Before we go through some examples, we load the package and the biomass2 dataset. This is a simulated dataset about grassland biodiversity and biomass. In a nutshell, invertebrated were sampled once every year over 10 successive years from 20 different populations. For each sample, temperature and precipitation were measured and overall species diversity and biomass were recorded.
+
+```{r setup, message=FALSE}
+library(partR2)
+library(lme4)
+library(tidyverse)
+data("biomass2")
+head(biomass2)
+```
+
+## Partitioning R^2^ in a Gaussian mixed model
+
+First of all, we check whether the biomass in our dataset follows a Gaussian distribution.
+```{r}
+hist(biomass2$Biomass, main = "Biomass")
+```
+
+That looks alright. Next, we fit a linear mixed model in `lme4`. We assume, that the biomass depends on the year and temperature and precipitation as well as their interaction. 
+```{r, warning=FALSE}
+mod1 <- lmer(Biomass ~ Year + Temperature * Precipitation + SpeciesDiversity + (1|Population), 
+             data = biomass2)
+```
+
+Now we would usually do the standard model checks and evaluations to ensure that the model works well. For the sake of simplicity, we skip that step here and go straight into the `partR2` part. First of all, we calculate the overall, marginal R^2^ and use parametric bootstrapping to get confidence intervals. Please note that we are supplying the fitted merMod object (the lme4 output) and the original dataset used to fit the model. 
+
+```{r, message=FALSE}
+R2_mod1 <- partR2(mod1, R2_type = "marginal", nboot = 10, data = biomass2)
+R2_mod1
+```
+
+The R^2^ is around 46% and confidence intervals indicate that its quite a good estimate. Let's check how much the different predictors contribute.
+
+```{r, warning=FALSE}
+R2_mod1_part1 <- partR2(mod1, partvars = c("Year", "Temperature", "Precipitation", "SpeciesDiversity"), R2_type = "marginal", nboot = 10,  data = biomass2)
+
+R2_mod1_part1
+```
+
+The main effects of the different predictors do not seem to explain very much! Maybe we should look at the combined main effects and interaction which is specified with the `*` in a lme4 formula. 
+
+```{r, warning=FALSE}
+R2_mod1_part2 <- partR2(mod1, partvars = c("Temperature*Precipitation"), 
+                       R2_type = "marginal", nboot = 10,  data = biomass2)
+
+R2_mod1_part2
+```
+
+So it seems that most variance in biomass is explained by the "Temperature*Precipitation" effect, which includes both main effects and the interaction.
+
+
+
+
+
