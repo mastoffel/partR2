@@ -20,7 +20,6 @@
 #' @param CI Width of the required confidence interval between 0 and 1 (defaults to
 #'        0.95).
 #' @param parallel If TRUE, computation runs in parallel, leaving one CPU free, except ncores is specified.
-#' @param ncores number of cpus for parallel computation
 #' @param expct A string specifying the method for estimating the expectation in Poisson models
 #'        with log link and in Binomial models with logit link (in all other cases the agrument is ignored).
 #'        The only valid terms are 'meanobs' and 'latent' (and 'liability for binary and proportion data).
@@ -81,8 +80,7 @@
 
 
 partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_level = NULL,
-                   nboot = NULL, CI = 0.95, parallel = FALSE, ncores = NULL,
-                   expct = "meanobs"){
+                   nboot = NULL, CI = 0.95, parallel = FALSE, expct = "meanobs"){
 
     # initial checks
     if(!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
@@ -96,10 +94,6 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
         stop("R2_type has to be marginal or conditional")
     }
 
-    if (parallel) {
-        if (is.null(ncores)) ncores <- parallel::detectCores()-1
-    }
-
     # check if data is there
     if (is.null(data)) {
         dat_name <- deparse(mod@call$data)
@@ -108,12 +102,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
    data_org <- data
 
     # check whether partvars are fixed effects
-    # check fixed effect names
-    # This has to be checked, dont think it works ATM
-    # fixed_terms <- names(lme4::fixef(mod))
-    # if (!(all(partvars[-grep(":", partvars)] %in% fixed_terms))) {
-    #     stop("partvars have to be fixed effects")
-    # }
+    # this is now done in the R2_of_red_mod function
 
     # create list of all unique combinations except for the full model
     if (!is.null(partvars)) {
@@ -145,14 +134,6 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
     # get family and response variable
     mod_fam <- stats::family(mod)[[1]]
     resp <- lme4::getME(mod, "y")
-
-    # check if cbind created a matrix as first data.frame column
-    # this has to be checked
-    # any_mat <- purrr::map_lgl(data_org, is.matrix)
-    # if (any(any_mat)) {
-    #     data_org <- cbind(as.data.frame(data_org[[which(any_mat)]]),
-    #                            data_org[(which(any_mat)+1):ncol(data_org)])
-    # }
 
     # overdispersion
     overdisp_out <- model_overdisp(mod = mod, dat = data_org)
@@ -233,12 +214,11 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
             out <- list(r2s = out_r2s, ests = out_ests, scs = out_scs)
         }
         # capture warnings and messages
-        bootstr_quiet <- purrr::quietly(bootstr)
+        bootstr_quiet <-  purrr::quietly(bootstr)
 
         # refit model with new responses
         if (!parallel) {
             boot_r2s_scs_ests <- pbapply::pblapply(Ysim, bootstr_quiet, mod, expct)
-           # boot_r2s_scs <- future_map(Ysim, bootstr_quiet, mod, .progress = TRUE)
         }
 
         if (parallel) {
@@ -246,9 +226,10 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
                 stop("Package \"furrr\" needed for parallelisation. Please install it.",
                      call. = FALSE)
             }
-            if (is.null(ncores)) ncores <- parallel::detectCores()-1
-            future::plan(future::multiprocess, workers = ncores)
-            boot_r2s_scs_ests <- furrr::future_map(Ysim, bootstr_quiet, mod, expct)
+            # if (is.null(ncores)) ncores <- parallel::detectCores()-1
+            # let the user plan
+            #future::plan(future::multiprocess, workers = ncores)
+            boot_r2s_scs_ests <- furrr::future_map(Ysim, bootstr_quiet, mod, expct, .progress = TRUE)
         }
 
         # reshaping bootstrap output

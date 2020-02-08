@@ -99,10 +99,20 @@ calc_CI <- function(x, CI) {
 #'
 R2_of_red_mod <- function(partvar, mod, R2_pe, data, expct) {
 
+
     # which variables to reduce?
     to_del <- paste(paste("-", partvar, sep= ""), collapse = " ")
     # reduced formula
     formula_red <- stats::update(stats::formula(mod), paste(". ~ . ", to_del, sep=""))
+
+    # check if old and new formula are different and hence the partvar does
+    # not exist
+    formula_terms <- attr(stats::terms(stats::formula(mod)), "term.labels")
+    formula_terms_red <- attr(stats::terms(formula_red), "term.labels")
+    if (all(formula_terms %in% formula_terms_red)) {
+        stop(paste0("partvar ", partvar, " not found in the model formula"))
+    }
+
     # fit reduced model
     mod_red <-  stats::update(mod, formula. = formula_red, data = data)
     # reduced model R2

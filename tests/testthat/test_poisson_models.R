@@ -12,7 +12,7 @@ r2_mod1_1 <- partR2(mod1, data = BeetlesFemale)
 r2_mod1_2 <- partR2(mod1, data = BeetlesFemale, nboot = 10)
 r2_mod1_3 <- partR2(mod1, data = BeetlesFemale, partvars = c("Treatment"))
 r2_mod1_4 <- partR2(mod1, data = BeetlesFemale, partvars = c("Treatment", "Habitat"))
-r2_mod1_5 <- partR2(mod1, data = BeetlesFemale, nboot = 10, parallel = TRUE)
+# r2_mod1_5 <- partR2(mod1, data = BeetlesFemale, nboot = 10, parallel = TRUE)
 
 #r2_mod1_6 <- partR2(mod1, partvars = c("Temperature*Precipitation"))
 test_that("Poisson models with increasing complexity do not throw errors", {

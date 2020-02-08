@@ -11,7 +11,7 @@ r2_mod1_1 <- partR2(mod1, data = BeetlesMale)
 r2_mod1_2 <- partR2(mod1, data = BeetlesMale, nboot = 10)
 r2_mod1_3 <- partR2(mod1, data = BeetlesMale, partvars = c("Treatment"))
 r2_mod1_4 <- partR2(mod1, data = BeetlesMale, partvars = c("Treatment", "Habitat"))
-r2_mod1_5 <- partR2(mod1, data = BeetlesMale, nboot = 10, parallel = TRUE)
+#r2_mod1_5 <- partR2(mod1, data = BeetlesMale, nboot = 10, parallel = TRUE)
 
 test_that("Binary models with increasing complexity give correct answers", {
     # pe
@@ -47,7 +47,7 @@ set.seed(134)
 r2_mod2_1 <- partR2(mod2, data = BeetlesColour)
 r2_mod2_2 <- partR2(mod2, data = BeetlesColour, nboot = 10)
 r2_mod2_3 <- partR2(mod2, data = BeetlesColour, partvars = c("Treatment"))
-r2_mod2_4 <- partR2(mod2, data = BeetlesColour, nboot = 10, parallel = TRUE)
+#r2_mod2_4 <- partR2(mod2, data = BeetlesColour, nboot = 10, parallel = TRUE)
 
 test_that("Proportion models with increasing complexity give correct answers", {
     # pe

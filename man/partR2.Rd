@@ -6,7 +6,7 @@
 \usage{
 partR2(mod, partvars = NULL, data = NULL, R2_type = "marginal",
   cc_level = NULL, nboot = NULL, CI = 0.95, parallel = FALSE,
-  ncores = NULL, expct = "meanobs")
+  expct = "meanobs")
 }
 \arguments{
 \item{mod}{merMod object fitted with lme4.}
@@ -35,8 +35,6 @@ asymtotic CI, but may be time-consuming. Bootstrapping can be switch on by setti
 0.95).}
 
 \item{parallel}{If TRUE, computation runs in parallel, leaving one CPU free, except ncores is specified.}
-
-\item{ncores}{number of cpus for parallel computation}
 
 \item{expct}{A string specifying the method for estimating the expectation in Poisson models
 with log link and in Binomial models with logit link (in all other cases the agrument is ignored).
