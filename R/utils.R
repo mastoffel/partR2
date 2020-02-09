@@ -1,14 +1,3 @@
-#' Pipe operator
-#'
-#' @name %>%
-#' @rdname pipe
-#' @keywords internal
-#' @export
-#' @importFrom magrittr %>%
-#' @usage lhs \%>\% rhs
-NULL
-
-
 #' Captures and suppresses (still to find out why) warnings of an expression
 #'
 #' This function is used within partR2 to capture lme4 model fitting warnings in the

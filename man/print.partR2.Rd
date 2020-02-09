@@ -4,10 +4,12 @@
 \alias{print.partR2}
 \title{Print a partR2 object}
 \usage{
-\method{print}{partR2}(x, ...)
+\method{print}{partR2}(x, round_to = 4, ...)
 }
 \arguments{
 \item{x}{An partR2 object returned from one of the partR2 functions}
+
+\item{round_to}{defaults to 4 (decimals)}
 
 \item{\dots}{Additional arguments; none are used in this method.}
 }

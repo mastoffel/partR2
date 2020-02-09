@@ -4,12 +4,14 @@
 \alias{summary.partR2}
 \title{Complete summary of a partR2 object}
 \usage{
-\method{summary}{partR2}(object, ...)
+\method{summary}{partR2}(object, round_to = 4, ...)
 }
 \arguments{
 \item{object}{An partR2 object returned from one of the partR2 functions}
 
-\item{\dots}{Additional arguments; none are used in this method.}
+\item{round_to}{defaults to 4 (decimals)}
+
+\item{\dots}{Additional arguments; not used at the moment}
 }
 \description{
 Displays the complete results a partR2object (i.e. the result of a partR2 function call)

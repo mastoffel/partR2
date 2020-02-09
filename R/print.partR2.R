@@ -3,6 +3,7 @@
 #' Displays the results a partR2object (i.e. the result of a partR2 function call) in a nice form.
 #'
 #' @param x An partR2 object returned from one of the partR2 functions
+#' @param round_to defaults to 4 (decimals)
 #' @param \dots Additional arguments; none are used in this method.
 #'
 #'
@@ -25,7 +26,7 @@
 #'
 #'
 #'
-print.partR2 <- function(x, ...) {
+print.partR2 <- function(x, round_to = 4, ...) {
 
     # prep
     CI_range <- paste0(sub('.*\\.', '', x$CI), "%")
@@ -35,7 +36,8 @@ print.partR2 <- function(x, ...) {
 
     cat("\n\n")
     cat(paste0("R2 (", x$R2_type, ") and CI (",CI_range ,") for the full model: \n"))
-    print(x$R2_pe_ci[1, 2:4], row.names = FALSE, digits = 3, right = FALSE)
+    r2_df <- x$R2_pe_ci %>% dplyr::mutate_if(is.numeric, round, round_to)
+    print(r2_df[1, 2:4], row.names = FALSE, right = FALSE)
     #cat(paste0("R2 = ", round(x$R2$R2, 3), ", CI = [", round(x$R2$lower, 3), ", ", round(x$R2$upper, 3), "]"))
     cat("\n")
     cat("----------")
@@ -45,7 +47,7 @@ print.partR2 <- function(x, ...) {
     if (nrow(x$R2_pe_ci) == 1) {
         print("No partitions selected.")
     } else {
-    print(x$R2_pe_ci[2:nrow(x$R2_pe_ci), ], row.names = FALSE, digits = 2, right = FALSE)
+    print(r2_df[2:nrow(r2_df), ], row.names = FALSE,right = FALSE)
     }
 #
 #     cat("\n")
