@@ -55,7 +55,7 @@ Returns an object of class \code{partR2} that is a a list with the following ele
 were extracted with broom.mixed::tidy}
 \item{R2_boot}{Parametric bootstrap samples for R2 for full model and partitions}
 \item{SC_boot}{Parametric bootstrap samples for structure coefficients}
-\item{Ests_pe_ci}{Parametric bootstrap samples for model estimates}
+\item{Ests_boot}{Parametric bootstrap samples for model estimates}
 \item{partvars}{predictors to partition}
 \item{CI}{Coverage of the confidence interval as specified by the \code{CI} argument.}
 \item{boot_warnings}{Potential warnings from estimating partial R2s during

@@ -18,13 +18,13 @@ knitr::opts_chunk$set(
 
 The goal of `partR2` is to partition the varianced explained in generalised linear mixed models (GLMMs) into the variation unique to and shared among predictors, but it also does a few other things. Here is a quick summary of what you can learn about your mixed model with `partR2`:
 
-* Marginal and conditional R^2^ 
+* Marginal and conditional R^2^ (based on Nakagawa & Schielzeth, 2013)
 * R^2^ unique to each predictor and for each combination of predictors (fixed effects)
 * Structure coefficients, i.e. the correlation between each predictor and the fitted response (the contribution of a predictor to the model when ignoring all other predictors)
 * Model estimates (these are based on the `broom.mixed` package)
 * Confidence intervals for all relevant estimators through parametric bootstrapping
 
-The workhorse of the package is a single function, `partR2()`. It takes a fitted model from `lme4`, which can be either Gaussian, Poisson or binomial.
+The workhorse of the package is a single function, `partR2()`. It takes a fitted model from `lme4` (Bates et al. 2015), which can be either Gaussian, Poisson or binomial.
 
 Before we go through some examples, we load the biomass dataset. This is a simulated dataset that aims to mimic a study on biomass production in grasslands. In a nutshell, virtual invertebrated were sampled once every year over 10 successive years from 20 different virtual populations. Temperature and precipitation were measured and overall species diversity and biomass were recorded for each population in each year.
 
@@ -64,7 +64,7 @@ R2_mod1 <- partR2(mod1, R2_type = "marginal", nboot = 10, data = biomass)
 R2_mod1
 ```
 
-The R^2^ is around 46% and confidence intervals are fairly narrow. Temperature and precipitation are highly correlated in the dataset (as they often are in real-life situations) and want to know how much each of them uniquely explains and what they explain together.
+The R^2^ is around 60% and confidence intervals are fairly narrow. Temperature and precipitation are highly correlated in the dataset (as they often are in real-life situations) and we want to know how much each of them uniquely explains and what they explain together.
 
 ```{r, warning=FALSE}
 R2_mod1 <- partR2(mod1, partvars = c("Temperature", "Precipitation"), 
@@ -72,7 +72,7 @@ R2_mod1 <- partR2(mod1, partvars = c("Temperature", "Precipitation"),
 R2_mod1
 ```
 
-So it seems that temperature and precipitation uniquely only explain around 4% and 10% in the variation in biomass, respectively. Together however, they explain around 36% of the variation! The reason for this is that partR2 calculates the R^2^ unique to each predictor by calculating the difference in R^2^ between the full model and a reduced model which does not contain the respective predictor. So when temperature is removed, it's variance explained is largely replaced by precipitation (as both are highly correlated). This is why the R^2^ unique to temperature is only 4%.  
+So it seems that temperature and precipitation uniquely only explain around 4% and 9% in the variation in biomass, respectively. Together however, they explain around 39% of the variation! The reason for this is that `partR2` calculates the R^2^ unique to each predictor by calculating the difference in R^2^ between the full model and a reduced model which does not contain the respective predictor. So when temperature is removed, it's variance explained is largely replaced by precipitation (as both are highly correlated). This is why the R^2^ unique to temperature is only 4%.  
 
 Besides partial R^2^s, `partR2` also outputs model estimates and structure coefficients, which are shown when calling the `summary()` function. 
 
@@ -82,7 +82,51 @@ summary(R2_mod1)
 
 Model estimates show that all four predictors seem to have some effect on biomass because none of the confidence intervals overlaps zero, while the effect of precipitation is the largest. Structure coefficients tell us that both temperature and precipitation are quite strongly correlated with the predicted biomass from the model. Structure coefficients effectively give us the contribution of a predictor to the model prediction in the absence of all other predictors (with a maximum magnitude of ±1). This is why they are large for temperature and precipitation, while their partial R^2^s (the variance that they uniquely explain) are small due to their correlation. 
 
-## Partial R^2^s for interactions
+## Plotting
+
+We can now plot the results as forestplots, powered by `ggplot2` (Wickham, 2016).
+
+```{r, fig.width = 4, fig.height=2.5}
+forestplot(R2_mod1)
+```
+
+The output of forestplot is a ggplot object so we can change it using ggplot syntax or assemble multiple plots with packages like `patchwork`. The function also allows to plot R2s, slopes or structure coefficients.
+
+```{r, fig.width = 7, fig.height=5}
+library(patchwork)
+p1 <- forestplot(R2_mod1, type = "R2")
+p2 <- forestplot(R2_mod1, type = "SC")
+p3 <- forestplot(R2_mod1, type = "Ests")
+(p1 + p2) / p3
+```
+
+However, if you prepare a publication, you probably want the data to plot it yourself or put it in a table. Here is how the results can be retrieved from a `partR2` object:
+
+```{r, results=FALSE}
+# point estimates and confidence intervals
+R2_mod1$R2_pe_ci   # R2s
+R2_mod1$SC_pe_ci   # Structure coefficients
+R2_mod1$Ests_pe_ci # Model estimates
+
+# bootstrap replicates
+R2_mod1$R2_boot
+R2_mod1$Ests_boot
+R2_mod1$SC_boot
+```
+
+## Check warnings from bootstrapping
+
+Parametric bootstrapping works through simulating new response variables and refitting the model. This sometimes causes warnings when the models based on simulated data are fitted. `partR2` captures those warnings (and messages) and saves them. Lets have a look at potential warnings and messages for the first 2 simulations.
+
+```{r, warning=FALSE}
+R2_mod1$boot_warnings[1:2]
+R2_mod1$boot_messages[1:2]
+```
+No warnings or messages in our case. But you might find something in your own analyses, for example convergence or singularity warnings or messages. Just make sure that you had a look, though these are typically not major problems (at least when the initially model fit wasn't problematic).
+
+## Special cases for partial R2s
+
+### Partial R^2^s for interactions
 
 It is possible to estimate partial R^2^ for models with interaction terms. There are two ways in which interaction terms can be included in the `formula` argument. The familiar `*` statment allows fitting terms with their main effects and their interactions, while the `:` statement fits only the interactions. This is important to know, because we need to use the `:` version to tell `partR2` that we require a partial R^2^ for an interaction. However, we can fit the model with the `*` statment:
 
@@ -101,7 +145,7 @@ R2_mod2
 ```
 
 
-## Partial R^2^s for models with transformations in the formula.
+### Partial R^2^s for models with transformations in the formula.
 
 We generally advice to do all variable transformation before fitting the model. However, if for some reason this is not possible, it is important to specify the variable in the `partvars` argument exactly (!) how it was done in the model. Here is an example where we fit and additonal term for the precipitation squared in the formula. 
 
@@ -122,16 +166,87 @@ R2_mod3
 
 Parametric bootstrapping is an inherently slow process, because it involves repeated fitting of mixed effects models. Furthermore, the computation time increases exponentially with the number of terms requested, all being tested in isolation and in combination. It is therefore advisable to run preliminary analysis first with low numbers of bootstraps, just to see that things work and make sense in principle. The final analysis should be done with a large number of bootstraps (at least 100, better 1000). This can take time.
 
-A simple way to save runtime is to distribute the bootstrap iterations across multiple cores. `partR2` parallises with the `future` and `furrr` packages. This makes it flexible for the user on how exactly to parallelise and should work on whatever OS you are running your analyses, be it Mac, Windows or Linux. A minor disadvantage of parallelization in `partR2`is that the progress bar does not show, such that it is more difficult to monitor progress.
+A simple way to save runtime is to distribute the bootstrap iterations across multiple cores. `partR2` parallises with the `future` (Bengtsson, 2019) and `furrr` (Vaughan & Dancho, 2018) packages. This makes it flexible for the user on how exactly to parallelise and should work on whatever OS you are running your analyses, be it Mac, Windows or Linux. A minor disadvantage of parallelization in `partR2`is that the progress bar does not show, such that it is more difficult to monitor progress.
 
-We will illustrate this with the `mod2` fitted above. First we specify how we want to parallelise using `future`'s `plan()` function. Check out `?future::plan` for more information on this. Generally, if you are running your analyses in RStudio, they recommend using `plan(multisession)`. After specifying the plan, you only need to supply a `parallel = TRUE` argument to `partR2` and everything will run in parallel. Parallelization will usually also work without customizing a parallelization plan. In this case, it will use the number of cores currently available.
+We will illustrate this with the `mod2` fitted above. First we specify how we want to parallelise using `future`'s `plan()` function. Check out `?future::plan` for more information on this. Generally, if you are running your analyses in RStudio, they recommend using `plan(multisession)`. After specifying the plan, you only need to supply a `parallel = TRUE` argument to `partR2` and everything will run in parallel. If you didn't specify a plan, `partR2` will just run sequencially.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, message=FALSE}
 library(future)
 # how many cores do I have?
 parallel::detectCores()
 # specify plan
 plan(multisession, workers = 3)
-#R2_mod1 <- partR2(mod2, partvars = c("Temperature", "Precipitation"), 
-#                        nboot = 10, parallel = TRUE, data = biomass)
+R2_mod2 <- partR2(mod2, partvars = c("Temperature", "Precipitation"), 
+                        nboot = 10, parallel = TRUE, data = biomass)
 ```
+
+## Partitioning R^2^ in Poisson and binomial models
+
+Partitioning the R2 in Poisson and binomial models works in exactly the same way and with the same function.  We simulated a (Poisson distributed) respone variable `Extinction` for the biomass dataset.
+
+```{r, fig.width=6, fig.height=4}
+hist(biomass$Extinction)
+```
+
+Let's first fit a Poisson model using `glmer`.
+
+```{r, warning=FALSE}
+mod4 <- glmer(Extinction ~ Year +  Temperature * Precipitation + SpeciesDiversity + (1|Population), 
+            data=biomass, family="poisson")
+```
+
+Then we can use partR2 as before. 
+
+```{r, warning = FALSE}
+R2_mod4 <- partR2(mod4, partvars = c("Temperature", "Precipitation"), 
+                   R2_type = "marginal", nboot = NULL, CI = 0.95, data=biomass)
+
+print(R2_mod4, round_to = 3) # rounding decimals in print and summary
+```
+One thing to have in mind when using GLMMs are observation-level random effects (OLRE, i.e. Harrison 2014). `partR2` fits them internally to quantify overdispersion but will recognise an OLRE when it is already in the model. We do not fit an OLRE for binomial models with binary responses though. 
+
+Finally, a simple example for a binomial model with a proportion response.
+
+```{r, message=FALSE, warning=FALSE}
+mod5 <- glmer(cbind(Recovered, NotRecovered) ~ Year +  
+              Temperature * Precipitation + SpeciesDiversity + (1|Population), 
+              data=biomass, family="binomial")
+```
+
+And we just pass it to `partR2()` again. The internally fitted OLRE is called overdisp in the summary output. 
+
+```{r, message=FALSE, warning=FALSE}
+R2_mod5 <- partR2(mod5, partvars = c("Temperature", "Precipitation"), 
+                   R2_type = "marginal", nboot = NULL, CI = 0.95, data=biomass)
+summary(R2_mod5, round_to=3)
+```
+
+## rptR and partR2: ratios of variance components
+
+The `rptR` (Stoffel, Nakagawa, Schielzeth 2017) package and the `partR2` package go hand in hand. The intra-class coefficient or repeatability calculated in `rptR` is the proportion of variance explained by random effects while the partR2 package estimates the proportion of variance explained by fixed effects (or fixed plus random effects when `r2_type = "conditional"`). Both the repeatability R and the coefficient of determination R^2^ are therefore ratios of variance components. However, we now changed the design of the `partR2` package compared to `rptR`. The `partR2` user now fits the model first in `lme4` so that any modeling problem can be recognized straight away. We think this is generally preferable as it seperates the modeling part from the rest of the calculations and allows the user to focus on specifying an appropriate model first. 
+
+
+## Literature
+
+Nakagawa, S., & Schielzeth, H. (2013). A general and simple method for obtaining R2 from generalized linear mixed‐effects models. Methods in ecology and evolution, 4(2), 133-142.
+
+Bates, D. M., Maechler, M., Bolker, B. M., & Walker, S. (2015). Fitting linear mixed‐effects models using lme4. Journal of Statistical Software 67 (1): 1–48.
+
+Wickham, H. (2016). ggplot2: elegant graphics for data analysis. Springer.
+
+Schielzeth, H. (2010). Simple means to improve the interpretability of regression coefficients. Methods in Ecology and Evolution, 1(2), 103-113.
+
+Henrik Bengtsson (2019). future: Unified Parallel and Distributed Processing in R for Everyone. R
+package version 1.14.0. https://CRAN.R-project.org/package=future
+
+Davis Vaughan and Matt Dancho (2018). furrr: Apply Mapping Functions in Parallel using Futures. R
+package version 0.1.0. https://CRAN.R-project.org/package=furrr
+
+Harrison, X. A. (2014). Using observation-level random effects to model overdispersion in count data in ecology and evolution. PeerJ, 2, e616.
+
+Stoffel, M. A., Nakagawa, S., & Schielzeth, H. (2017). rptR: Repeatability estimation and variance decomposition by generalized linear mixed‐effects models. Methods in Ecology and Evolution, 8(11), 1639-1644.
+
+
+
+
+

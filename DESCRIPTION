@@ -28,5 +28,6 @@ Suggests:
     future,
     furrr,
     knitr,
-    rmarkdown
+    rmarkdown,
+    patchwork
 VignetteBuilder: knitr
