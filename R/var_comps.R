@@ -2,12 +2,13 @@
 #'
 #' @param mod A merMod object.
 #' @param expct expectation.
+#' @param overdisp_name name of overdispersion term
 #'
 #' @keywords internal
 #' @return Fixed, random and residual variance
 #' @export
 #'
-get_var_comps <- function(mod, expct) {
+get_var_comps <- function(mod, expct, overdisp_name) {
 
     fam <- stats::family(mod)[["family"]]
     #if (is.null(expct)) expct <- "meanobs"
@@ -20,7 +21,7 @@ get_var_comps <- function(mod, expct) {
         out <- var_comps_gaussian(mod)
     }
     if (fam == "poisson"){
-        out <- var_comps_poisson(mod, expct)
+        out <- var_comps_poisson(mod, expct, overdisp_name)
     }
     if (fam == "binomial"){
         # check if binary
@@ -29,7 +30,7 @@ get_var_comps <- function(mod, expct) {
         }
         # if not binary
         if (length(table(lme4::getME(mod, "y"))) >= 3) {
-            out <- var_comps_proportion(mod, expct)
+            out <- var_comps_proportion(mod, expct, overdisp_name)
         }
     }
 
@@ -65,18 +66,19 @@ var_comps_gaussian <- function(mod, ...) {
 #'
 #' @param mod merMod object with poisson family.
 #' @param expct "meanobs" or "latent". "latent" recommended.
+#' @param overdisp_name name of overdispersion term
 #'
 #' @keywords internal
 #' @return Fixed, random and residual variance
 #' @export
 #'
-var_comps_poisson <- function(mod, expct) {
+var_comps_poisson <- function(mod, expct, overdisp_name) {
 
     # intercept on link scale
     beta0 <- unname(lme4::fixef(mod)[1])
 
     # random effects
-    var_ran <- get_ran_var(mod)
+    var_ran <- get_ran_var(mod, overdisp_name)
 
     # fixed effect variance
     var_fix <- stats::var(stats::predict(mod, re.form=NA))
@@ -85,7 +87,7 @@ var_comps_poisson <- function(mod, expct) {
     mod_fam <- stats::family(mod)
 
     # overdispersion estimate
-    var_overdisp <- var_ran[var_ran$group == "overdisp", ][["estimate"]]
+    var_overdisp <- var_ran[var_ran$group == overdisp_name, ][["estimate"]]
 
     # sum up random effects
     # var_ran <- sum(var_ran$estimate)
@@ -106,7 +108,7 @@ var_comps_poisson <- function(mod, expct) {
     }
 
     # remove overdisp from var_ran and sum up as overdisp is now part of var_res
-    var_ran <- var_ran[!(var_ran$group == "overdisp"), ]
+    var_ran <- var_ran[!(var_ran$group == overdisp_name), ]
     var_ran <- sum(var_ran$estimate)
 
     out <- data.frame(var_fix = var_fix,
@@ -122,13 +124,13 @@ var_comps_poisson <- function(mod, expct) {
 #' @return Fixed, random and residual variance
 #' @export
 #'
-var_comps_proportion <- function(mod, expct) {
+var_comps_proportion <- function(mod, expct, overdisp_name) {
 
     # random effects
-    var_ran <- get_ran_var(mod)
+    var_ran <- get_ran_var(mod, overdisp_name)
 
     # overdisp
-    var_overdisp <- var_ran[var_ran$group == "overdisp", "estimate"]
+    var_overdisp <- var_ran[var_ran$group == overdisp_name, "estimate"]
 
     # intercept on link scale
     beta0 <- unname(lme4::fixef(mod)[1])
@@ -178,7 +180,7 @@ var_comps_proportion <- function(mod, expct) {
     }
 
     # remove overdisp from var_ran and sum up as overdisp is now part of var_res
-    var_ran <- var_ran[!(var_ran$group == "overdisp"), ]
+    var_ran <- var_ran[!(var_ran$group == overdisp_name), ]
     # calc sum
     var_ran <- sum(var_ran$estimate)
 
@@ -264,13 +266,19 @@ var_comps_binary <- function(mod, expct) {
 #' variance across the levels of a covariate.
 #'
 #' @param mod An lme4 model object.
+#' @param overdisp_name name of overdispersion term
 #' @keywords internal
 #'
-get_ran_var <- function(mod){
+get_ran_var <- function(mod, overdisp_name = NULL){
 
     var_comps <- lme4::VarCorr(mod)
     # gives only grouping factors, no Residual, no overdisp
-    grnames <- names(var_comps)[!(var_comps == "overdisp")]
+    if (!is.null(overdisp_name)) {
+        grnames <- names(var_comps)[!(var_comps == overdisp_name)]
+    } else {
+        grnames <- names(var_comps)
+    }
+
 
     var_raneff <- function(grname, var_comps) {
         # check whether component is a matrix (--> random slopes)

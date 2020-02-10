@@ -4,12 +4,14 @@
 \alias{get_var_comps}
 \title{Extract variance components from merMod.}
 \usage{
-get_var_comps(mod, expct)
+get_var_comps(mod, expct, overdisp_name)
 }
 \arguments{
 \item{mod}{A merMod object.}
 
 \item{expct}{expectation.}
+
+\item{overdisp_name}{name of overdispersion term}
 }
 \value{
 Fixed, random and residual variance

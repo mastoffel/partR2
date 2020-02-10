@@ -32,26 +32,27 @@ model_overdisp <- function(mod, dat) {
     # family
     mod_fam <- stats::family(mod)[[1]]
     resp <- lme4::getME(mod, "y")
-
+    overdisp_name <- "overdisp"
     if (mod_fam == "poisson" | ((mod_fam == "binomial") & (length(table(resp)) > 2))) {
         # check if OLRE already there
         overdisp_term <- lme4::getME(mod, "l_i") == nrow(dat)
         # if so, get variable name
         if (sum(overdisp_term) == 1) {
-            overdisp <- names(overdisp_term)[overdisp_term]
+            overdisp_name <- names(overdisp_term)[overdisp_term]
             # rename OLRE to overdisp if not done so already
-            if (!overdisp == "overdisp") {
-                names(dat[overdisp]) <- "overdisp"
-                message("The OLRE or overdispersion term has been renamed to 'overdisp'")
+            if (!(overdisp_name == "overdisp")) {
+                # names(dat[overdisp]) <- "overdisp"
+                message(paste0("'", overdisp_name, "' has been recognized as observational
+level random effect and is used to quantify overdispersion"))
             }
         } else if ((sum(overdisp_term) == 0)) {
-            dat$overdisp <- as.factor(1:nrow(dat))
+            dat[[overdisp_name]] <- as.factor(1:nrow(dat))
             mod <- stats::update(mod, . ~ . + (1 | overdisp), data = dat)
             message("An observational level random-effect has been fitted
 to account for overdispersion.")
         }
     }
-    out <- list(mod = mod, dat = dat)
+    out <- list(mod = mod, dat = dat, overdisp_name = overdisp_name)
 }
 
 
@@ -82,11 +83,14 @@ calc_CI <- function(x, CI) {
 #' of the model.
 #' @param mod merMod object.
 #' @param R2_pe R2 function.
+#' @param data Data.frame to fit the model
+#' @param expct Expectation
+#' @param overdisp_name Name of overdispersion term
 #' @keywords internal
 #' @return R2 of reduced model.
 #' @export
 #'
-R2_of_red_mod <- function(partvar, mod, R2_pe, data, expct) {
+R2_of_red_mod <- function(partvar, mod, R2_pe, data, expct, overdisp_name) {
 
 
     # which variables to reduce?
@@ -105,7 +109,7 @@ R2_of_red_mod <- function(partvar, mod, R2_pe, data, expct) {
     # fit reduced model
     mod_red <-  stats::update(mod, formula. = formula_red, data = data)
     # reduced model R2
-    R2_red <- R2_pe(mod_red, expct)
+    R2_red <- R2_pe(mod_red, expct, overdisp_name)
 
 }
 

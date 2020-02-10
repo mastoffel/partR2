@@ -139,6 +139,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
     overdisp_out <- model_overdisp(mod = mod, dat = data_org)
     mod <- overdisp_out$mod
     data_mod <- overdisp_out$dat
+    overdisp_name <- overdisp_out$overdisp_name
 
     # extract some essential info
     # we suppress messages here to avoid the notice that broom.mixed
@@ -146,10 +147,10 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
     model_ests_full <- suppressMessages(broom.mixed::tidy(mod))
 
     # R2
-    R2_pe <- function(mod, expct) {
+    R2_pe <- function(mod, expct, overdisp_name) {
 
         # get variance components
-        var_comps <- get_var_comps(mod, expct)
+        var_comps <- get_var_comps(mod, expct, overdisp_name)
 
         if (R2_type == "marginal") {
             R2_out <- var_comps %>%
@@ -167,13 +168,14 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
 
 
     # partition R2
-    part_R2s <- function(mod, expct) {
+    part_R2s <- function(mod, expct, overdisp_name) {
         # calculate full model R2
-        R2_full <- R2_pe(mod, expct)
+        R2_full <- R2_pe(mod, expct, overdisp_name)
         if (!partition) return(R2_full)
         # calculate R2s of reduced models and difference with full model
         R2s_red <- purrr::map_df(all_comb, R2_of_red_mod, mod = mod,
-                                 R2_pe = R2_pe, data = data_mod, expct = expct) %>%
+                                 R2_pe = R2_pe, data = data_mod, expct = expct,
+                                 overdisp_name = overdisp_name) %>%
                    dplyr::mutate(R2 = R2_full$R2 - .data$R2) %>%
                    # if by chance part R2 drops below 0, make it 0
                    dplyr::mutate(R2 = ifelse(.data$R2 < 0, 0, .data$R2)) %>%
@@ -181,7 +183,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
     }
 
     # calculate R2 and partial R2s
-    R2_org <- part_R2s(mod, expct)
+    R2_org <- part_R2s(mod, expct, overdisp_name)
 
     # SC to be discussed
     # # structure coefficients function
@@ -205,10 +207,10 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
         # simulation new responses
         if (nboot > 0)  Ysim <- as.data.frame(stats::simulate(mod, nsim = nboot))
         # main bootstrap function
-        bootstr <- function(y, mod, expct) {
+        bootstr <- function(y, mod, expct, overdisp_name) {
             # at the moment lme4 specific, could be extended
             mod_iter <- lme4::refit(mod, newresp = y)
-            out_r2s <- part_R2s(mod_iter, expct)
+            out_r2s <- part_R2s(mod_iter, expct, overdisp_name)
             out_scs <- SC_pe(mod_iter)
             out_ests <- broom.mixed::tidy(mod_iter)
             out <- list(r2s = out_r2s, ests = out_ests, scs = out_scs)
@@ -218,7 +220,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
 
         # refit model with new responses
         if (!parallel) {
-            boot_r2s_scs_ests <- pbapply::pblapply(Ysim, bootstr_quiet, mod, expct)
+            boot_r2s_scs_ests <- pbapply::pblapply(Ysim, bootstr_quiet, mod, expct, overdisp_name)
         }
 
         if (parallel) {
@@ -229,7 +231,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
             # if (is.null(ncores)) ncores <- parallel::detectCores()-1
             # let the user plan
             #future::plan(future::multiprocess, workers = ncores)
-            boot_r2s_scs_ests <- furrr::future_map(Ysim, bootstr_quiet, mod, expct, .progress = TRUE)
+            boot_r2s_scs_ests <- furrr::future_map(Ysim, bootstr_quiet, mod, expct, overdisp_name, .progress = TRUE)
         }
 
         # reshaping bootstrap output

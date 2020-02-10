@@ -4,10 +4,12 @@
 \alias{get_ran_var}
 \title{Estimates random effect variance from random slope models}
 \usage{
-get_ran_var(mod)
+get_ran_var(mod, overdisp_name = NULL)
 }
 \arguments{
 \item{mod}{An lme4 model object.}
+
+\item{overdisp_name}{name of overdispersion term}
 }
 \description{
 This function computes the sum of random effect variances where one

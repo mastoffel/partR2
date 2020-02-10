@@ -4,12 +4,14 @@
 \alias{var_comps_poisson}
 \title{Get variance components for merMod with poisson response.}
 \usage{
-var_comps_poisson(mod, expct)
+var_comps_poisson(mod, expct, overdisp_name)
 }
 \arguments{
 \item{mod}{merMod object with poisson family.}
 
 \item{expct}{"meanobs" or "latent". "latent" recommended.}
+
+\item{overdisp_name}{name of overdispersion term}
 }
 \value{
 Fixed, random and residual variance

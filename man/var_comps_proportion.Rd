@@ -4,7 +4,7 @@
 \alias{var_comps_proportion}
 \title{Get variance components for binomial model with proportion response.}
 \usage{
-var_comps_proportion(mod, expct)
+var_comps_proportion(mod, expct, overdisp_name)
 }
 \arguments{
 \item{mod}{merMod object with binomial family and binary response.}
