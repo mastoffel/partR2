@@ -45,30 +45,32 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
             data = biomass)
 
 (R2 <- partR2(mod,  partvars = c("SpeciesDiversity", "Temperature", "Year"),
-                                 R2_type = "marginal", nboot = 100, CI = 0.95))
+                                 R2_type = "marginal", nboot = 100, CI = 0.95,
+                                 data = biomass))
 #> 
 #> 
 #> R2 (marginal) and CI (95%) for the full model: 
-#>  R2    CI_lower CI_upper
-#>  0.613 0.538    0.682   
+#>  R2     CI_lower CI_upper
+#>  0.5133 0.4225   0.63    
 #> 
 #> ----------
 #> 
 #> Partitioned R2s:
 #>  Predictor(s)                      R2     CI_lower CI_upper
-#>  SpeciesDiversity                  0.2552  0.180   0.325   
-#>  Temperature                       0.3076  0.232   0.377   
-#>  Year                              0.0017 -0.073   0.071   
-#>  SpeciesDiversity+Temperature      0.6060  0.531   0.675   
-#>  SpeciesDiversity+Year             0.2570  0.182   0.326   
-#>  Temperature+Year                  0.3135  0.238   0.383   
-#>  SpeciesDiversity+Temperature+Year 0.6129  0.538   0.682
+#>  SpeciesDiversity                  0.1653 0.0745   0.2820  
+#>  Temperature                       0.3038 0.2129   0.4205  
+#>  Year                              0.0130 0.0000   0.1297  
+#>  SpeciesDiversity+Temperature      0.4914 0.4006   0.6081  
+#>  SpeciesDiversity+Year             0.1784 0.0875   0.2951  
+#>  Temperature+Year                  0.3250 0.2342   0.4417  
+#>  SpeciesDiversity+Temperature+Year 0.5133 0.4225   0.6300
 ```
 
-And to plot the results:
+And to plot the
+results:
 
 ``` r
-forestplot(R2, type = "R2")
+forestplot(R2, type = "R2", line_size = 0.7, text_size = 14, point_size = 3)
 ```
 
 ![](README-plot-1.png)<!-- -->

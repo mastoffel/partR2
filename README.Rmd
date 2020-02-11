@@ -47,10 +47,11 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
             data = biomass)
 
 (R2 <- partR2(mod,  partvars = c("SpeciesDiversity", "Temperature", "Year"),
-                                 R2_type = "marginal", nboot = 100, CI = 0.95))
+                                 R2_type = "marginal", nboot = 100, CI = 0.95,
+                                 data = biomass))
 ```
 
 And to plot the results:
-```{r plot, results = TRUE, warning=FALSE}
-forestplot(R2, type = "R2")
+```{r plot, results = TRUE, warning=FALSE, fig.width=7, fig.height=4}
+forestplot(R2, type = "R2", line_size = 0.7, text_size = 14, point_size = 3)
 ```

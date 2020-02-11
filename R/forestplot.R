@@ -5,6 +5,8 @@
 #' @param x A partR2 object.
 #' @param type Plot either "R2" or "SC" or "Ests" for R2s, structure coefficients
 #' or model estimates.
+#' @param line_size Controls size of all lines in the forestplot. Defaults to 0.5 which usually looks good.
+#' @param test_size
 #'
 #'
 #' @author Martin Stoffel (martin.adam.stoffel@@gmail.com),
@@ -20,7 +22,8 @@
 #'
 
 
-forestplot <- function(x, type = c("R2", "Ests", "SC")) {
+forestplot <- function(x, type = c("R2", "Ests", "SC"), line_size = 0.5, text_size = 12, point_size = 2) {
+
 
     if (!requireNamespace("ggplot2", quietly = TRUE)) {
         stop("Package \"ggplot2\" needed for this function to work. Please install it.",
@@ -55,21 +58,26 @@ forestplot <- function(x, type = c("R2", "Ests", "SC")) {
     p_out <-
         ggplot(aes_string("pe", "combs", xmax = "CI_upper", xmin = "CI_lower"),
                data = mod_out) +
-        geom_vline(xintercept = 0, color = "black", alpha = 0.1) +
-        geom_point(size = 3, shape = 21, col = "black", fill = "grey69",
+        geom_vline(xintercept = 0, color = "#1b262c", linetype='dashed', size = line_size) +
+        #geom_point(size = point_size, shape = 21, col = "black", fill = "grey69", # "grey69"
+        #           alpha = 1, stroke = line_size) +
+        geom_point(size = point_size, col = "#1b262c", # "grey69"
                    alpha = 1) +
-        theme_minimal(base_size = 11) +
+        theme_classic(base_line_size = line_size, base_size = text_size) +
         theme(
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
-            axis.line.x = element_line(),
+            axis.line.y = element_blank(),
+            axis.ticks.y = element_blank(),
             axis.title.y = element_blank(),
-            text = element_text(size = 11)
+            axis.text = element_text(color = "#1b262c"),
+            axis.title.x = element_text(margin=margin(t=8), color = "#1b262c")
         ) +
         xlab(x_label)
     # if bootstrap plot errorbars
     if (!is.na(x[[paste0(type, "_pe_ci")]][["CI_lower"]][1])) {
-        p_out <- p_out + geom_errorbarh(alpha = 1, color = "black", height = 0)
+        p_out <- p_out + geom_errorbarh(alpha = 1, color = "#1b262c", height = 0,
+                                        size = line_size)
     }
     # when estimates are plotted, split fixed and random effects into
     # different plots
