@@ -28,6 +28,10 @@
 #'        While this is a preferred solution, it is susceptible to the distribution of fixed effect covariates and gives
 #'        appropriate results typically only when all covariances are centered to zero. With 'liability'
 #'        estimates follow formulae as presented in Nakagawa & Schielzeth (2010).
+#' @param olre Logical, defaults to TRUE. This argument allows the user to prevent the automatic fitting of
+#'        an obervation level random effect (by setting it to FALSE) in Poisson and binomial models
+#'        to account for overdispersion.
+#'
 #'
 #'
 #' @return
@@ -80,7 +84,8 @@
 
 
 partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_level = NULL,
-                   nboot = NULL, CI = 0.95, parallel = FALSE, expct = "meanobs"){
+                   nboot = NULL, CI = 0.95, parallel = FALSE, expct = "meanobs",
+                   olre = TRUE){
 
     # initial checks
     if(!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
@@ -136,7 +141,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
     resp <- lme4::getME(mod, "y")
 
     # overdispersion
-    overdisp_out <- model_overdisp(mod = mod, dat = data_org)
+    overdisp_out <- model_overdisp(mod = mod, dat = data_org, olre = olre)
     mod <- overdisp_out$mod
     data_mod <- overdisp_out$dat
     overdisp_name <- overdisp_out$overdisp_name

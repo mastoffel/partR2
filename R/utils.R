@@ -28,12 +28,14 @@ with_warnings <- function(expr) {
 #' @keywords internal
 #' @export
 #'
-model_overdisp <- function(mod, dat) {
+model_overdisp <- function(mod, dat, olre) {
     # family
     mod_fam <- stats::family(mod)[[1]]
     resp <- lme4::getME(mod, "y")
     overdisp_name <- "overdisp"
-    if (mod_fam == "poisson" | ((mod_fam == "binomial") & (length(table(resp)) > 2))) {
+
+    # fit olre if not FALSE and family is either poisson or binomial but not binary
+    if (olre & (mod_fam == "poisson" | ((mod_fam == "binomial") & (length(table(resp)) > 2)))) {
         # check if OLRE already there
         overdisp_term <- lme4::getME(mod, "l_i") == nrow(dat)
         # if so, get variable name

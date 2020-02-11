@@ -6,7 +6,7 @@
 \usage{
 partR2(mod, partvars = NULL, data = NULL, R2_type = "marginal",
   cc_level = NULL, nboot = NULL, CI = 0.95, parallel = FALSE,
-  expct = "meanobs")
+  expct = "meanobs", olre = TRUE)
 }
 \arguments{
 \item{mod}{merMod object fitted with lme4.}
@@ -44,6 +44,10 @@ With 'latent', the expectation is estimated from estiamtes of the intercept and 
 While this is a preferred solution, it is susceptible to the distribution of fixed effect covariates and gives
 appropriate results typically only when all covariances are centered to zero. With 'liability'
 estimates follow formulae as presented in Nakagawa & Schielzeth (2010).}
+
+\item{olre}{Logical, defaults to TRUE. This argument allows the user to prevent the automatic fitting of
+an obervation level random effect (by setting it to FALSE) in Poisson and binomial models
+to account for overdispersion.}
 }
 \value{
 Returns an object of class \code{partR2} that is a a list with the following elements:
