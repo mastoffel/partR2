@@ -4,13 +4,20 @@
 \alias{forestplot}
 \title{Plot a partR2 object}
 \usage{
-forestplot(x, type = c("R2", "Ests", "SC"))
+forestplot(x, type = c("R2", "Ests", "SC"), line_size = 0.5,
+  text_size = 12, point_size = 3)
 }
 \arguments{
 \item{x}{A partR2 object.}
 
 \item{type}{Plot either "R2" or "SC" or "Ests" for R2s, structure coefficients
 or model estimates.}
+
+\item{line_size}{Controls size of all lines in the forestplot. Defaults to 0.5 which usually looks good.}
+
+\item{text_size}{Base text size, default is 12.}
+
+\item{point_size}{Point size, default is 3.}
 }
 \description{
 Forestplot of the partR2 results

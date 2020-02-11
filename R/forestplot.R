@@ -6,7 +6,8 @@
 #' @param type Plot either "R2" or "SC" or "Ests" for R2s, structure coefficients
 #' or model estimates.
 #' @param line_size Controls size of all lines in the forestplot. Defaults to 0.5 which usually looks good.
-#' @param test_size
+#' @param text_size Base text size, default is 12.
+#' @param point_size Point size, default is 3.
 #'
 #'
 #' @author Martin Stoffel (martin.adam.stoffel@@gmail.com),
@@ -22,7 +23,7 @@
 #'
 
 
-forestplot <- function(x, type = c("R2", "Ests", "SC"), line_size = 0.5, text_size = 12, point_size = 2) {
+forestplot <- function(x, type = c("R2", "Ests", "SC"), line_size = 0.5, text_size = 12, point_size = 3) {
 
 
     if (!requireNamespace("ggplot2", quietly = TRUE)) {
