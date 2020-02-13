@@ -6,7 +6,8 @@
 #' @param data data.frame used to fit the lme4 model. Has to be provided because
 #' the model is refitted to calculate partial R2s.
 #' @param R2_type "marginal" or "conditional" R2.
-#' @param cc_level Level up to which commonality coefficients are calculated.
+#' @param cc_level Level up to which shared partial R2s (sometimes called commonality coefficients)
+#'        are calculated.
 #'        The number of sets for which to calculate partial R2 increases exponantially,
 #'        i.e. for 10 variables 2^10 - 1 commonality coefficients and potentially CIs
 #'        can be calculated. To limit this number for models with many fixed effects,
@@ -138,6 +139,10 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
 
     # get family and response variable
     mod_fam <- stats::family(mod)[[1]]
+    if (!(mod_fam %in% c("gaussian", "binomial", "poisson"))) {
+        stop("partR2 only handles gaussian, binomial and poisson models at
+the moment")
+    }
     resp <- lme4::getME(mod, "y")
 
     # overdispersion

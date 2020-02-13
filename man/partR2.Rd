@@ -18,7 +18,8 @@ the model is refitted to calculate partial R2s.}
 
 \item{R2_type}{"marginal" or "conditional" R2.}
 
-\item{cc_level}{Level up to which commonality coefficients are calculated.
+\item{cc_level}{Level up to which shared partial R2s (sometimes called commonality coefficients)
+are calculated.
 The number of sets for which to calculate partial R2 increases exponantially,
 i.e. for 10 variables 2^10 - 1 commonality coefficients and potentially CIs
 can be calculated. To limit this number for models with many fixed effects,

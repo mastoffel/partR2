@@ -1,6 +1,6 @@
 Package: partR2
 Title: Partitioning R2 in GLMMs
-Version: 0.1.0
+Version: 0.9.0
 Depends: R (>= 3.4.0)
 Author: Martin Stoffel <martin.adam.stoffel@gmail.com>,
           Shinichi Nakagawa <s.nakagawa@unsw.edu.au>,

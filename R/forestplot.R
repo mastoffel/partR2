@@ -25,7 +25,6 @@
 
 forestplot <- function(x, type = c("R2", "Ests", "SC"), line_size = 0.5, text_size = 12, point_size = 3) {
 
-
     if (!requireNamespace("ggplot2", quietly = TRUE)) {
         stop("Package \"ggplot2\" needed for this function to work. Please install it.",
              call. = FALSE)
