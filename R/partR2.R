@@ -67,6 +67,9 @@
 #' data(biomass)
 #' library(lme4)
 #'
+#' # scale data
+#' biomass[] <- lapply(biomass, function(x) if (is.double(x)) scale(x) else x)
+#'
 #' # Gaussian data
 #' mod <- lmer(Biomass ~  Year + Temperature * Precipitation + SpeciesDiversity + (1|Population),
 #'             data = biomass)
@@ -288,6 +291,15 @@ the moment")
 
     sc_cis <- purrr::map_df(boot_scs, calc_CI, CI, .id = "parts") %>%
               tibble::add_column(SC = as.numeric(SC_org), .after = "parts")
+
+    # calculate numerator degrees of freedom and add to partial R2 object
+    if((length(all_comb) == 1) & (any(is.na(all_comb)))) {
+        ndf_terms <- "Full"
+    } else {
+        ndf_terms <- c("Full", all_comb)
+    }
+    ndf <- suppressWarnings(purrr::map_int(ndf_terms, get_ndf, mod, data_mod))
+    r2_cis$ndf <- ndf
 
     res <- list(call = mod@call,
                 #datatype = "gaussian",

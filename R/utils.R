@@ -116,6 +116,29 @@ R2_of_red_mod <- function(partvar, mod, R2_pe, data, expct, overdisp_name) {
 }
 
 
+#' Get numerator dfs for reduced models
+#'
+#' @param partvar One or more fixed effect variables which are taken out
+#' of the model.
+#' @param mod merMod object.
+#' @param data Data.frame to fit the model
+#' @keywords internal
+#' @return Numerator degrees of freedom
+#' @export
+#'
+get_ndf <- function(partvar, mod, data) {
+
+    if (("Full" %in% partvar)&(length(partvar) == 1)) return(ncol(stats::model.matrix(mod)))
+
+    # which variables to reduce?
+    to_del <- paste(paste("-", partvar, sep= ""), collapse = " ")
+    # reduced formula
+    formula_red <- stats::update(stats::formula(mod), paste(". ~ . ", to_del, sep=""))
+    # fit reduced model
+    mod_red <-  stats::update(mod, formula. = formula_red, data = data)
+    ncol(stats::model.matrix(mod_red))
+
+}
 
 
 

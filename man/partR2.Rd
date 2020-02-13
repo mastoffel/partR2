@@ -77,6 +77,9 @@ R2, commonality coefficients and structure coefficients for gaussian lme4 models
 data(biomass)
 library(lme4)
 
+# scale data
+biomass[] <- lapply(biomass, function(x) if (is.double(x)) scale(x) else x)
+
 # Gaussian data
 mod <- lmer(Biomass ~  Year + Temperature * Precipitation + SpeciesDiversity + (1|Population),
             data = biomass)
