@@ -20,7 +20,14 @@
 #'        \code{nboot = 1000}.
 #' @param CI Width of the required confidence interval between 0 and 1 (defaults to
 #'        0.95).
-#' @param parallel If TRUE, computation runs in parallel, leaving one CPU free, except ncores is specified.
+#' @param parallel If TRUE, computation uses \code{future} within \code{furrr::map} which allows
+#'        parallelisation. However, it is necessary to specify a plan before running
+#'        \code{partR2()}. To see which options you have, check \code{?future::plan} and have
+#'        a look at our vignette for details. When running RStudio,
+#'        usually \code{plan(multisession, workers = 4)} is a good choice,
+#'        when you want to use 4 cores. To detect how many cores you have, use
+#'        \code{parallel::detectCores()}. If no plan is specified, \code{partR2} will simply run
+#'        sequentially.
 #' @param expct A string specifying the method for estimating the expectation in Poisson models
 #'        with log link and in Binomial models with logit link (in all other cases the agrument is ignored).
 #'        The only valid terms are 'meanobs' and 'latent' (and 'liability for binary and proportion data).

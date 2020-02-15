@@ -35,11 +35,14 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     names(x$R2_pe_ci) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper", "ndf")
     names(x$SC_pe_ci) <- c("Predictor", "r(Yhat,x)", "CI_lower", "CI_upper")
     # names(x$CC_df) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper")
-
+    # check how many bootstraps
+    num_boot <- ifelse(length(x$boot_warnings) == 0, NA, length(x$boot_warnings))
     cat("\n\n")
-    cat(paste0("R2 (", x$R2_type, ") and CI (",CI_range ,") for the full model: \n"))
-    r2_df <- x$R2_pe_ci %>% dplyr::mutate_if(is.numeric, round, round_to)
-    print(r2_df[1, 2:5], row.names = FALSE, right = FALSE)
+    cat(paste0("R2 (", x$R2_type, ") and ", CI_range, " CI for the full model: \n"))
+    r2_df <- x$R2_pe_ci %>%
+        dplyr::mutate_if(is.numeric, round, round_to) %>%
+        tibble::add_column(nboot = num_boot, .before = 5)
+    print(r2_df[1, 2:6], row.names = FALSE, right = FALSE)
     #cat(paste0("R2 = ", round(x$R2$R2, 3), ", CI = [", round(x$R2$lower, 3), ", ", round(x$R2$upper, 3), "]"))
 
     cat("\n")
