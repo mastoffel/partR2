@@ -198,7 +198,7 @@ the moment")
                                  overdisp_name = overdisp_name) %>%
                    dplyr::mutate(R2 = R2_full$R2 - .data$R2) %>%
                    # if by chance part R2 drops below 0, make it 0
-                   dplyr::mutate(R2 = ifelse(.data$R2 < 0, 0, .data$R2)) %>%
+                   # dplyr::mutate(R2 = ifelse(.data$R2 < 0, 0, .data$R2)) %>%
                    dplyr::bind_rows(R2_full, .)
     }
 
