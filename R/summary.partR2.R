@@ -33,7 +33,8 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     # prep
     CI_range <- paste0(sub('.*\\.', '', x$CI), "%")
     names(x$R2_pe_ci) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper", "ndf")
-    names(x$SC_pe_ci) <- c("Predictor", "r(Yhat,x)", "CI_lower", "CI_upper")
+    names(x$SC_pe_ci) <- c("Predictor", "SC", "CI_lower", "CI_upper")
+    names(x$IR2_pe_ci) <- c("Predictor", "IR2", "CI_lower", "CI_upper")
     # names(x$CC_df) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper")
     # check how many bootstraps
     num_boot <- ifelse(length(x$boot_warnings) == 0, NA, length(x$boot_warnings))
@@ -69,9 +70,17 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     cat("----------")
     cat("\n\n")
 
-    cat("Structure coefficients:\n")
+    cat("Structure coefficients r(Yhat,x):\n")
     SC_df <- x$SC_pe_ci %>% dplyr::mutate_if(is.numeric, round, round_to)
     print(SC_df, row.names = FALSE, right = FALSE)
+
+    cat("\n")
+    cat("----------")
+    cat("\n\n")
+
+    cat("Inklusive R2 (SC^2 * R2):\n")
+    IR2_df <- x$IR2_pe_ci %>% dplyr::mutate_if(is.numeric, round, round_to)
+    print(IR2_df, row.names = FALSE, right = FALSE)
 
     cat("\n")
     cat("----------")

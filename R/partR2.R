@@ -263,6 +263,10 @@ the moment")
                     purrr::map_df(function(x) stats::setNames(as.data.frame(t(x[[1]])), part_terms))
         # put all structure coefficients in a data.frame
         boot_scs <- purrr::map_df(boot_r2s_scs_ests, function(x) x$result[["scs"]])
+        # calculate inklusive R2
+        # not sure what is correct yet
+        # square the SC and multiply by full R2
+        boot_ir2s <- purrr::map_df(boot_scs, function(sc) sc^2 * boot_r2s$Full)
         # put all model estimates in a data.frame
         boot_ests <- purrr::map(boot_r2s_scs_ests, function(x) x$result[["ests"]])
         # warnings and messages
@@ -277,6 +281,9 @@ the moment")
                             as.data.frame() %>%
                             stats::setNames(part_terms)
         boot_scs <- matrix(nrow = 1, ncol = ncol(SC_org)) %>%
+                     as.data.frame() %>%
+                     stats::setNames(names(SC_org))
+        boot_ir2s <- matrix(nrow = 1, ncol = ncol(SC_org)) %>%
                      as.data.frame() %>%
                      stats::setNames(names(SC_org))
         boot_ests <- model_ests_full %>%
@@ -299,6 +306,9 @@ the moment")
     sc_cis <- purrr::map_df(boot_scs, calc_CI, CI, .id = "parts") %>%
               tibble::add_column(SC = as.numeric(SC_org), .after = "parts")
 
+    ir2_cis <- purrr::map_df(boot_ir2s, calc_CI, CI, .id = "parts") %>%
+               tibble::add_column(IR2 = as.numeric(SC_org^2 * R2_org$R2[1]), .after = "parts")
+
     # calculate numerator degrees of freedom and add to partial R2 object
     if((length(all_comb) == 1) & (any(is.na(all_comb)))) {
         ndf_terms <- "Full"
@@ -313,9 +323,11 @@ the moment")
                 R2_type = R2_type,
                 R2_pe_ci =  r2_cis,
                 SC_pe_ci =  sc_cis,
+                IR2_pe_ci = ir2_cis,
                 Ests_pe_ci =  ests_cis,
                 R2_boot =   boot_r2s,
                 SC_boot = boot_scs,
+                IR2_boot = boot_ir2s,
                 Ests_boot =   boot_ests,
                 partvars = partvars,
                 CI = CI,
