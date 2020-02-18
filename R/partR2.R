@@ -210,7 +210,7 @@ the moment")
     SC_pe <- function(mod) {
         # question: always return all structure coefficients?
         # if (is.null(partvars)) return(data.frame(no_partvars = NA))
-        Yhat <- stats::predict(mod)
+        Yhat <- stats::predict(mod, re.form=NA)
         mod_mat <- stats::model.matrix(mod)
         # only calculate SC for partvars
         mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop=FALSE]
