@@ -62,7 +62,7 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     if (nrow(r2_df) == 1) {
         print("No partitions selected.")
     } else {
-        print(r2_df[2:nrow(r2_df), ], row.names = FALSE, right = FALSE)
+        print(r2_df, row.names = FALSE, right = FALSE)
     }
 
     cat("\n")
