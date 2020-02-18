@@ -6,7 +6,7 @@
 \usage{
 partR2(mod, partvars = NULL, data = NULL, R2_type = "marginal",
   cc_level = NULL, nboot = NULL, CI = 0.95, parallel = FALSE,
-  expct = "meanobs", olre = TRUE)
+  expct = "meanobs", olre = TRUE, partbatch = NULL)
 }
 \arguments{
 \item{mod}{merMod object fitted with lme4.}
@@ -56,6 +56,15 @@ estimates follow formulae as presented in Nakagawa & Schielzeth (2010).}
 \item{olre}{Logical, defaults to TRUE. This argument allows the user to prevent the automatic fitting of
 an obervation level random effect (by setting it to FALSE) in Poisson and binomial models
 to account for overdispersion.}
+
+\item{partbatch}{List of character vectors with predictors that should be fitted and
+removed together. E.g. partbatch = list(batch1 = c("V1", "V2", "V3"),
+batch2 = c("V4", "V5", "V6")) would calculate part R2 only for combinations of
+predictors which contain V1, V2, V3 together or/and V4,V5,V6 together.
+This is useful when the number of potential subsets gets too large to
+be computationally practical, for example when dummy coding is used.
+See our vignette for details. This feature is still experimental and
+should be used with caution.}
 }
 \value{
 Returns an object of class \code{partR2} that is a a list with the following elements:

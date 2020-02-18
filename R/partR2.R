@@ -39,6 +39,14 @@
 #' @param olre Logical, defaults to TRUE. This argument allows the user to prevent the automatic fitting of
 #'        an obervation level random effect (by setting it to FALSE) in Poisson and binomial models
 #'        to account for overdispersion.
+#' @param partbatch List of character vectors with predictors that should be fitted and
+#'        removed together. E.g. partbatch = list(batch1 = c("V1", "V2", "V3"),
+#'        batch2 = c("V4", "V5", "V6")) would calculate part R2 only for combinations of
+#'        predictors which contain V1, V2, V3 together or/and V4,V5,V6 together.
+#'        This is useful when the number of potential subsets gets too large to
+#'        be computationally practical, for example when dummy coding is used.
+#'        See our vignette for details. This feature is still experimental and
+#'        should be used with caution.
 #'
 #'
 #'
@@ -96,7 +104,7 @@
 
 partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_level = NULL,
                    nboot = NULL, CI = 0.95, parallel = FALSE, expct = "meanobs",
-                   olre = TRUE){
+                   olre = TRUE, partbatch = NULL){
 
     # initial checks
     if(!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
@@ -133,6 +141,28 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
         all_comb <- NA
     }
 
+    # check batches
+    if (!is.null(partbatch)) {
+        if(!is.list(partbatch)) stop("partbatch must be a list")
+        if (is.null(all_comb)) all_comb <-NA
+        # first, make combinations of partbatches
+        combs_num <- purrr::map(1:length(partbatch),
+                           function(m) utils::combn(length(partbatch), m,
+                                                    simplify = FALSE)) %>%
+                      unlist(recursive = FALSE)
+        comb_batches <- purrr::map(combs_num, function(x) unlist(partbatch[x]))
+        # now add those to partvar combs
+        comb_batches2 <- purrr::map(comb_batches, function(x)
+                                    purrr::map(all_comb, function(z) c(z, x))) %>%
+                         unlist(recursive = FALSE)
+        # now add those to all_combs
+        all_comb <- c(all_comb, comb_batches2)
+        # check for duplicates or NA and remove in case
+        all_comb <- purrr::map(all_comb, function(x) x[!(duplicated(x) | is.na(x))])
+        # last step remove any empty list elements
+        all_comb[purrr::map(all_comb, length) == 0] <- NULL
+    }
+
     # commonality coefficients up to cc_level (e.g. 3 for
     # the cc of 3 predictors)
     if (!is.null(cc_level)) {
@@ -147,7 +177,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
         part_terms <- "Full"
     }
 
-    # get family and response variable
+   # get family and response variable
     mod_fam <- stats::family(mod)[[1]]
     if (!(mod_fam %in% c("gaussian", "binomial", "poisson"))) {
         stop("partR2 only handles gaussian, binomial and poisson models at
