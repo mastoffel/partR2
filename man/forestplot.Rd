@@ -4,7 +4,7 @@
 \alias{forestplot}
 \title{Plot a partR2 object}
 \usage{
-forestplot(x, type = c("R2", "Ests", "SC"), line_size = 0.5,
+forestplot(x, type = c("R2", "Ests", "SC", "IR2"), line_size = 0.5,
   text_size = 12, point_size = 3)
 }
 \arguments{

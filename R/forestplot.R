@@ -23,7 +23,7 @@
 #'
 
 
-forestplot <- function(x, type = c("R2", "Ests", "SC"), line_size = 0.5, text_size = 12, point_size = 3) {
+forestplot <- function(x, type = c("R2", "Ests", "SC", "IR2"), line_size = 0.5, text_size = 12, point_size = 3) {
 
     if (!requireNamespace("ggplot2", quietly = TRUE)) {
         stop("Package \"ggplot2\" needed for this function to work. Please install it.",
@@ -48,12 +48,11 @@ forestplot <- function(x, type = c("R2", "Ests", "SC"), line_size = 0.5, text_si
             factor(mod_out$combs, levels = rev(mod_out$combs))
     }
 
-    if (type == "R2")
-        x_label <- paste0("R2 (", x$R2_type, ") and CI")
-    if (type == "SC")
-        x_label <- "Structure coefficients and CI"
-    if (type == "Ests")
-        x_label <- "Model estimates and CI"
+    if (type == "R2") x_label <-  paste0("R2 (", x$R2_type, ") and CI")
+    if (type == "SC") x_label <- "Structure coefficients and CI"
+    if (type == "IR2") x_label <-  bquote(Inclusive~R^2~(SC^2%*%R^2~full)~and~CI)
+    if (type == "Ests") x_label <- "Model estimates and CI"
+
 
     p_out <-
         ggplot(aes_string("pe", "combs", xmax = "CI_upper", xmin = "CI_lower"),
