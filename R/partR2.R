@@ -158,7 +158,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
                                     purrr::map(all_comb, function(z) c(z, x))) %>%
                          unlist(recursive = FALSE)
         # now add those to all_combs
-        all_comb <- c(all_comb, comb_batches2)
+        all_comb <- c(partbatch, all_comb, comb_batches2)
         # check for duplicates or NA and remove in case
         all_comb <- purrr::map(all_comb, function(x) x[!(duplicated(x) | is.na(x))])
         # last step remove any empty list elements
@@ -339,7 +339,8 @@ the moment")
               tibble::add_column(SC = as.numeric(SC_org), .after = "parts")
 
     ir2_cis <- purrr::map_df(boot_ir2s, calc_CI, CI, .id = "parts") %>%
-               tibble::add_column(IR2 = as.numeric(SC_org^2 * R2_org$R2[1]), .after = "parts")
+               tibble::add_column(IR2 = as.numeric(SC_org^2 * R2_org$R2[1]), .after = "parts") %>%
+               as.data.frame()
 
     # calculate numerator degrees of freedom and add to partial R2 object
     if((length(all_comb) == 1) & (any(is.na(all_comb)))) {
@@ -362,6 +363,7 @@ the moment")
                 IR2_boot = boot_ir2s,
                 Ests_boot =   boot_ests,
                 partvars = partvars,
+                partbatch = ifelse(is.null(partbatch), NA, partbatch),
                 CI = CI,
                 boot_warnings = boot_warnings ,
                 boot_messages = boot_messages)
