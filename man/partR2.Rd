@@ -70,12 +70,14 @@ should be used with caution.}
 Returns an object of class \code{partR2} that is a a list with the following elements:
 \item{call}{model call}
 \item{R2_type}{Marginal or conditional R2}
-\item{R2_pe_ci}{R2 and confidence intervals for full model and partitions}
-\item{SC_pe_ci}{Structure coefficients and confidence intervals}
-\item{Ests_pe_ci}{Model estimates and confidence intervals. Point estimates
+\item{R2}{R2 and confidence intervals for full model and partitions}
+\item{SC}{Structure coefficients and confidence intervals}
+\item{IR2}{Inklusive R2. This is SC^2 * R2_full.}
+\item{Ests}{Model estimates and confidence intervals. Point estimates
 were extracted with broom.mixed::tidy}
 \item{R2_boot}{Parametric bootstrap samples for R2 for full model and partitions}
 \item{SC_boot}{Parametric bootstrap samples for structure coefficients}
+\item{IR2_boot}{Parametric bootstrap samples for inklusive R2 values}
 \item{Ests_boot}{Parametric bootstrap samples for model estimates}
 \item{partvars}{predictors to partition}
 \item{CI}{Coverage of the confidence interval as specified by the \code{CI} argument.}

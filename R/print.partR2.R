@@ -30,12 +30,12 @@ print.partR2 <- function(x, round_to = 4, ...) {
 
     # prep
     CI_range <- paste0(sub('.*\\.', '', x$CI), "%")
-    names(x$R2_pe_ci) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper", "ndf")
+    names(x$R2) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper", "ndf")
     # check how many bootstraps
     num_boot <- ifelse(length(x$boot_warnings) == 0, NA, length(x$boot_warnings))
     cat("\n\n")
     cat(paste0("R2 (", x$R2_type, ") and ", CI_range, " CI for the full model: \n"))
-    r2_df <- x$R2_pe_ci %>%
+    r2_df <- x$R2 %>%
              dplyr::mutate_if(is.numeric, round, round_to) %>%
              tibble::add_column(nboot = num_boot, .before = 5)
     print(r2_df[1, 2:6], row.names = FALSE, right = FALSE)
@@ -45,7 +45,7 @@ print.partR2 <- function(x, round_to = 4, ...) {
     cat("\n\n")
     cat("Partitioned R2s:\n")
 
-    if (nrow(x$R2_pe_ci) == 1) {
+    if (nrow(x$R2) == 1) {
         print("No partitions selected.")
     } else {
     print(r2_df, row.names = FALSE,right = FALSE)

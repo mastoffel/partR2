@@ -32,15 +32,15 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     x <- object
     # prep
     CI_range <- paste0(sub('.*\\.', '', x$CI), "%")
-    names(x$R2_pe_ci) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper", "ndf")
-    names(x$SC_pe_ci) <- c("Predictor", "SC", "CI_lower", "CI_upper")
-    names(x$IR2_pe_ci) <- c("Predictor", "IR2", "CI_lower", "CI_upper")
+    names(x$R2) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper", "ndf")
+    names(x$SC) <- c("Predictor", "SC", "CI_lower", "CI_upper")
+    names(x$IR2) <- c("Predictor", "IR2", "CI_lower", "CI_upper")
     # names(x$CC_df) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper")
     # check how many bootstraps
     num_boot <- ifelse(length(x$boot_warnings) == 0, NA, length(x$boot_warnings))
     cat("\n\n")
     cat(paste0("R2 (", x$R2_type, ") and ", CI_range, " CI for the full model: \n"))
-    r2_df <- x$R2_pe_ci %>%
+    r2_df <- x$R2 %>%
         dplyr::mutate_if(is.numeric, round, round_to) %>%
         tibble::add_column(nboot = num_boot, .before = 5)
     print(r2_df[1, 2:6], row.names = FALSE, right = FALSE)
@@ -51,7 +51,7 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     cat("\n\n")
 
     cat("Model estimates:\n")
-    ests_df <- x$Ests_pe_ci %>% dplyr::mutate_if(is.numeric, round, round_to)
+    ests_df <- x$Ests %>% dplyr::mutate_if(is.numeric, round, round_to)
     print(ests_df, row.names = FALSE, right = FALSE)
 
     cat("\n")
@@ -71,7 +71,7 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     cat("\n\n")
 
     cat("Structure coefficients r(Yhat,x):\n")
-    SC_df <- x$SC_pe_ci %>% dplyr::mutate_if(is.numeric, round, round_to)
+    SC_df <- x$SC %>% dplyr::mutate_if(is.numeric, round, round_to)
     print(SC_df, row.names = FALSE, right = FALSE)
 
     cat("\n")
@@ -79,7 +79,7 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     cat("\n\n")
 
     cat("Inklusive R2 (SC^2 * R2):\n")
-    IR2_df <- x$IR2_pe_ci %>% dplyr::mutate_if(is.numeric, round, round_to)
+    IR2_df <- x$IR2 %>% dplyr::mutate_if(is.numeric, round, round_to)
     print(IR2_df, row.names = FALSE, right = FALSE)
 
     cat("\n")

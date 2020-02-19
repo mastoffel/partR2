@@ -31,7 +31,7 @@ forestplot <- function(x, type = c("R2", "Ests", "SC"), line_size = 0.5, text_si
     }
 
     if (length(type) > 1) type <- type[1]
-    to_plot <- paste0(type, "_pe_ci")
+    to_plot <- type
     mod_out <- x[[to_plot]]
 
     # reshape Ests_pe_ci a bit
@@ -75,7 +75,7 @@ forestplot <- function(x, type = c("R2", "Ests", "SC"), line_size = 0.5, text_si
         ) +
         xlab(x_label)
     # if bootstrap plot errorbars
-    if (!is.na(x[[paste0(type, "_pe_ci")]][["CI_lower"]][1])) {
+    if (!is.na(x[[type]][["CI_lower"]][1])) {
         p_out <- p_out + geom_errorbarh(alpha = 1, color = "#1b262c", height = 0,
                                         size = line_size)
     }
