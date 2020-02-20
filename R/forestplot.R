@@ -83,7 +83,7 @@ forestplot <- function(x, type = c("R2", "Ests", "SC", "IR2"), line_size = 0.5, 
     # when estimates are plotted, split fixed and random effects into
     # different plots
     if (type == "Ests") {
-        p_out <- p_out + facet_wrap(~ effect, scales = "free_y")
+        p_out <- p_out + facet_wrap(~ effect, scales = "free")
     }
     p_out
 
