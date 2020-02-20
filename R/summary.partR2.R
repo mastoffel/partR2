@@ -43,6 +43,8 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     r2_df <- x$R2 %>%
         dplyr::mutate_if(is.numeric, round, round_to) %>%
         tibble::add_column(nboot = num_boot, .before = 5)
+    # rename Full to Model
+    r2_df[1, 1] <- "Model"
     print(r2_df[1, 2:6], row.names = FALSE, right = FALSE)
     #cat(paste0("R2 = ", round(x$R2$R2, 3), ", CI = [", round(x$R2$lower, 3), ", ", round(x$R2$upper, 3), "]"))
 

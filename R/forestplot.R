@@ -39,10 +39,10 @@ forestplot <- function(x, type = c("R2", "Ests", "SC", "IR2"), line_size = 0.5, 
         mod_out <-
             mod_out %>% dplyr::mutate(group = ifelse(is.na(.data$group), "", .data$group)) %>%
             dplyr::mutate(combs = paste(.data$term, .data$group, sep = " ")) %>%
-            dplyr::mutate(combs = gsub("var__", "", combs)) %>%
+            dplyr::mutate(combs = gsub("var__", "", .data$combs)) %>%
             dplyr::rename(pe = .data$estimate) %>%
             dplyr::filter(.data$term != "(Intercept)") %>%
-            dplyr::mutate(combs = ifelse(group == "Residual", "Residual", combs)) %>%
+            dplyr::mutate(combs = ifelse(.data$group == "Residual", "Residual", .data$combs)) %>%
             dplyr::mutate(effect = ifelse(.data$effect == "ran_pars", "random effects (variance)", "fixed effects"))
     } else {
         names(mod_out) <- c("combs", "pe", "CI_lower", "CI_upper")
