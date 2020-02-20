@@ -194,7 +194,10 @@ the moment")
     # extract some essential info
     # we suppress messages here to avoid the notice that broom.mixed
     # overwrites the broom S3 methods.
-    model_ests_full <- suppressMessages(broom.mixed::tidy(mod))
+    model_ests_full <- suppressMessages(
+        broom.mixed::tidy(mod, effects = c("ran_pars", "fixed"),
+                          scales = c("vcov", NA))
+        )
 
     # R2
     R2_pe <- function(mod, expct, overdisp_name) {
@@ -262,7 +265,8 @@ the moment")
             mod_iter <- lme4::refit(mod, newresp = y)
             out_r2s <- part_R2s(mod_iter, expct, overdisp_name)
             out_scs <- SC_pe(mod_iter)
-            out_ests <- broom.mixed::tidy(mod_iter)
+            out_ests <- broom.mixed::tidy(mod_iter, effects = c("ran_pars", "fixed"),
+                                          scales = c("vcov", NA))
             out <- list(r2s = out_r2s, ests = out_ests, scs = out_scs)
         }
         # capture warnings and messages
