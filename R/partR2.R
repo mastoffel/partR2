@@ -6,14 +6,12 @@
 #' @param data data.frame used to fit the lme4 model. Has to be provided because
 #' the model is refitted to calculate partial R2s.
 #' @param R2_type "marginal" or "conditional" R2.
-#' @param cc_level Level up to which shared partial R2s (sometimes called commonality coefficients)
-#'        are calculated.
+#' @param max_level Level up to which shared partial R2s are calculated.
 #'        The number of sets for which to calculate partial R2 increases exponantially,
-#'        i.e. for 10 variables 2^10 - 1 commonality coefficients and potentially CIs
-#'        can be calculated. To limit this number for models with many fixed effects,
-#'        specify cc_level. cc_level = 3 would limit the number of sets to a maximum of
-#'        triplets, i.e. calculating partial R2 for each individual fixed effect specified in
-#'        partvars, for each pair and for each triplet.
+#'        i.e. for 10 variables 2^10 - 1 R2s  can be calculated. If you are
+#'        only interested in the unique but not the shared effects, use max_level = 1.
+#'        If interested in unique effects and combinations of two terms,
+#'        use max_level = 2 etc.
 #' @param nboot Number of parametric bootstraps for interval estimation
 #'        (defaults to NULL). Larger numbers of bootstraps give a better
 #'        asymtotic CI, but may be time-consuming. Bootstrapping can be switch on by setting
@@ -104,7 +102,7 @@
 #' @export
 
 
-partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_level = NULL,
+partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_level = NULL,
                    nboot = NULL, CI = 0.95, parallel = FALSE, expct = "meanobs",
                    olre = TRUE, partbatch = NULL){
 
@@ -165,10 +163,10 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", cc_l
         all_comb[purrr::map(all_comb, length) == 0] <- NULL
     }
 
-    # commonality coefficients up to cc_level (e.g. 3 for
+    # commonality coefficients up to max_level (e.g. 3 for
     # the cc of 3 predictors)
-    if (!is.null(cc_level)) {
-        remove_combs <- purrr::map_lgl(all_comb, function(x) length(x) > cc_level)
+    if (!is.null(max_level)) {
+        remove_combs <- purrr::map_lgl(all_comb, function(x) length(x) > max_level)
         all_comb[remove_combs] <- NULL
     }
 

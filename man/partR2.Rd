@@ -5,7 +5,7 @@
 \title{Partition the R2 for Gaussian mixed models}
 \usage{
 partR2(mod, partvars = NULL, data = NULL, R2_type = "marginal",
-  cc_level = NULL, nboot = NULL, CI = 0.95, parallel = FALSE,
+  max_level = NULL, nboot = NULL, CI = 0.95, parallel = FALSE,
   expct = "meanobs", olre = TRUE, partbatch = NULL)
 }
 \arguments{
@@ -18,14 +18,12 @@ the model is refitted to calculate partial R2s.}
 
 \item{R2_type}{"marginal" or "conditional" R2.}
 
-\item{cc_level}{Level up to which shared partial R2s (sometimes called commonality coefficients)
-are calculated.
+\item{max_level}{Level up to which shared partial R2s are calculated.
 The number of sets for which to calculate partial R2 increases exponantially,
-i.e. for 10 variables 2^10 - 1 commonality coefficients and potentially CIs
-can be calculated. To limit this number for models with many fixed effects,
-specify cc_level. cc_level = 3 would limit the number of sets to a maximum of
-triplets, i.e. calculating partial R2 for each individual fixed effect specified in
-partvars, for each pair and for each triplet.}
+i.e. for 10 variables 2^10 - 1 R2s  can be calculated. If you are
+only interested in the unique but not the shared effects, use max_level = 1.
+If interested in unique effects and combinations of two terms,
+use max_level = 2 etc.}
 
 \item{nboot}{Number of parametric bootstraps for interval estimation
 (defaults to NULL). Larger numbers of bootstraps give a better
