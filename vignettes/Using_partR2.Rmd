@@ -16,11 +16,13 @@ knitr::opts_chunk$set(
 ```
 
 
-The goal of `partR2` is to partition the varianced explained in generalised linear mixed models (GLMMs) into variation unique to and shared among predictors (partial R^2^), but it also does a few other things. Here is a quick summary of what you can learn about your mixed model with `partR2`:
+The goal of `partR2` is to partition the varianced explained in generalised linear mixed models (GLMMs) into variation unique to and shared among predictors using semi-partial (or 'part') R^2^, but it also does a few other things. Here is a quick summary of what you can learn about your mixed model with `partR2`:
 
 * Marginal and conditional R^2^ (based on Nakagawa & Schielzeth, 2013)
-* Partial R^2^ unique to each predictor and for each combination of predictors (fixed effects)
-* Structure coefficients, i.e. the correlation between each predictor and the fitted response (the contribution of a predictor to the model when ignoring all other predictors)
+* Part R^2^ unique to each predictor and for each combination of predictors (fixed effects)
+* Structure coefficients (SC), i.e. the correlation between each predictor and the fitted response (the contribution of a predictor to the model when ignoring all other predictors)
+* Inclusive R^2^, which is the explained variance of a predictor for the fitted response irrespective
+of covariances with other predictors. It is calculated as SC^2^ * R^2^ (of the full model).
 * Model estimates (these are based on the `broom.mixed` package)
 * Confidence intervals for all relevant estimators through parametric bootstrapping
 
@@ -57,7 +59,7 @@ mod1 <- lmer(Biomass ~ Year + Temperature + Precipitation +
 
 Now we would usually do the standard model checks and evaluations to ensure that the model works well. For the sake of simplicity (and because we simulated the data from Gaussian distributions), we skip that step here and go straight into the `partR2` part. First of all, we calculate the overall marginal R^2^ and use parametric bootstrapping to estimate confidence intervals. Marginal R^2^ refers to the variance explained by fixed effect predictors relative to the total variance in the response. Alternatively, we can estimate conditional R^2^ (by setting `R2_type ="conditional"`), which is the variance explained by fixed effects relative to the variance after accounting for random effect variances
 
-Note that we are supplying the fitted `merMod` object (the `lme4` output) and the original dataset (in the `data` argument) used to fit the model.  This is required, because the `merMod` object does not contain all necessary information to perform the `partR2` analysis. There is one important thing to pay attention to: If there are missing observations for some of the predictors/response, `lmer` will subset the data, which will result in a mismatch between the data in the `data` object and the data used fit the model. In order to avoid complications, it is advisable to remove rows with missing data prior to the fitting the model. 
+Note that we are supplying the fitted `merMod` object (the `lme4` output) and the original dataset (in the `data` argument) used to fit the model.  This is required, because the `merMod` object does not contain all necessary information to perform the `partR2` analysis. There is one important thing to pay attention to: If there are missing observations for some of the predictors/response, `lmer` and `glmer` will remove those rows containing NAs, which will result in a mismatch between the data in the `data` object and the data used fit the model. In order to avoid complications, it is advisable to remove rows with missing data prior to the fitting the model. 
 
 ```{r, message=FALSE}
 R2_mod1 <- partR2(mod1, R2_type = "marginal", nboot = 10, data = biomass)
@@ -72,45 +74,88 @@ R2_mod1 <- partR2(mod1, partvars = c("Temperature", "Precipitation"),
 R2_mod1
 ```
 
-So it seems that temperature and precipitation uniquely only explain around 4% and 9% in the variation in biomass, respectively. Together however, they explain around 39% of the variation! The reason for this is that `partR2` calculates the partial R^2^ unique to each predictor by calculating the difference in R^2^ between the full model and a reduced model which does not contain the respective predictor. So when temperature is removed, it's variance explained is largely replaced by precipitation (as both are highly correlated). This is why the R^2^ unique to temperature is only 4%.  
+So it seems that temperature and precipitation uniquely only explain around 4% and 9% in the variation in biomass, respectively. Together however, they explain around 39% of the variation! The reason for this is that `partR2` calculates the part R^2^ unique to each predictor by calculating the difference in R^2^ between the full model and a reduced model which does not contain the respective predictor. So when temperature is removed, it's variance explained is largely replaced by precipitation (as both are highly correlated). This is why the R^2^ unique to temperature is only 4%.  
 
-Besides partial R^2^s, `partR2` also outputs model estimates and structure coefficients, which are shown when calling the `summary()` function. 
+Besides part R^2^s, `partR2` also outputs model estimates and structure coefficients, which are shown when calling the `summary()` function. 
 
 ```{r, warning=FALSE}
 summary(R2_mod1)
 ```
 
-Model estimates show that all four predictors seem to have some effect on biomass because none of the confidence intervals overlaps zero, while the effect of precipitation is the largest. Structure coefficients tell us that both temperature and precipitation are quite strongly correlated with the predicted biomass from the model. Structure coefficients effectively give us the contribution of a predictor to the model prediction in the absence of all other predictors (with a maximum magnitude of ±1). This is why they are large for temperature and precipitation, while their partial R^2^s (the variance that they uniquely explain) are small due to their correlation. 
+Model estimates show that all four predictors seem to have some effect on biomass because none of the confidence intervals overlaps zero, while the effect of precipitation is the largest. Structure coefficients tell us that both temperature and precipitation are quite strongly correlated with the predicted biomass from the model. Structure coefficients effectively give us the contribution of a predictor to the model prediction in the absence of all other predictors (with a maximum magnitude of ±1). SC are correlation coefficients and by squaring them and multiplying by the marginal R^2^ of the model we get
+what we call inclusive R^2^ or short IR^2^ (IR^2^ = SC^2^ * R^2^). SC and IR^2^ are large for temperature and precipitation as both are highly correlated to the predicted response, but their part R^2^s (the variance that they uniquely explain) are small due to their correlation. 
+
+
+## Limiting the amount of combinations
+
+The number of combinations for part R^2^ increases exponantially with 2^n-1 combinations
+for n predictors. There are two possibilities to decrease the number of sets for
+which R^2^ is calculated and to reduce the computational burden. Our model
+`mod1` has four predictors and hence 2^4-1 = 15 combinations. If we only
+wanted the part R^2^ for each predictor but not their combinations, we can
+specify `max_level`. 
+
+```{r, warning=FALSE}
+R2_short <- partR2(mod1, partvars = c("Temperature", "Precipitation", "Year", "SpeciesDiversity"), 
+                   R2_type = "marginal", data = biomass, max_level = 1)
+R2_short
+```
+
+`max_level` = 2 would give all combinations up to a maximum of two predictors 
+and so on. 
+
+Another option is `partbatch` which takes a list of character vectors. The
+terms in each character vector are then always fitted or removed together. This
+is most useful for many variables, e.g. when using dummy coding.
+```{r, warning=FALSE}
+R2_batch <- partR2(mod1, partvars = c("SpeciesDiversity"), 
+                   partbatch = list(batch1 = c("Temperature", "Precipitation")),
+                   R2_type = "marginal", data = biomass)
+R2_batch
+```
+
 
 ## Plotting
 
-We can now plot the results as forestplots, powered by `ggplot2` (Wickham, 2016).
+We can now plot the results as forestplots, powered by `ggplot2` (Wickham, 2016). Some
+arguments provide an easy way to customize the plot, see `?forestplot`.
 
 ```{r, fig.width = 4, fig.height=2.5}
-forestplot(R2_mod1)
+forestplot(R2_mod1, type = "R2", line_size = 0.5, text_size = 12, point_size = 3)
 ```
 
-The output of forestplot is a ggplot object so we can change it using ggplot syntax or assemble multiple plots with packages like `patchwork`. The function also allows to plot partial R2s, slopes or structure coefficients.
+The output of forestplot is a ggplot object so we can change it using ggplot syntax or assemble multiple plots with packages like `patchwork`. We can also plot the model estimates, structure
+coefficients or inclusive R^2^s.
 
 ```{r, fig.width = 7, fig.height=5}
 library(patchwork)
-p1 <- forestplot(R2_mod1, type = "R2")
-p2 <- forestplot(R2_mod1, type = "SC")
-p3 <- forestplot(R2_mod1, type = "Ests")
+p1 <- forestplot(R2_mod1, type = "R2", text_size = 10)
+p2 <- forestplot(R2_mod1, type = "IR2", text_size = 10)
+p3 <- forestplot(R2_mod1, type = "Ests", text_size = 10)
 (p1 + p2) / p3
 ```
 
 However, if you prepare a publication, you probably want the data to plot it yourself or put it in a table. Here is how the results can be retrieved from a `partR2` object:
 
+```{r}
+# An overview
+str(R2_mod1, max.level = 1)
+```
+
+How to obtain point estimates, confidence intervals and bootstrap replicates.
+
 ```{r, results=FALSE}
 # point estimates and confidence intervals
-R2_mod1$R2_pe_ci   # R2s
-R2_mod1$SC_pe_ci   # Structure coefficients
-R2_mod1$Ests_pe_ci # Model estimates
+R2_mod1$R2   # R2s
+R2_mod1$SC   # Structure coefficients
+R2_mod1$IR2  # inclusive R2s
+R2_mod1$Ests # Model estimates
+
 # bootstrap replicates
 R2_mod1$R2_boot
 R2_mod1$Ests_boot
 R2_mod1$SC_boot
+R2_mod1$IR2_boot
 ```
 
 ## Check warnings from bootstrapping
@@ -123,33 +168,34 @@ R2_mod1$boot_messages[1:2]
 ```
 No warnings or messages in our case. But you might find something in your own analyses, for example convergence or singularity warnings or messages. Just make sure that you had a look, though these are typically not major problems (at least when the initial model fit wasn't problematic).
 
-## Special cases for partial R2s
+## Special cases for part R2s
 
-### Partial R^2^s for interactions
+### Part R^2^s for interactions
 
-It is possible to estimate partial R^2^ for models with interaction terms. There are two ways in which interaction terms can be included in the `formula` argument. The familiar `*` statment allows fitting terms with their main effects and their interactions, while the `:` statement fits only the interactions. This is important to know, because we need to use the `:` version to tell `partR2` that we require a partial R^2^ for an interaction. Nevertheless, we can fit the model with the `*` statment:
+It is possible to estimate part R^2^ for models with interaction terms. There are two ways in which interaction terms can be included in the `formula` argument. The familiar `*` statment allows fitting terms with their main effects and their interactions, while the `:` statement fits only the interactions. This is important to know, because we need to use the `:` version to tell `partR2` that we require a part R^2^ for an interaction. Nevertheless, we can fit the model with the `*` statment:
 
 ```{r, warning=FALSE}
 mod2 <- lmer(Biomass ~ Temperature * Precipitation + (1|Population), 
              data = biomass)
 ```
 
-If we are interested in the effect of each main effect and the interaction, we can specify this in the `partvars` argument (now with the `:` version).
+When calculating part R^2^ of interactions we should be a careful because
+it is difficult to interpret an interaction without the main effects fitted and
+centering or standardising the variables is probably a good idea (see Schielzeth 2010).
+For now, we are only interested the explained variation of the interaction itself.
+We specify it in the `partvars` argument with `Temperature:Precipitation`.
 
 ```{r, warning=FALSE}
-R2_mod2 <- partR2(mod2, partvars = c("Temperature:Precipitation", 
-                                           "Temperature", "Precipitation"), 
+R2_mod2 <- partR2(mod2, partvars = c("Temperature:Precipitation"), 
                         R2_type = "marginal", nboot = 10, data = biomass)
 R2_mod2
 ```
 
-The first rows show the variances explained by single predictors, while rows 4-8 show variances explained by combinations of predictors. This first row, in this case, is the variance uniquely explained by the interaction `Temperature:Precipitation`. The fourth row shows the variance explained by the `Temperature:Precipitation` interaction together with the main effect of `Temperature`. The seventh row shows the variance explained additive by the two predictors `Temperature` and `Precepitation`.
-
-It is sometimes useful to eyeball the table for jumps in variance explained when predictors are added. However, it is also important to realized the meaning of partial R^2^2 of main effects when interactions are fitted in the model. When a partial main effect is also involved in an interaction, the variance explained by the main effect is usually also explained by the interaction, such that the unique variance explained is often small.
+It is sometimes useful to eyeball the table for jumps in variance explained when predictors are added. However, it is also important to realized the meaning of part R^2^2 of main effects when interactions are fitted in the model. When a part main effect is also involved in an interaction, the variance explained by the main effect is usually also explained by the interaction, such that the unique variance explained is often small.
 
 An extreme case are interactions involving factorial predictors. With one covariate, a three-level factor and their interaction, the model has estimates six parameters in the fixed part: one intercept, one for the main effect of the covariate, two contrasts for the main-effect of the three-level factor and two contrasts for the interaction. Now, if the covariate is removed from the model, the contrasts will be reparameterized, such that there are still six parameters estimated in the fixed part: one intercept, two contrast for the main-effect of the three-level factor, and three for the interactions.
 
-### Partial R^2^s for models with transformations in the formula
+### part R^2^s for models with transformations in the formula
 
 We generally advice to do all variable transformation before fitting the model. However, if for some reason this is not possible, it is important to specify the variable in the `partvars` argument exactly (!) how it was done in the model. Here is an example where we fit and additonal term for the precipitation squared in the formula. 
 

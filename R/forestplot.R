@@ -55,15 +55,13 @@ forestplot <- function(x, type = c("R2", "Ests", "SC", "IR2"), line_size = 0.5, 
     if (type == "IR2") x_label <-  bquote(Inclusive~R^2~(SC^2%*%R^2~full)~and~CI)
     if (type == "Ests") x_label <- "Model estimates and CI"
 
-
+    col_all <- "#2E3440"
     p_out <-
         ggplot(aes_string("pe", "combs", xmax = "CI_upper", xmin = "CI_lower"),
                data = mod_out) +
-        geom_vline(xintercept = 0, color = "#1b262c", linetype='dashed', size = line_size) +
+        geom_vline(xintercept = 0, color = col_all, linetype='dashed', size = line_size) +
         #geom_point(size = point_size, shape = 21, col = "black", fill = "grey69", # "grey69"
         #           alpha = 1, stroke = line_size) +
-        geom_point(size = point_size, col = "#1b262c", # "grey69"
-                   alpha = 1) +
         theme_classic(base_line_size = line_size, base_size = text_size) +
         theme(
             panel.grid.major = element_blank(),
@@ -71,15 +69,18 @@ forestplot <- function(x, type = c("R2", "Ests", "SC", "IR2"), line_size = 0.5, 
             axis.line.y = element_blank(),
             axis.ticks.y = element_blank(),
             axis.title.y = element_blank(),
-            axis.text = element_text(color = "#1b262c"),
-            axis.title.x = element_text(margin=margin(t=8), color = "#1b262c")
+            axis.text = element_text(color = col_all),
+            axis.title.x = element_text(margin=margin(t=8), color = col_all)
         ) +
         xlab(x_label)
     # if bootstrap plot errorbars
     if (!is.na(x[[type]][["CI_lower"]][1])) {
-        p_out <- p_out + geom_errorbarh(alpha = 1, color = "#1b262c", height = 0,
+        p_out <- p_out + geom_errorbarh(alpha = 1, color = col_all, height = 0,
                                         size = line_size)
     }
+    p_out <- p_out +
+        geom_point(size = point_size, shape = 21, fill = "#ECEFF4", col = col_all, # "grey69"
+                   alpha = 1, stroke = line_size)
     # when estimates are plotted, split fixed and random effects into
     # different plots
     if (type == "Ests") {
