@@ -20,7 +20,7 @@ The goal of `partR2` is to partition the varianced explained in generalised line
 
 * Marginal and conditional R^2^ (based on Nakagawa & Schielzeth, 2013)
 * Part R^2^ unique to each predictor and for each combination of predictors (fixed effects)
-* Structure coefficients (SC), i.e. the correlation between each predictor and the fitted response (the contribution of a predictor to the model when ignoring all other predictors)
+* Structure coefficients (SC), i.e. the correlation between each predictor and the fitted response (the contribution of a predictor to the model when ignoring all other predictors) (see Yeatts et al., 2017)
 * Inclusive R^2^, which is the explained variance of a predictor for the fitted response irrespective
 of covariances with other predictors. It is calculated as SC^2^ * R^2^ (of the full model)
 * Model estimates (these are based on the `broom.mixed` package)
@@ -296,4 +296,6 @@ package version 0.1.0. https://CRAN.R-project.org/package=furrr
 Harrison, X. A. (2014). Using observation-level random effects to model overdispersion in count data in ecology and evolution. PeerJ, 2, e616.
 
 Stoffel, M. A., Nakagawa, S. & Schielzeth, H. (2017). rptR: Repeatability estimation and variance decomposition by generalized linear mixed‐effects models. Methods in Ecology and Evolution, 8(11), 1639-1644.
+
+Yeatts, P.E., Barton, M., Henson, R.K. & Martin, S.B. (2017). The use of structure coefficients to address multicollinearity in sport and exercise science. Measurement in Physical Education and Exercise Science, 21(2), pp.83-91.
 
