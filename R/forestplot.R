@@ -23,7 +23,7 @@
 #'
 
 
-forestplot <- function(x, type = c("R2", "Ests", "SC", "IR2"), line_size = 0.5, text_size = 12, point_size = 3) {
+forestplot <- function(x, type = c("R2", "BW", "SC", "IR2", "Ests"), line_size = 0.5, text_size = 12, point_size = 3) {
 
     if (!requireNamespace("ggplot2", quietly = TRUE)) {
         stop("Package \"ggplot2\" needed for this function to work. Please install it.",
@@ -35,7 +35,7 @@ forestplot <- function(x, type = c("R2", "Ests", "SC", "IR2"), line_size = 0.5, 
     mod_out <- x[[to_plot]]
 
     # reshape Ests_pe_ci a bit
-    if (type == "Ests") {
+    if (type %in% c("Ests", "BW")) {
         mod_out <-
             mod_out %>% dplyr::mutate(group = ifelse(is.na(.data$group), "", .data$group)) %>%
             dplyr::mutate(combs = paste(.data$term, .data$group, sep = " ")) %>%
@@ -53,6 +53,7 @@ forestplot <- function(x, type = c("R2", "Ests", "SC", "IR2"), line_size = 0.5, 
     if (type == "R2") x_label <-  paste0("R2 (", x$R2_type, ") and CI")
     if (type == "SC") x_label <- "Structure coefficients and CI"
     if (type == "IR2") x_label <-  bquote(Inclusive~R^2~(SC^2%*%R^2~full)~and~CI)
+    if (type == "BW") x_label <- "Model estimates (beta weights and variances) and CI"
     if (type == "Ests") x_label <- "Model estimates and CI"
 
     col_all <- "#2E3440"
@@ -83,7 +84,7 @@ forestplot <- function(x, type = c("R2", "Ests", "SC", "IR2"), line_size = 0.5, 
                    alpha = 1, stroke = line_size)
     # when estimates are plotted, split fixed and random effects into
     # different plots
-    if (type == "Ests") {
+    if (type %in% c("BW", "Ests")) {
         p_out <- p_out + facet_wrap(~ effect, scales = "free")
     }
     p_out
