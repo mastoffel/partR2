@@ -198,6 +198,8 @@ the moment")
         broom.mixed::tidy(mod, effects = c("ran_pars", "fixed"),
                           scales = c("vcov", NA))
         )
+    # beta weights
+    model_bws_full <- get_bw(model_ests_full, mod)
 
     # R2
     R2_pe <- function(mod, expct, overdisp_name) {
@@ -238,36 +240,34 @@ the moment")
     # calculate R2 and partial R2s
     R2_org <- part_R2s(mod, expct, overdisp_name)
 
-    # SC to be discussed
-    # # structure coefficients function
+    # structure coefficients
     SC_pe <- function(mod) {
-        # question: always return all structure coefficients?
-        # if (is.null(partvars)) return(data.frame(no_partvars = NA))
         Yhat <- stats::predict(mod, re.form=NA)
         mod_mat <- stats::model.matrix(mod)
         # only calculate SC for partvars
         mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop=FALSE]
-        #message("SC for factors with more than two levels do not make sense at the moment")
         out <- data.frame(stats::cor(Yhat, mod_mat))
     }
 
     # structure coefficients
     SC_org <- SC_pe(mod)
 
-    # parametric bootstrapping
+    # param. bootstrapping
     if (!is.null(nboot)) {
 
-        # simulation new responses
+        # simulating new responses for param. bootstraps
         if (nboot > 0)  Ysim <- as.data.frame(stats::simulate(mod, nsim = nboot))
         # main bootstrap function
         bootstr <- function(y, mod, expct, overdisp_name) {
-            # at the moment lme4 specific, could be extended
             mod_iter <- lme4::refit(mod, newresp = y)
             out_r2s <- part_R2s(mod_iter, expct, overdisp_name)
             out_scs <- SC_pe(mod_iter)
             out_ests <- broom.mixed::tidy(mod_iter, effects = c("ran_pars", "fixed"),
                                           scales = c("vcov", NA))
-            out <- list(r2s = out_r2s, ests = out_ests, scs = out_scs)
+            # beta weights
+            out_bw <- get_bw(out_ests, mod_iter)
+            out <- list(r2s = out_r2s, ests = out_ests, scs = out_scs,
+                        bws = out_bw)
         }
         # capture warnings and messages
         bootstr_quiet <-  purrr::quietly(bootstr)
@@ -298,11 +298,11 @@ the moment")
         # put all structure coefficients in a data.frame
         boot_scs <- purrr::map_df(boot_r2s_scs_ests, function(x) x$result[["scs"]])
         # calculate inklusive R2
-        # not sure what is correct yet
         # square the SC and multiply by full R2
         boot_ir2s <- purrr::map_df(boot_scs, function(sc) sc^2 * boot_r2s$Full)
         # put all model estimates in a data.frame
         boot_ests <- purrr::map(boot_r2s_scs_ests, function(x) x$result[["ests"]])
+        boot_bws <- purrr::map(boot_r2s_scs_ests, function(x) x$result[["bws"]])
         # warnings and messages
         boot_warnings <- purrr::map(boot_r2s_scs_ests, function(x) x$warnings)
         boot_messages <- purrr::map(boot_r2s_scs_ests, function(x) x$messages)
@@ -325,6 +325,7 @@ the moment")
                         # cut off std.err and statistic from broom output
                         dplyr::select(-.data$std.error, -.data$statistic) %>%
                         list(sim1 = .)
+        boot_bws <- boot_ests
         boot_warnings <- character(0)
         boot_messages <- character(0)
     }
@@ -336,6 +337,10 @@ the moment")
     ests_cis <- purrr::map_df(boot_ests, "estimate") %>%
                 purrr::pmap_df(function(...) calc_CI(c(...), CI)) %>%
                 cbind(model_ests_full[1:4], .)
+
+    bws_cis <- purrr::map_df(boot_bws, "estimate") %>%
+               purrr::pmap_df(function(...) calc_CI(c(...), CI)) %>%
+               cbind(model_bws_full[1:4], .)
 
     sc_cis <- purrr::map_df(boot_scs, calc_CI, CI, .id = "parts") %>%
               tibble::add_column(SC = as.numeric(SC_org), .after = "parts")
@@ -359,10 +364,12 @@ the moment")
                 R2 =  r2_cis,
                 SC =  sc_cis,
                 IR2 = ir2_cis,
+                BW = bws_cis,
                 Ests =  ests_cis,
                 R2_boot =   boot_r2s,
                 SC_boot = boot_scs,
                 IR2_boot = boot_ir2s,
+                BW_boot = boot_bws,
                 Ests_boot =   boot_ests,
                 partvars = partvars,
                 partbatch = ifelse(is.null(partbatch), NA, partbatch),

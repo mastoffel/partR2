@@ -140,6 +140,30 @@ get_ndf <- function(partvar, mod, data) {
 
 }
 
+#' Get beta weights
+#'
+#' @param ests tidy model output from broom.mixed
+#' @param mod merMod object.
+#' @keywords internal
+#' @return tidy output with bw instead of raw estimates
+#' @export
+#'
+#'
+
+get_bw <- function(ests, mod){
+    mod_mat <- stats::model.matrix(mod)
+    mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop=FALSE]
+    resp <- lme4::getME(mod, "y")
+    sd_ratio <- purrr::map_dbl(as.data.frame(mod_mat), stats::sd, na.rm = TRUE)/
+                               stats::sd(resp, na.rm = TRUE)
+    ests[ests$term %in% names(sd_ratio), "estimate"] <-
+        purrr::map_dbl(names(sd_ratio), function(x) {
+            unlist(ests[ests$term %in% x, "estimate"] * sd_ratio[x])
+        })
+    ests
+}
+
+
 
 
 #Adds an observational level random effect to a model
