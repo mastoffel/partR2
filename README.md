@@ -49,21 +49,22 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
                                  data = biomass))
 #> 
 #> 
-#> R2 (marginal) and CI (95%) for the full model: 
-#>  R2     CI_lower CI_upper
-#>  0.5133 0.4225   0.63    
+#> R2 (marginal) and 95% CI for the full model: 
+#>  R2     CI_lower CI_upper nboot ndf
+#>  0.5133 0.435    0.6096   100   4  
 #> 
 #> ----------
 #> 
 #> Partitioned R2s:
-#>  Predictor(s)                      R2     CI_lower CI_upper
-#>  SpeciesDiversity                  0.1653 0.0745   0.2820  
-#>  Temperature                       0.3038 0.2129   0.4205  
-#>  Year                              0.0130 0.0000   0.1297  
-#>  SpeciesDiversity+Temperature      0.4914 0.4006   0.6081  
-#>  SpeciesDiversity+Year             0.1784 0.0875   0.2951  
-#>  Temperature+Year                  0.3250 0.2342   0.4417  
-#>  SpeciesDiversity+Temperature+Year 0.5133 0.4225   0.6300
+#>  Predictor(s)                      R2     CI_lower CI_upper nboot ndf
+#>  Model                             0.5133  0.4350  0.6096   100   4  
+#>  SpeciesDiversity                  0.1653  0.0870  0.2616   100   3  
+#>  Temperature                       0.3038  0.2255  0.4001   100   3  
+#>  Year                              0.0130 -0.0653  0.1093   100   3  
+#>  SpeciesDiversity+Temperature      0.4914  0.4131  0.5877   100   2  
+#>  SpeciesDiversity+Year             0.1784  0.1001  0.2747   100   2  
+#>  Temperature+Year                  0.3250  0.2467  0.4213   100   2  
+#>  SpeciesDiversity+Temperature+Year 0.5133  0.4350  0.6096   100   1
 ```
 
 And to plot the
