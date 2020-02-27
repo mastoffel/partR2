@@ -1,13 +1,21 @@
-#' Partition the R2 for Gaussian mixed models
+#' Partition the R2 for mixed models
 #'
-#' R2, commonality coefficients and structure coefficients for gaussian lme4 models.
-#' @param mod merMod object fitted with lme4.
-#' @param partvars Character vector specifying the predictors for which to partition the R2.
+#' R2, semi-partial R2 for predictors and their combinations, inclusive R2,
+#' structure coefficients and beta weights for Gaussian, Poisson and binomial
+#' mixed models.
+#'
+#' @param mod Fitted lme4 model (a merMod object).
+#' @param partvars Character vector specifying the predictors (fixed effects) for which to partition the R2.
+#'        Can be main effects like c("Var1", "Var2") and interactions ("Var1:Var2"). Predictors
+#'        specified in partvars have to be named precisely like the terms in the formula to
+#'        fit the model.
 #' @param data data.frame used to fit the lme4 model. Has to be provided because
-#' the model is refitted to calculate partial R2s.
-#' @param R2_type "marginal" or "conditional" R2.
-#' @param max_level Level up to which shared partial R2s are calculated.
-#'        The number of sets for which to calculate partial R2 increases exponantially,
+#'        the model is refitted to calculate semi-partial R2s.
+#' @param R2_type "marginal" or "conditional" R2. With "marginal", the variance explained
+#'        by fixed effects is calculated. With "conditional", the variance explained by
+#'        both fixed and random effects is calculated.
+#' @param max_level Level up to which shared semi-partial R2s are calculated.
+#'        The number of sets for which to calculate R2 increases exponantially,
 #'        i.e. for 10 variables 2^10 - 1 R2s  can be calculated. If you are
 #'        only interested in the unique but not the shared effects, use max_level = 1.
 #'        If interested in unique effects and combinations of two terms,
@@ -35,12 +43,12 @@
 #'        appropriate results typically only when all covariances are centered to zero. With 'liability'
 #'        estimates follow formulae as presented in Nakagawa & Schielzeth (2010).
 #' @param olre Logical, defaults to TRUE. This argument allows the user to prevent the automatic fitting of
-#'        an obervation level random effect (by setting it to FALSE) in Poisson and binomial models
-#'        to account for overdispersion.
+#'        an obervation level random effect (by setting it to FALSE) in Poisson and binomial models.
+#'        The OLRE is used to account for overdispersion.
 #' @param partbatch List of character vectors with predictors that should be fitted and
 #'        removed together. E.g. partbatch = list(batch1 = c("V1", "V2", "V3"),
 #'        batch2 = c("V4", "V5", "V6")) would calculate part R2 only for combinations of
-#'        predictors which contain V1, V2, V3 together or/and V4,V5,V6 together.
+#'        predictors which contain the variables V1, V2, V3 together or/and V4,V5,V6 together.
 #'        This is useful when the number of potential subsets gets too large to
 #'        be computationally practical, for example when dummy coding is used.
 #'        See our vignette for details. This feature is still experimental and

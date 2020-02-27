@@ -1,18 +1,24 @@
 #' partR2: partitioning R2 in mixed models
 #'
-#' partR2 provides R2, partitioned R2s, structure coefficients and
-#' estimates for for mixed models.
+#' The goal of partR2 is variance decomposition in mixed models with
+#' R2, semi-partial R2 for predictors and their combinations, inclusive R2,
+#' structure coefficients and beta weights. The package works with Gaussian,
+#' binomial and Poisson models fitted in lme4.
 #'
-#' It's main goals are:
+#' The goals of partR2 are:
 #'
 #' \itemize{
-#' \item Estimate marginal and conditional R2 for LMMs and GLMMs.
-#' \item Partition the R2 into variance explained uniquely by each predictor
-#' and variance explained by a combination of predictors.
-#' \item Provide structure coefficients (the correlation between each
-#' predictor and the predicted response, independent of the other predictors)
-#' \item Report model estimates (based on the broom.mixed package)
-#' \item Use parametric bootstrapping to get confidence intervals for
+#' \item To estimate marginal and conditional R2 for LMMs and GLMMs.
+#' \item To partition the R2 into variance explained uniquely by each predictor
+#' and variance explained by a combination of predictors using semi-partial R2s.
+#' \item To provide structure coefficients (SC). SC are the correlation between a
+#' predictor and the predicted response, independent of the other predictors.
+#' \item To estimate the the total variance explained by a predictor independent of
+#' other predictors, using inclusive R2 (IR2). IR2 is estimated with SC^2 * R2_full_model.
+#' \item To provide beta weights, which are standardised regression coefficients.
+#' If beta is a model estimate for variable x, and y is the response,then the
+#' beta weight is beta * (sd(x)/sd(y).
+#' \item Use parametric bootstrapping to estimate confidence intervals for
 #' all estimates.
 #' }
 #'
@@ -37,10 +43,9 @@
 #' @importFrom rlang .data
 #'
 #' @docType package
+#' @name partR2-package
 #'
-#' @aliases partR2-package
 #'
-"_PACKAGE"
-
+NULL
 ## quiets concerns of R CMD check re: the .'s that appear in pipelines
 if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))

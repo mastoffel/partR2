@@ -27,4 +27,4 @@ morphs of males: dark and reddish-brown (`Colour`).
 Nakagawa, S. & Schielzeth, H. (2013) \emph{A general and simple method for obtaining R2
 from generalized linear mixed-effects models}. Methods in Ecology and Evolution 4: 133-142.
 }
-\keyword{datasets}
+\keyword{internal}

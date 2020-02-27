@@ -38,7 +38,7 @@ NULL
 #' from generalized linear mixed-effects models}. Methods in Ecology and Evolution 4: 133-142.
 #'
 #'
-#' @keywords datasets
+#' @keywords internal
 #' @name BeetlesMale
 NULL
 
@@ -64,8 +64,7 @@ NULL
 #' Nakagawa, S. & Schielzeth, H. (2013) \emph{A general and simple method for obtaining R2
 #' from generalized linear mixed-effects models}. Methods in Ecology and Evolution 4: 133-142.
 #'
-#'
-#' @keywords datasets
+#' @keywords internal
 #' @name BeetlesFemale
 NULL
 
@@ -92,6 +91,6 @@ NULL
 #' from generalized linear mixed-effects models}. Methods in Ecology and Evolution 4: 133-142.
 #'
 #'
-#' @keywords datasets
+#' @keywords internal
 #' @name BeetlesBody
 NULL
