@@ -76,10 +76,10 @@ Returns an object of class \code{partR2} that is a a list with the following ele
 \item{R2}{R2 and confidence intervals for full model and partitions}
 \item{SC}{Structure coefficients and confidence intervals}
 \item{IR2}{Inklusive R2. This is SC^2 * R2_full.}
-\item{BW}{Model estimates as beta weights for fixed effects and
+\item{BW}{Standardised model estimates (beta weights) for fixed effects and
 variances for random effects and confidence intervals. Beta weights
 are calculated as beta * sd(x)/sd(y), with beta being the estimated
-slope of a fixed effect.}
+slope of a fixed effect for predictor x and response y.}
 \item{Ests}{Model estimates and confidence intervals. Point estimates
 were extracted with broom.mixed::tidy}
 \item{R2_boot}{Parametric bootstrap samples for R2 for full model and partitions}

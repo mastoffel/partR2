@@ -13,6 +13,19 @@
 #' @name biomass
 NULL
 
+#' GuineaPigs dataset
+#'
+#' @details This is a real dataset from guinea pigs.
+#'
+#' The dataset contains testosterone measurements (`Testo`) of 31 male guinea pigs, each measured at 5 time points.
+#' (age between 120 and 240 days at 30-day intervals). As covariates the dataset
+#' contains the time point of measurement (`Time`) and a rank index derived from behavioral
+#' observations (`Rank`) around the time of measurement (see Mutwill et al. in prep. for details).
+#'
+#'
+#' @keywords datasets
+#' @name GuineaPigs
+NULL
 
 #' BeetlesMale dataset
 #'

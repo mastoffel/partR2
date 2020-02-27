@@ -59,3 +59,5 @@ test_that("Predictor manipulation in formula works", {
                  r2_mod2_2$R2$R2[1], tolerance = 0.001)
 
 })
+
+
