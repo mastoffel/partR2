@@ -52,6 +52,7 @@ print.partR2 <- function(x, round_to = 4, ...) {
     } else {
     print(r2_df, row.names = FALSE,right = FALSE)
     }
+
 #
 #     cat("\n")
 #     cat("----------")
