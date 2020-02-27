@@ -195,7 +195,6 @@ var_comps_proportion <- function(mod, expct, overdisp_name) {
                       var_ran = var_ran,
                       var_res = var_res)
 
-
 }
 
 

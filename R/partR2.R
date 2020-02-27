@@ -166,6 +166,8 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
         all_comb <- purrr::map(all_comb, function(x) x[!(duplicated(x) | is.na(x))])
         # last step remove any empty list elements
         all_comb[purrr::map(all_comb, length) == 0] <- NULL
+        # remove potential duplicates
+        all_comb <- all_comb[!(duplicated(purrr::map(all_comb, function(x) as.character(sort(x)))))]
     }
 
     # commonality coefficients up to max_level (e.g. 3 for
