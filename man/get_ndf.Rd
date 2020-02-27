@@ -4,7 +4,7 @@
 \alias{get_ndf}
 \title{Get numerator dfs for reduced models}
 \usage{
-get_ndf(partvar, mod, data)
+get_ndf(partvar, mod, dat)
 }
 \arguments{
 \item{partvar}{One or more fixed effect variables which are taken out

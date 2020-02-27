@@ -234,7 +234,7 @@ the moment")
         if (!partition) return(R2_full)
         # calculate R2s of reduced models and difference with full model
         R2s_red <- purrr::map_df(all_comb, R2_of_red_mod, mod = mod,
-                                 R2_pe = R2_pe, data = data_mod, expct = expct,
+                                 R2_pe = R2_pe, dat = data_mod, expct = expct,
                                  overdisp_name = overdisp_name) %>%
                    dplyr::mutate(R2 = R2_full$R2 - .data$R2) %>%
                    # if by chance part R2 drops below 0, make it 0

@@ -4,7 +4,7 @@
 \alias{R2_of_red_mod}
 \title{Calculate R2 from a reduced model}
 \usage{
-R2_of_red_mod(partvar, mod, R2_pe, data, expct, overdisp_name)
+R2_of_red_mod(partvar, mod, R2_pe, dat, expct, overdisp_name)
 }
 \arguments{
 \item{partvar}{One or more fixed effect variables which are taken out
@@ -14,11 +14,11 @@ of the model.}
 
 \item{R2_pe}{R2 function.}
 
-\item{data}{Data.frame to fit the model}
-
 \item{expct}{Expectation}
 
 \item{overdisp_name}{Name of overdispersion term}
+
+\item{data}{Data.frame to fit the model}
 }
 \value{
 R2 of reduced model.

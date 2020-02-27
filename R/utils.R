@@ -92,7 +92,7 @@ calc_CI <- function(x, CI) {
 #' @return R2 of reduced model.
 #' @export
 #'
-R2_of_red_mod <- function(partvar, mod, R2_pe, data, expct, overdisp_name) {
+R2_of_red_mod <- function(partvar, mod, R2_pe, dat, expct, overdisp_name) {
 
 
     # which variables to reduce?
@@ -109,7 +109,7 @@ R2_of_red_mod <- function(partvar, mod, R2_pe, data, expct, overdisp_name) {
     }
 
     # fit reduced model
-    mod_red <-  stats::update(mod, formula. = formula_red, data = data)
+    mod_red <-  stats::update(object = mod, formula. = formula_red, data = dat)
     # reduced model R2
     R2_red <- R2_pe(mod_red, expct, overdisp_name)
 
@@ -126,7 +126,7 @@ R2_of_red_mod <- function(partvar, mod, R2_pe, data, expct, overdisp_name) {
 #' @return Numerator degrees of freedom
 #' @export
 #'
-get_ndf <- function(partvar, mod, data) {
+get_ndf <- function(partvar, mod, dat) {
 
     if (("Full" %in% partvar)&(length(partvar) == 1)) return(ncol(stats::model.matrix(mod)))
 
@@ -135,7 +135,7 @@ get_ndf <- function(partvar, mod, data) {
     # reduced formula
     formula_red <- stats::update(stats::formula(mod), paste(". ~ . ", to_del, sep=""))
     # fit reduced model
-    mod_red <-  stats::update(mod, formula. = formula_red, data = data)
+    mod_red <-  stats::update(mod, formula. = formula_red, data = dat)
     ncol(stats::model.matrix(mod_red))
 
 }

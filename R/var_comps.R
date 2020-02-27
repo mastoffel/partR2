@@ -86,8 +86,10 @@ var_comps_poisson <- function(mod, expct, overdisp_name) {
     # family and link
     mod_fam <- stats::family(mod)
 
-    # overdispersion estimate
-    var_overdisp <- var_ran[var_ran$group == overdisp_name, ][["estimate"]]
+    # overdispersion estimate, if there, else 0
+    ran_comps <- lme4::VarCorr(mod)
+    var_overdisp <- ifelse(overdisp_name %in% names(ran_comps),
+                           as.numeric(ran_comps[[overdisp_name]]), 0)
 
     # sum up random effects
     # var_ran <- sum(var_ran$estimate)
@@ -102,13 +104,15 @@ var_comps_poisson <- function(mod, expct, overdisp_name) {
     if (mod_fam[["link"]] == "log") {
         if(expct=="meanobs") EY <- mean(mod@resp$y, na.rm=TRUE)
         # no overdisp in var_ran
-        if(expct=="latent") EY <- exp(beta0 + (sum(var_ran$estimate) + var_fix)/2)
+        if(expct=="latent") EY <- exp(beta0 + (sum(var_ran$estimate) + var_overdisp + var_fix)/2)
         # residual variance
         var_res <- var_overdisp + log(1/EY+1)
     }
 
     # remove overdisp from var_ran and sum up as overdisp is now part of var_res
-    var_ran <- var_ran[!(var_ran$group == overdisp_name), ]
+    # var_ran <- var_ran[!(var_ran$group == overdisp_name), ]
+
+    # var_ran does not include overdispersion
     var_ran <- sum(var_ran$estimate)
 
     out <- data.frame(var_fix = var_fix,
@@ -129,8 +133,10 @@ var_comps_proportion <- function(mod, expct, overdisp_name) {
     # random effects
     var_ran <- get_ran_var(mod, overdisp_name)
 
-    # overdisp
-    var_overdisp <- var_ran[var_ran$group == overdisp_name, "estimate"]
+    # overdispersion estimate, if there, else 0
+    ran_comps <- lme4::VarCorr(mod)
+    var_overdisp <- ifelse(overdisp_name %in% names(ran_comps),
+                           as.numeric(ran_comps[[overdisp_name]]), 0)
 
     # intercept on link scale
     beta0 <- unname(lme4::fixef(mod)[1])
@@ -145,7 +151,7 @@ var_comps_proportion <- function(mod, expct, overdisp_name) {
         # if(expct=="latent") Ep <- stats::plogis(beta0*sqrt(1+((16*sqrt(3))/(15*pi))^2*(sum(VarComps[,"vcov"])+var_f))^-1)
         if (expct=="latent") {
             # should overdisp be included here? probably yes #### check
-            Ep <- stats::plogis(beta0*sqrt(1+((16*sqrt(3))/(15*pi))^2*(sum(var_ran$estimate) + var_fix))^-1)
+            Ep <- stats::plogis(beta0*sqrt(1+((16*sqrt(3))/(15*pi))^2*(sum(var_ran$estimate) + var_overdisp + var_fix))^-1)
             estdv_link <- 1 / (Ep*(1-Ep))
         }
         if (expct=="meanobs") {
@@ -166,7 +172,7 @@ var_comps_proportion <- function(mod, expct, overdisp_name) {
 
     if (mod_fam[["link"]] == "probit"){
         if (expct == "latent") {
-            Ep <- stats::pnorm(beta0*sqrt(1+sum(var_ran$estimate)+var_fix)^-1)
+            Ep <- stats::pnorm(beta0*sqrt(1+sum(var_ran$estimate) + var_overdisp +var_fix)^-1)
             estdv_link <- 2*pi*Ep*(1-Ep) * (exp(inverf(2*Ep-1)^2))^2
         }
         if (expct=="meanobs"){
@@ -180,8 +186,9 @@ var_comps_proportion <- function(mod, expct, overdisp_name) {
     }
 
     # remove overdisp from var_ran and sum up as overdisp is now part of var_res
-    var_ran <- var_ran[!(var_ran$group == overdisp_name), ]
-    # calc sum
+    # var_ran <- var_ran[!(var_ran$group == overdisp_name), ]
+
+    # var_ran does not include overdispersion
     var_ran <- sum(var_ran$estimate)
 
     out <- data.frame(var_fix = var_fix,
@@ -262,8 +269,9 @@ var_comps_binary <- function(mod, expct) {
 #'
 #' This function computes the sum of random effect variances where one
 #' or more of the random effects are random slopes. It the method from Paul Johnson
-#' to compute the average group
-#' variance across the levels of a covariate.
+#' to compute the average group variance across the levels of a covariate.
+#' This function extracts only grouping factors, no residual or overdispersion.
+#'
 #'
 #' @param mod An lme4 model object.
 #' @param overdisp_name name of overdispersion term
@@ -272,9 +280,10 @@ var_comps_binary <- function(mod, expct) {
 get_ran_var <- function(mod, overdisp_name = NULL){
 
     var_comps <- lme4::VarCorr(mod)
+
     # gives only grouping factors, no Residual, no overdisp
     if (!is.null(overdisp_name)) {
-        grnames <- names(var_comps)[!(var_comps == overdisp_name)]
+        grnames <- names(var_comps)[!(names(var_comps) %in% overdisp_name)]
     } else {
         grnames <- names(var_comps)
     }

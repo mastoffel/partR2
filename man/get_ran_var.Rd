@@ -14,7 +14,7 @@ get_ran_var(mod, overdisp_name = NULL)
 \description{
 This function computes the sum of random effect variances where one
 or more of the random effects are random slopes. It the method from Paul Johnson
-to compute the average group
-variance across the levels of a covariate.
+to compute the average group variance across the levels of a covariate.
+This function extracts only grouping factors, no residual or overdispersion.
 }
 \keyword{internal}
