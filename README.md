@@ -5,21 +5,26 @@ Status](https://travis-ci.org/mastoffel/partR2.svg?branch=master)
 
 # partR2
 
-The goal of partR2 is to provide an estimate of R<sup>2</sup> in GLMMs
-and to partition the R<sup>2</sup> into the variance explained by each
-model component and by their combinations.
+The goal of partR2 is to estimate R<sup>2</sup> in GLMMs (sensu Nakagawa
+& Schielzeth 2013) and to partition the R<sup>2</sup> into the variance
+explained by the predictors.
 
-In addition to R<sup>2</sup> and partial R<sup>2</sup>’s the partR2
-package calculates structure coefficients (SC). SC show the correlation
-between a fixed effect and the predicted response and give an intuition
-of the contribution of that fixed effect to the model prediction,
-independent of all other predictors. Finally, partR2 also reports the
-model estimates, i.e. the slopes and variances.
+The package takes a fitted lme4 model as input and gives you:
+
+  - R<sup>2</sup> (marginal or conditional)
+  - Semi-partial R<sup>2</sup>, the variance explained uniquely by each
+    predictor and combinations of predictors
+  - Inclusive R<sup>2</sup>, the variance explained by a predictor
+    independent of all other predictors
+  - Structure coefficients, the correlation between a predictor and the
+    fitted response
+  - Beta weights, standardised model estimates
 
 All estimates can be combined with parametric bootstrapping to get
 confidence intervals.
 
-partR2 is in an early phase of development and might still contain bugs.
+partR2 is in an early phase of development and despite a lot of testing
+might still contain bugs, so be careful and thoughtful when using it.
 
 ## Installation
 
@@ -27,7 +32,7 @@ You can install partR2 from github with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("mastoffel/partR2")
+devtools::install_github("mastoffel/partR2", build_vignettes = TRUE)
 ```
 
 ## Example
@@ -43,7 +48,7 @@ data(biomass)
 # fit lme4 model
 mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
             data = biomass)
-
+# R2s and partial R2s
 (R2 <- partR2(mod,  partvars = c("SpeciesDiversity", "Temperature", "Year"),
                                  R2_type = "marginal", nboot = 100, CI = 0.95,
                                  data = biomass))
@@ -51,20 +56,20 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> 
 #> R2 (marginal) and 95% CI for the full model: 
 #>  R2     CI_lower CI_upper nboot ndf
-#>  0.5133 0.435    0.6096   100   4  
+#>  0.5133 0.4218   0.5965   100   4  
 #> 
 #> ----------
 #> 
 #> Partitioned R2s:
 #>  Predictor(s)                      R2     CI_lower CI_upper nboot ndf
-#>  Model                             0.5133  0.4350  0.6096   100   4  
-#>  SpeciesDiversity                  0.1653  0.0870  0.2616   100   3  
-#>  Temperature                       0.3038  0.2255  0.4001   100   3  
-#>  Year                              0.0130 -0.0653  0.1093   100   3  
-#>  SpeciesDiversity+Temperature      0.4914  0.4131  0.5877   100   2  
-#>  SpeciesDiversity+Year             0.1784  0.1001  0.2747   100   2  
-#>  Temperature+Year                  0.3250  0.2467  0.4213   100   2  
-#>  SpeciesDiversity+Temperature+Year 0.5133  0.4350  0.6096   100   1
+#>  Model                             0.5133  0.4218  0.5965   100   4  
+#>  SpeciesDiversity                  0.1653  0.0738  0.2485   100   3  
+#>  Temperature                       0.3038  0.2123  0.3870   100   3  
+#>  Year                              0.0130 -0.0785  0.0963   100   3  
+#>  SpeciesDiversity+Temperature      0.4914  0.3999  0.5746   100   2  
+#>  SpeciesDiversity+Year             0.1784  0.0869  0.2616   100   2  
+#>  Temperature+Year                  0.3250  0.2335  0.4083   100   2  
+#>  SpeciesDiversity+Temperature+Year 0.5133  0.4218  0.5965   100   1
 ```
 
 And to plot the
