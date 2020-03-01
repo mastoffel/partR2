@@ -73,8 +73,10 @@ should be used with caution.}
 Returns an object of class \code{partR2} that is a a list with the following elements:
 \item{call}{model call}
 \item{R2_type}{Marginal or conditional R2}
-\item{R2}{R2 and confidence intervals for full model and partitions}
-\item{SC}{Structure coefficients and confidence intervals}
+\item{R2}{R2 and confidence intervals for full model and semi-partial R2 for
+predictors and their combinations}
+\item{SC}{Structure coefficients and confidence intervals. SC are the
+correlation between a predictor and the predicted response.}
 \item{IR2}{Inklusive R2. This is SC^2 * R2_full.}
 \item{BW}{Standardised model estimates (beta weights) for fixed effects and
 variances for random effects and confidence intervals. Beta weights

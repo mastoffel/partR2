@@ -22,14 +22,14 @@
 #' all estimates.
 #' }
 #'
-#' The package has one main function \code{partR2()} which takes a fitted model
+#' The package has one main function \code{\link{partR2}} which takes a fitted model
 #' from lme4. At the moment, Gaussian, Poisson and binomial models are supported.
-#' For Poisson and non-binary binomial models, \code{partR2()} adds an
+#' For Poisson and non-binary binomial models, \code{partR2} adds an
 #' observational level random effect to model additive overdispersion (if
 #' an olre is not fitted already).
 #'
-#' The \code{summary()} function provides an extended summary with R2s, partial
-#' R2s, model estimates and structure coefficients. The \code{forestplot()}
+#' The \code{\link{summary.partR2}} function provides an extended summary with R2s, partial
+#' R2s, model estimates and structure coefficients. The \code{\link{forestplot}}
 #' function provides a means of plotting the results.
 #'
 #' @references
