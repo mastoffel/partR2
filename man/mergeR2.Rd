@@ -31,3 +31,27 @@ This function is a bit experimental and should be used with caution.
 See vignette or paper on how to use it to obtain semi-partial R2s
 for main effects which are also involved in interactions.
 }
+\examples{
+
+data(biomass)
+library(lme4)
+
+# scale data
+biomass[] <- lapply(biomass, function(x) if (is.double(x)) scale(x) else x)
+
+# Full model
+mod_full <- lmer(Biomass ~  Year + Temperature * Precipitation + SpeciesDiversity + (1|Population),
+            data = biomass)
+# Semi-partial R2 for interaction and all other predictors of interest
+(R2_full <- partR2(mod_full, partvars = c("Temperature:Precipitation", "SpeciesDiversity", "Year"),
+data = biomass))
+
+# model without interaction to get main effect semi-partial R2s
+mod_noIA <- lmer(Biomass ~  Year + Temperature + Precipitation + SpeciesDiversity + (1|Population),
+            data = biomass)
+(R2_noIA <- partR2(mod_noIA, partvars = c("Temperature", "Precipitation"), data = biomass))
+
+# combine both
+(R2_comb <- mergeR2(R2_full, R2_noIA))
+
+}
