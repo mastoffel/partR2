@@ -123,7 +123,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
 
     # initial checks
     if(!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
-    partition <- ifelse(is.null(partvars), FALSE, TRUE)
+    partition <- ifelse(is.null(partvars) & is.null(partbatch), FALSE, TRUE)
 
     if (!is.null(nboot)) {
         if (nboot < 2) stop("nboot has to be greater than 1 or NULL")
@@ -178,6 +178,8 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
         all_comb[purrr::map(all_comb, length) == 0] <- NULL
         # remove potential duplicates
         all_comb <- all_comb[!(duplicated(purrr::map(all_comb, function(x) as.character(sort(x)))))]
+        # change all formats to unnamed character vecotr
+        all_comb <- purrr::map(all_comb, function(x) as.character(unname(x)))
     }
 
     # commonality coefficients up to max_level (e.g. 3 for
@@ -212,8 +214,6 @@ the moment")
     # we suppress messages here to avoid the notice that broom.mixed
     # overwrites the broom S3 methods.
     model_ests_full <- suppressMessages(
-        # broom.mixed::tidy(mod, effects = c("ran_pars", "fixed"),
-        #                   scales = c("vcov", NA))
         broom.mixed::tidy(mod, effects = c("fixed"))
         )
     # beta weights

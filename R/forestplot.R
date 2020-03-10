@@ -12,7 +12,7 @@
 #'
 #' @author Martin Stoffel (martin.adam.stoffel@@gmail.com),
 #'         Holger Schielzeth  (holger.schielzeth@@uni-jena.de)
-#'         Shinichi Nakagawa (s.nakagawa@unsw.edu.au),
+#'         Shinichi Nakagawa (s.nakagawa@@unsw.edu.au),
 #'
 #'
 #' @keywords models
@@ -34,14 +34,18 @@ forestplot <- function(x, type = c("R2", "BW", "SC", "IR2", "Ests"), line_size =
     to_plot <- type
     mod_out <- x[[to_plot]]
 
-    if (type %in% c("Ests", "BW")) {
+    if (type == "R2") {
+        mod_out[mod_out$parts == "Full", 1] <- "Model"
+        names(mod_out) <- c("combs", "pe", "CI_lower", "CI_upper", "ndf")
+    } else if (type %in% c("Ests", "BW")) {
         mod_out <- mod_out %>%
             dplyr::select(.data$term, .data$estimate, .data$CI_lower, .data$CI_upper) %>%
             dplyr::rename(Predictor = .data$term, BW = .data$estimate) %>%
             dplyr::filter(!(.data$Predictor == "(Intercept)"))
+        names(mod_out) <- c("combs", "pe", "CI_lower", "CI_upper")
+    } else {
+        names(mod_out) <- c("combs", "pe", "CI_lower", "CI_upper")
     }
-
-    names(mod_out) <- c("combs", "pe", "CI_lower", "CI_upper")
     mod_out$combs <- factor(mod_out$combs, levels = rev(mod_out$combs))
     # reshape Ests_pe_ci a bit
     # if (type %in% c("Ests", "BW")) {
@@ -59,7 +63,8 @@ forestplot <- function(x, type = c("R2", "BW", "SC", "IR2", "Ests"), line_size =
     #         factor(mod_out$combs, levels = rev(mod_out$combs))
     # }
 
-    if (type == "R2") x_label <-  paste0("R2 (", x$R2_type, ") and CI")
+   # if (type == "R2") x_label <-  paste0("R2 (", x$R2_type, ") and CI")
+    if (type == "R2") x_label <-   bquote(R^2~and~CI)
     if (type == "SC") x_label <- "Structure coefficients and CI"
     if (type == "IR2") x_label <-  bquote(Inclusive~R^2~(SC^2%*%R^2~full)~and~CI)
     if (type == "BW") x_label <- "Beta weights and CI"
