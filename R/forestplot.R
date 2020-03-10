@@ -32,28 +32,32 @@ forestplot <- function(x, type = c("R2", "BW", "SC", "IR2", "Ests"), line_size =
 
     if (length(type) > 1) type <- type[1]
     to_plot <- type
-    mod_out <- x[[to_plot]]
+    mod_out <- x[[to_plot]] %>% dplyr::select(term, estimate, CI_lower, CI_upper) %>%
+        dplyr::rename(Predictor = term, BW = estimate) %>%
+        dplyr::filter(!(Predictor == "(Intercept)"))
 
+    names(mod_out) <- c("combs", "pe", "CI_lower", "CI_upper")
+    mod_out$combs <- factor(mod_out$combs, levels = rev(mod_out$combs))
     # reshape Ests_pe_ci a bit
-    if (type %in% c("Ests", "BW")) {
-        mod_out <-
-            mod_out %>% dplyr::mutate(group = ifelse(is.na(.data$group), "", .data$group)) %>%
-            dplyr::mutate(combs = paste(.data$term, .data$group, sep = " ")) %>%
-            dplyr::mutate(combs = gsub("var__", "", .data$combs)) %>%
-            dplyr::rename(pe = .data$estimate) %>%
-            dplyr::filter(.data$term != "(Intercept)") %>%
-            dplyr::mutate(combs = ifelse(.data$group == "Residual", "Residual", .data$combs)) %>%
-            dplyr::mutate(effect = ifelse(.data$effect == "ran_pars", "random effects (variance)", "fixed effects"))
-    } else {
-        names(mod_out) <- c("combs", "pe", "CI_lower", "CI_upper")
-        mod_out$combs <-
-            factor(mod_out$combs, levels = rev(mod_out$combs))
-    }
+    # if (type %in% c("Ests", "BW")) {
+    #     mod_out <-
+    #         mod_out %>% dplyr::mutate(group = ifelse(is.na(.data$group), "", .data$group)) %>%
+    #         dplyr::mutate(combs = paste(.data$term, .data$group, sep = " ")) %>%
+    #         dplyr::mutate(combs = gsub("var__", "", .data$combs)) %>%
+    #         dplyr::rename(pe = .data$estimate) %>%
+    #         dplyr::filter(.data$term != "(Intercept)") %>%
+    #         dplyr::mutate(combs = ifelse(.data$group == "Residual", "Residual", .data$combs)) %>%
+    #         dplyr::mutate(effect = ifelse(.data$effect == "ran_pars", "random effects (variance)", "fixed effects"))
+    # } else {
+    #     names(mod_out) <- c("combs", "pe", "CI_lower", "CI_upper")
+    #     mod_out$combs <-
+    #         factor(mod_out$combs, levels = rev(mod_out$combs))
+    # }
 
     if (type == "R2") x_label <-  paste0("R2 (", x$R2_type, ") and CI")
     if (type == "SC") x_label <- "Structure coefficients and CI"
     if (type == "IR2") x_label <-  bquote(Inclusive~R^2~(SC^2%*%R^2~full)~and~CI)
-    if (type == "BW") x_label <- "Model estimates (beta weights and variances) and CI"
+    if (type == "BW") x_label <- "Beta weights and CI"
     if (type == "Ests") x_label <- "Model estimates and CI"
 
     col_all <- "#2E3440"
@@ -84,9 +88,9 @@ forestplot <- function(x, type = c("R2", "BW", "SC", "IR2", "Ests"), line_size =
                    alpha = 1, stroke = line_size)
     # when estimates are plotted, split fixed and random effects into
     # different plots
-    if (type %in% c("BW", "Ests")) {
-        p_out <- p_out + facet_wrap(~ effect, scales = "free")
-    }
+    # if (type %in% c("BW", "Ests")) {
+    #     p_out <- p_out + facet_wrap(~ effect, scales = "free")
+    # }
     p_out
 
 }
