@@ -32,9 +32,14 @@ forestplot <- function(x, type = c("R2", "BW", "SC", "IR2", "Ests"), line_size =
 
     if (length(type) > 1) type <- type[1]
     to_plot <- type
-    mod_out <- x[[to_plot]] %>% dplyr::select(term, estimate, CI_lower, CI_upper) %>%
-        dplyr::rename(Predictor = term, BW = estimate) %>%
-        dplyr::filter(!(Predictor == "(Intercept)"))
+    mod_out <- x[[to_plot]]
+
+    if (type %in% c("Ests", "BW")) {
+        mod_out <- mod_out %>%
+            dplyr::select(.data$term, .data$estimate, .data$CI_lower, .data$CI_upper) %>%
+            dplyr::rename(Predictor = .data$term, BW = .data$estimate) %>%
+            dplyr::filter(!(.data$Predictor == "(Intercept)"))
+    }
 
     names(mod_out) <- c("combs", "pe", "CI_lower", "CI_upper")
     mod_out$combs <- factor(mod_out$combs, levels = rev(mod_out$combs))

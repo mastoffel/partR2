@@ -35,9 +35,10 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     names(x$R2) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper", "ndf")
     names(x$SC) <- c("Predictor", "SC", "CI_lower", "CI_upper")
     names(x$IR2) <- c("Predictor", "IR2", "CI_lower", "CI_upper")
-    x$BW <- x$BW %>% dplyr::select(term, estimate, CI_lower, CI_upper) %>%
-        dplyr::rename(Predictor = term, BW = estimate) %>%
-        dplyr::filter(!(Predictor == "(Intercept)"))
+    x$BW <- x$BW %>%
+        dplyr::select(.data$term, .data$estimate, .data$CI_lower, .data$CI_upper) %>%
+        dplyr::rename(Predictor = .data$term, BW = .data$estimate) %>%
+        dplyr::filter(!(.data$Predictor == "(Intercept)"))
     # names(x$CC_df) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper")
     # check how many bootstraps
     num_boot <- ifelse(length(x$boot_warnings) == 0, NA, length(x$boot_warnings))
