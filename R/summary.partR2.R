@@ -35,6 +35,9 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     names(x$R2) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper", "ndf")
     names(x$SC) <- c("Predictor", "SC", "CI_lower", "CI_upper")
     names(x$IR2) <- c("Predictor", "IR2", "CI_lower", "CI_upper")
+    x$BW <- x$BW %>% dplyr::select(term, estimate, CI_lower, CI_upper) %>%
+        dplyr::rename(Predictor = term, BW = estimate) %>%
+        dplyr::filter(!(Predictor == "(Intercept)"))
     # names(x$CC_df) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper")
     # check how many bootstraps
     num_boot <- ifelse(length(x$boot_warnings) == 0, NA, length(x$boot_warnings))
@@ -80,8 +83,8 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     cat("----------")
     cat("\n\n")
 
-    cat("Model estimates:\n")
-    cat("Beta weights (estimate * sd(x)/sd(y)) for fixed effects and variances for random effects\n")
+    #cat("Model estimates:\n")
+    cat("Beta weights (estimate * sd(x)/sd(y))\n")
     ests_df <- x$BW %>% dplyr::mutate_if(is.numeric, round, round_to)
     print(ests_df, row.names = FALSE, right = FALSE)
 
