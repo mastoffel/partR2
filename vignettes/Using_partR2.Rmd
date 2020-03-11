@@ -18,15 +18,17 @@ knitr::opts_chunk$set(
 
 The goal of `partR2` is to partition the varianced explained in generalised linear mixed models (GLMMs) into variation unique to and shared among predictors using semi-partial (or 'part') R^2^, but it also does a few other things. Here is a quick summary of what you can learn about your mixed model with `partR2`:
 
-* Marginal and conditional R^2^ (based on Nakagawa & Schielzeth, 2013)
+* Marginal and conditional R^2^ (sensu Nakagawa & Schielzeth, 2013)
 * Part R^2^ unique to each predictor and for each combination of predictors (fixed effects)
 * Structure coefficients (SC), i.e. the correlation between each predictor and the fitted response (the contribution of a predictor to the model when ignoring all other predictors) (see Yeatts et al., 2017)
-* Inclusive R^2^, which is the explained variance of a predictor for the fitted response irrespective
-of covariances with other predictors. It is calculated as SC^2^ * R^2^ (of the full model)
-* Model estimates (these are based on the `broom.mixed` package)
+* Inclusive R^2^, which we define as explained variance of a predictor in the fitted response irrespective
+of covariances with other predictors. It is calculated as SC^2^ * R^2^, the squared structure coefficient
+time the R^2^ of the full model.
+* Standardised model estimates called beta weights. These are calculated with
+beta * (sd(x)/sd(y), where beta is the estimate or slope, x is the predictor and y is the response. 
 * Confidence intervals for all relevant estimators through parametric bootstrapping
 
-The workhorse of the package is a single function, `partR2()`. It takes a fitted model from `lme4` (Bates et al. 2015), which can be either Gaussian, Poisson or binomial family.
+The workhorse of the package is a single function, `partR2()`. It takes a fitted model from `lme4` (Bates et al. 2015), which can be of either a Gaussian, Poisson or binomial family.
 
 Before we go through some examples, we load the biomass dataset. This is a simulated dataset that aims to mimic a study on biomass production in grasslands. In a nutshell, virtual invertebrated were sampled once every year over 10 successive years from 20 different virtual populations. Temperature and precipitation were measured and overall species diversity and biomass were recorded for each population in each year.
 
@@ -37,7 +39,7 @@ data("biomass")
 head(biomass)
 ```
 
-Before we proceed, we standardise some variables to bring them on the same scale and make them comparable (see Schielzeth 2010 for a discussion).
+Before we proceed, we standardise some variables to bring them to the same scale and make their slope estimates comparable (see Schielzeth 2010 for a discussion).
 ```{r}
 biomass[] <- lapply(biomass, function(x) if (is.double(x)) scale(x) else x)
 ```
@@ -57,7 +59,7 @@ mod1 <- lmer(Biomass ~ Year + Temperature + Precipitation +
              data = biomass)
 ```
 
-Now we would usually do the standard model checks and evaluations to ensure that the model works well. For the sake of simplicity (and because we simulated the data from Gaussian distributions), we skip that step here and go straight into the `partR2` part. First of all, we calculate the overall marginal R^2^ and use parametric bootstrapping to estimate confidence intervals. Marginal R^2^ refers to the variance explained by fixed effect predictors relative to the total variance in the response. Alternatively, we can estimate conditional R^2^ (by setting `R2_type ="conditional"`), which is the variance explained by fixed effects relative to the variance after accounting for random effect variances
+Now we would usually do the standard model checks and evaluations to ensure that the model works well. For the sake of simplicity (and because we simulated the data from Gaussian distributions), we skip that step here and go straight into the `partR2` part. First of all, we calculate the overall marginal R^2^ and use parametric bootstrapping to estimate confidence intervals. Marginal R^2^ refers to the variance explained by fixed effect predictors relative to the total variance in the response. Alternatively, we can estimate conditional R^2^ (by setting `R2_type ="conditional"`), which is the variance explained by fixed effects and random effects together relative to the total variance in the response.
 
 Note that we are supplying the fitted `merMod` object (the `lme4` output) and the original dataset (in the `data` argument) used to fit the model.  This is required, because the `merMod` object does not contain all necessary information to perform the `partR2` analysis. There is one important thing to pay attention to: If there are missing observations for some of the predictors/response, `lmer` and `glmer` will remove those rows containing NAs, which will result in a mismatch between the data in the `data` object and the data used fit the model. In order to avoid complications, it is advisable to remove rows with missing data prior to the fitting the model. 
 
@@ -82,9 +84,7 @@ Besides part R^2^s, `partR2` also outputs model estimates and structure coeffici
 summary(R2_mod1)
 ```
 
-Model estimates show that all four predictors seem to have some effect on biomass because none of the confidence intervals overlaps zero, while the effect of precipitation is the largest. Structure coefficients tell us that both temperature and precipitation are quite strongly correlated with the predicted biomass from the model. Structure coefficients effectively give us the contribution of a predictor to the model prediction in the absence of all other predictors (with a maximum magnitude of ±1). SC are correlation coefficients and by squaring them and multiplying by the marginal R^2^ of the model we get
-what we call inclusive R^2^ or short IR^2^ (IR^2^ = SC^2^ * R^2^). SC and IR^2^ are large for temperature and precipitation as both are highly correlated to the predicted response, but their part R^2^s (the variance that they uniquely explain) are small due to their correlation. 
-
+The standardised model estimates (called beta weights) show that all four predictors seem to have some effect on biomass because none of the confidence intervals overlaps zero, while the effect of precipitation is the largest. Structure coefficients tell us that both temperature and precipitation are quite strongly correlated with the predicted biomass from the model. Structure coefficients effectively give us the contribution of a predictor to the model prediction in the absence of all other predictors (with a maximum magnitude of ±1). SC are correlation coefficients and by squaring them and multiplying by the marginal R^2^ of the model we get what we call inclusive R^2^ or short IR^2^ (IR^2^ = SC^2^ * R^2^). SC and IR^2^ are large for temperature and precipitation as both are highly correlated to the predicted response, but their semi-partial or part R^2^s (the variance that they uniquely explain) are small due to their correlation. 
 
 ## Limiting the amount of combinations
 
@@ -106,7 +106,9 @@ and so on.
 
 Another option is `partbatch` which takes a list of character vectors. The
 terms in each character vector are then always fitted or removed together. This
-is most useful for many variables, e.g. when using dummy coding.
+is most useful for models with many variables, e.g. when using dummy coding.
+When the elements in the list given to partbatch are named, then the output
+shows the name of the batch instead of all single list elements.
 ```{r, warning=FALSE}
 R2_batch <- partR2(mod1, partvars = c("SpeciesDiversity"), 
                    partbatch = list(batch1 = c("Temperature", "Precipitation")),
@@ -131,8 +133,9 @@ coefficients or inclusive R^2^s.
 library(patchwork)
 p1 <- forestplot(R2_mod1, type = "R2", text_size = 10)
 p2 <- forestplot(R2_mod1, type = "IR2", text_size = 10)
-p3 <- forestplot(R2_mod1, type = "Ests", text_size = 10)
-(p1 + p2) / p3
+p3 <- forestplot(R2_mod1, type = "SC", text_size = 10)
+p4 <- forestplot(R2_mod1, type = "BW", text_size = 10)
+(p1 + p2) / (p3 + p4) + plot_annotation(tag_levels = "A")
 ```
 
 However, if you prepare a publication, you probably want the data to plot it yourself or put it in a table. Here is how the results can be retrieved from a `partR2` object:
@@ -149,13 +152,15 @@ How to obtain point estimates, confidence intervals and bootstrap replicates.
 R2_mod1$R2   # R2s
 R2_mod1$SC   # Structure coefficients
 R2_mod1$IR2  # inclusive R2s
+R2_mod1$BW # Standardised model estimates
 R2_mod1$Ests # Model estimates
 
 # bootstrap replicates
 R2_mod1$R2_boot
-R2_mod1$Ests_boot
 R2_mod1$SC_boot
 R2_mod1$IR2_boot
+R2_mod1$BW_boot
+R2_mod1$Ests_boot
 ```
 
 ## Check warnings from bootstrapping
@@ -195,6 +200,9 @@ It is sometimes useful to eyeball the table for jumps in variance explained when
 
 An extreme case are interactions involving factorial predictors. With one covariate, a three-level factor and their interaction, the model has estimates six parameters in the fixed part: one intercept, one for the main effect of the covariate, two contrasts for the main-effect of the three-level factor and two contrasts for the interaction. Now, if the covariate is removed from the model, the contrasts will be reparameterized, such that there are still six parameters estimated in the fixed part: one intercept, two contrast for the main-effect of the three-level factor, and three for the interactions.
 
+There are a few other options on how to deal with interactions, which we detailed in the paper and will
+add to this vignette after the review process.
+
 ### part R^2^s for models with transformations in the formula
 
 We generally advice to do all variable transformation before fitting the model. However, if for some reason this is not possible, it is important to specify the variable in the `partvars` argument exactly (!) how it was done in the model. Here is an example where we fit and additonal term for the precipitation squared in the formula. 
@@ -211,6 +219,31 @@ R2_mod3 <- partR2(mod3, partvars = c("Temperature", "Precipitation", "I(Precipit
                   data = biomass)
 R2_mod3
 ```
+
+### Fitting batches for models with many variables
+
+Sometimes models contain many variables and one is only interested in the combined
+effects of some of them. This could for example be the case when dummy coding is
+used. In this case, it is possible to calculate part R^2^ in batches using
+partbatch or a combination of partvars and partbatch. 
+
+```{r, warning=FALSE}
+mod4 <- lmer(Biomass ~ Temperature + Precipitation + SpeciesDiversity + Year + (1|Population), 
+             data = biomass)
+```
+
+Let's say now we are always ever interested in the combined effects of 
+Temperature and Precipitation. `partbatch` takes a list where every element
+is a character vector containing variables which should be held together as
+batches. 
+```{r, warning=FALSE}
+R2_mod4 <- partR2(mod4, partvars = "SpeciesDiversity", 
+                  partbatch = list(batch1 = "Temperature", "Precipitation"),
+                  data = biomass)
+R2_mod4
+```
+If the elements in partbatch have a name, the batch name is used in the output
+too.
 
 ## Run partR2 in parallel
 
@@ -252,7 +285,7 @@ R2_mod4 <- partR2(mod4, partvars = c("Temperature", "Precipitation"),
                    R2_type = "marginal", nboot = NULL, CI = 0.95, data=biomass)
 print(R2_mod4, round_to = 3) # rounding decimals in print and summary
 ```
-One thing to have in mind when using GLMMs are observation-level random effects (OLRE, i.e. Harrison 2014). `partR2` fits them internally to quantify overdispersion but will recognise an OLRE when it is already in the model. We do not fit an OLRE for binomial models with binary responses though. 
+One thing to have in mind when using GLMMs are observation-level random effects (OLRE, i.e. Harrison 2014). `partR2` fits them internally to quantify overdispersion but will recognise an OLRE when it is already in the model. We do not fit an OLRE for binomial models with binary responses because in this case there is no overdispersion. 
 
 Finally, a simple example for a binomial model with a proportion response.
 
@@ -270,7 +303,7 @@ R2_mod5 <- partR2(mod5, partvars = c("Temperature", "Precipitation"),
 summary(R2_mod5, round_to=3)
 ```
 
-As you might have noticed, both Poisson and binomials models give low R^2^ and R values -- even though they have been generated with similar paraameter settings as the Gaussian data. This situation is common and it originates from the inherent rounding when traits are expressed as discrete or binary numbers. Fixed and random effects explain variation only at the latent scale, but inherent distribution-specific variance contribute to the residual variances. This leads to large residual variance and relatively lower variance components.
+As you might have noticed, both Poisson and binomials models give low R^2^ and R values -- even though they have been generated with similar paraameter settings as the Gaussian data. This situation is common and originates from the inherent rounding when traits are expressed as discrete or binary numbers. Fixed and random effects explain variation only at the latent scale, but inherent distribution-specific variance contribute to the residual variances. This leads to large residual variance and relatively lower variance components.
 
 ## rptR and partR2: ratios of variance components
 

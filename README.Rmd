@@ -3,6 +3,7 @@ output: github_document
 ---
 
 ![Build Status](https://travis-ci.org/mastoffel/partR2.svg?branch=master)
+[![Lifecycle: maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, echo = FALSE}
@@ -36,8 +37,10 @@ be careful and thoughtful when using it.
 You can install partR2 from github with:
 
 ```{r gh-installation, eval = FALSE}
-# install.packages("devtools")
-devtools::install_github("mastoffel/partR2", build_vignettes = TRUE)
+# install.packages("remotes")
+remotes::install_github("mastoffel/partR2", build_vignettes = TRUE)
+# check vignette
+browseVignettes("partR2")
 ```
 
 ## Example
@@ -46,7 +49,7 @@ devtools::install_github("mastoffel/partR2", build_vignettes = TRUE)
 library(partR2)
 library(lme4)
 
-?partR2
+?`partR2-package`
 
 # load data
 data(biomass)
