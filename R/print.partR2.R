@@ -45,7 +45,7 @@ print.partR2 <- function(x, round_to = 4, ...) {
     cat("\n")
     cat("----------")
     cat("\n\n")
-    cat("Partitioned R2s:\n")
+    cat("Part (semi-partial) R2:\n")
 
     if (nrow(x$R2) == 1) {
         print("No partitions selected.")

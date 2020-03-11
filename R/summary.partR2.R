@@ -56,7 +56,7 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     cat("----------")
     cat("\n\n")
 
-    cat("Partitioned R2s:\n")
+    cat("Part (semi-partial) R2:\n")
 
     if (nrow(r2_df) == 1) {
         print("No partitions selected.")
@@ -68,7 +68,7 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     cat("----------")
     cat("\n\n")
 
-    cat("Inklusive R2 (SC^2 * R2):\n")
+    cat("Inclusive R2 (SC^2 * R2):\n")
     IR2_df <- x$IR2 %>% dplyr::mutate_if(is.numeric, round, round_to)
     print(IR2_df, row.names = FALSE, right = FALSE)
 
@@ -96,7 +96,7 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     if (!(is.null(x$boot_warnings) & (is.null(x$boot_messages)))) {
         cat("Parametric bootstrapping resulted in warnings or messages:")
         cat("\n")
-        cat("Check out$boot_warnings and out$boot_messages, where out is the partR2 output object.")
+        cat("Check r2obj$boot_warnings and r2obj$boot_messages.")
         cat("\n\n")
     }
 
