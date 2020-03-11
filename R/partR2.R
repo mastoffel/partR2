@@ -375,6 +375,22 @@ the moment")
     ndf <- suppressWarnings(purrr::map_int(ndf_terms, get_ndf, mod, data_mod))
     r2_cis$ndf <- ndf
 
+    # change partbatch with names, if present
+    if (!is.null(names(partbatch))) {
+        added_batches <- purrr::map(partbatch, function(x){
+            out <- paste(x, collapse = "+")
+            out
+        } )
+
+        part_names <- r2_cis$parts
+        for (i in 1:length(added_batches)) {
+            if (is.null(names(added_batches)[i])) next()
+            part_names <- gsub(added_batches[[i]], names(added_batches)[i], part_names, fixed = TRUE)
+        }
+        r2_cis$parts <- part_names
+        names(boot_r2s) <- part_names
+    }
+
     res <- list(call = mod@call,
                 #datatype = "gaussian",
                 R2_type = R2_type,

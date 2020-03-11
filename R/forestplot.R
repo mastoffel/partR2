@@ -17,7 +17,7 @@
 #'
 #' @keywords models
 #'
-#' @import ggplot2 dplyr patchwork
+#' @import ggplot2 dplyr
 #' @export
 #'
 #'
