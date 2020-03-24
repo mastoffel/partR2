@@ -214,11 +214,11 @@ R2_mod2b <- partR2(mod2, partvars = c("Temperature", "Precipitation", "Precipita
 R2_mod2b
 ```
 
-Using a Venn diagram, we can show what we actually just estimated. Here, Y is the total variance of the response, Y_RE is the variance explained by random effects, Y_R is the residual variance. The other fields are the variance explaned by the main effects, the interaction and what's shared between them. 
+Using a Venn diagram, we can show what we actually just estimated. Here, Y is the total variance of the response, Y~RE~ is the variance explained by random effects, Y~R~ is the residual variance. The other fields are the variance explaned by the main effects, the interaction and what's shared between them. 
 
 Basically, we estimated part R^2^ for the main effects and the interaction alone, but the
 variance shared by both is neither attributed to the main effect nor the interaction. We are
-attributing the variance Yx1 (horizontal stripes) to the first main effect (say Temperature) and Yx2 (vertical stripes) to the second main effect (Precipitation). Finally, Yint (horizontal and vertical stripes) is attributed to the the interaction.
+attributing the variance Y~x1~ (horizontal stripes) to the first main effect (say Temperature) and Y~x2~ (vertical stripes) to the second main effect (Precipitation). Finally, Y~int~ (horizontal and vertical stripes) is attributed to the the interaction.
 
 ![](venn1.jpeg){ width=80% }
 
@@ -226,6 +226,7 @@ This might not be what we are most interest in. Here's a second approach.
 
 #### 3) Pooling main effect and interaction variance
 One way to think about variance explained by main effects and their interactions is to pool the variance explained by a main effect with the variance explained by interactions that the term is involved in. Here, Temperature might be important either as a main effect or in interaction with Precipitation and we might want to estimate the total effect of Temperature. The same might be true for Temperature. This can be done using the partbatch argument, which can be used to calculate part R^2^ for batches of predictors.
+
 ```{r, warning=FALSE}
 R2_mod2c <- partR2(mod2, partbatch = list(c("Temperature", "Temperature:Precipitation"), 
                                           c("Precipitation", "Temperature:Precipitation")),
@@ -262,8 +263,8 @@ R2_merged
 Here, the part R^2^ of Temperature could be X1 (horizontal stripes), the part R^2^ of Precipitation could be X2 (vertical stripes) and the Temperature:Precipitation is X1:X2 or Yint in the Venn diagram. Here, all part R^2^s are rather low because Precipitation and Temperature are correlated.
 
 #### Note on interactions with factorial predictors
-An extreme case are interactions involving factorial predictors. With one covariate, a three-level factor and their interaction, the model has estimates six parameters in the fixed part: one intercept, one for the main effect of the covariate, two contrasts for the main-effect of the three-level factor and two contrasts for the interaction. Now, if the covariate is removed from the model, the contrasts will be reparameterized, such that there are still six parameters estimated in the fixed part: one intercept, two contrast for the main-effect of the three-level factor, and three for the interactions.
 
+An extreme case are interactions involving factorial predictors. With one covariate, a three-level factor and their interaction, the model has estimates six parameters in the fixed part: one intercept, one for the main effect of the covariate, two contrasts for the main-effect of the three-level factor and two contrasts for the interaction. Now, if the covariate is removed from the model, the contrasts will be reparameterized, such that there are still six parameters estimated in the fixed part: one intercept, two contrast for the main-effect of the three-level factor, and three for the interactions.
 to be continued ...
 
 ### part R^2^s for models with transformations in the formula
@@ -310,7 +311,7 @@ too.
 
 ## Run partR2 in parallel
 
-Parametric bootstrapping is an inherently slow process, because it involves repeated fitting of mixed effects models. Furthermore, the computation time increases exponentially with the number of terms requested, all being tested in isolation and in combination. It is therefore advisable to run preliminary analysis first with low numbers of bootstraps, just to see that things work and make sense in principle. The final analysis should be done with a large number of bootstraps (at least 100, better 1000). This can take time.
+We use parametric bootstrapping to quantify uncertainty due to sampling variance. Parametric bootstrapping is an inherently slow process, because it involves repeated fitting of mixed effects models. Furthermore, the computation time increases exponentially with the number of terms requested, all being tested in isolation and in combination. It is therefore advisable to run preliminary analysis first with low numbers of bootstraps, just to see that things work and make sense in principle. The final analysis should be done with a large number of bootstraps (at least 100, better 1000). This can take time.
 
 A simple way to save runtime is to distribute the bootstrap iterations across multiple cores. `partR2` parallises with the `future` (Bengtsson, 2019) and `furrr` (Vaughan & Dancho, 2018) packages. This makes it flexible for the user on how exactly to parallelise and should work on whatever OS you are running your analyses, be it Mac, Windows or Linux. 
 
@@ -368,6 +369,13 @@ summary(R2_mod5, round_to=3)
 
 As you might have noticed, both Poisson and binomials models give low R^2^ and R values -- even though they have been generated with similar paraameter settings as the Gaussian data. This situation is common and originates from the inherent rounding when traits are expressed as discrete or binary numbers. Fixed and random effects explain variation only at the latent scale, but inherent distribution-specific variance contribute to the residual variances. This leads to large residual variance and relatively lower variance components.
 
+## Under the hood
+The `partR2` function takes the fitted model and calculates the variances in the linear predictor. R^2^ is calculated relative to the total variance in the response, where the total variance is calculated as the sum of random effect, residual and fixed effect components. For GLMM this includes the distribution-specific variance (Nakagawa and Schielzeth 2010). Note also that for GLMM with Poisson or proportion data, the function searches for an observation-level random effect (OLRE, a random effect with as many levels as the response) to account for overdispersion. If no such predictor is found, an OLRE is added to the model and a message is printed to screen. This addition is usually advisable (though it does not control for all causes of overdispersion, Harrison 2014). It is possible to suppress fitting of on OLRE by setting `olre = FALSE`. All beta weights reported by `partR2` are based on the model estimates extracted by the `broom.mixed` package.  
+In a next step, `partR2` uses the list of predictors provided in partvars to fit a series of models in which each matching predictor is removed from the model individually and in combination with other matching predictors. For n predictors in partvars this results in 2^n-1 reduced model fits and thus an exponential increase of computation time. For each reduced model, the variance explained by fixed effects is estimated and the reduction relative to the full model is attributed to the missing predictor or set of predictors. Structure coefficients are estimated as the correlation between predictors in partvars and the linear predictor of the full model (fixed part only, using `lme4::predict.merMod(…, re.form=NA)`). Note that the calculation of structure coefficients as well as fitting reduced models requires that the data provided in the `data` argument matches exactly the data used in the merMod fit.
+The procedures described so far yield point estimates for the parameters for interest. Sampling variance is quantified by parametric bootstrapping. Parametric bootstrapping is based on the idea that if the full model represents an estimate of the underlying biological processes and new data are generated using exactly the same process and the same sampling design, then any fluctuation in estimates can be attributed to sampling variation alone (Faraway 2014). We therefore generate new data from the full model under the same sampling design using the `lme4::simulate.merMod` function (Bates et al. 2015). The same sampling design means that the fixed effects model matrix is assumed to be fixed, that the number of random effect levels is the same and that the distribution of random effect levels over covariates is fixed. 
+For each bootstrap dataset we reiterate the full process of fitting a full model, estimating the variance explained by fixed effects, estimate model parameters, structure coefficients, inclusive R^2^, followed by fitting of reduced models and monitoring the change in variance explained by fixed effects. All estimates for each bootstrap iteration and are stored in the `R2_boot`, `SC_boot`, `IR2_boot`, `BW_boot` and `Ests_boot` elements of the `partR2` object. The set of bootstraps is used to estimate confidence intervals (the 2.5% and 97.5% quantile for 95% CI). Note that in particular the quantiles will be estimated accurately only with a large number of bootstraps. Computation time increases linearly with the number of bootstrap iterations. 
+We have implemented the analysis for Gaussian, binomial and Poisson GLMMs, because these seem to be most widely used in the study of ecology and evolution. For non-Gaussian GLMMs, part R^2^ are calculated on the link scale. Part R2 on the data-scale estimates are considered problematic and we think that link-scale estimates are usually what is more informative. Additions of other GLMM families are possible in the future (see Nakagawa et al. 2017). 
+
 ## rptR and partR2: ratios of variance components
 
 The `rptR` (Stoffel, Nakagawa, Schielzeth 2017) package and the `partR2` package go hand in hand. The intra-class coefficient or repeatability calculated in `rptR` is the proportion of variance explained by random effects while the `partR2` package estimates the proportion of variance explained by fixed effects (or fixed plus random effects when `R2_type = "conditional"`). Both the repeatability R and the coefficient of determination R^2^ are therefore ratios of variance components. However, we now changed the design of the `partR2` package compared to `rptR`. The `partR2` user now fits the model first in `lme4` so that any modeling problem can be recognized straight away. We think this is generally preferable as it seperates the modeling part from the rest of the calculations and allows the user to focus on specifying an appropriate model first. 
@@ -395,3 +403,6 @@ Stoffel, M. A., Nakagawa, S. & Schielzeth, H. (2017). rptR: Repeatability estima
 
 Yeatts, P.E., Barton, M., Henson, R.K. & Martin, S.B. (2017). The use of structure coefficients to address multicollinearity in sport and exercise science. Measurement in Physical Education and Exercise Science, 21(2), pp.83-91.
 
+Nakagawa, S., & Schielzeth, H. (2010). Repeatability for Gaussian and non‐Gaussian data: a practical guide for biologists. Biological Reviews, 85(4), 935-956.
+
+Faraway, J. J. (2014). Linear models with R. CRC press.
