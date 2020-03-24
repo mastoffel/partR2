@@ -20,19 +20,20 @@ The goal of `partR2` is to partition the varianced explained in generalised line
 
 * Marginal and conditional R^2^ (sensu Nakagawa & Schielzeth, 2013)
 * Part R^2^ unique to each predictor and for each combination of predictors (fixed effects)
-* Structure coefficients (SC), i.e. the correlation between each predictor and the fitted response (the contribution of a predictor to the model when ignoring all other predictors) (see Yeatts et al., 2017)
-* Inclusive R^2^, which we define as explained variance of a predictor in the fitted response irrespective
+* Structure coefficients (SC), i.e. the correlation between each predictor and the predicted response (the contribution of a predictor to the model when ignoring all other predictors) (see Yeatts et al., 2017)
+* Inclusive R^2^, which we define as explained variance of a predictor in the predicted response irrespective
 of covariances with other predictors. It is calculated as SC^2^ * R^2^, the squared structure coefficient
-time the R^2^ of the full model.
+times the R^2^ of the full model.
 * Standardised model estimates called beta weights. These are calculated with
 beta * (sd(x)/sd(y), where beta is the estimate or slope, x is the predictor and y is the response. 
 * Confidence intervals for all relevant estimators through parametric bootstrapping
 
-The workhorse of the package is a single function, `partR2()`. It takes a fitted model from `lme4` (Bates et al. 2015), which can be of either a Gaussian, Poisson or binomial family.
+The workhorse of the package is a single function, `partR2()`. It takes a fitted model from `lme4` (Bates et al. 2015), with either a Gaussian, Poisson or binomial family.
 
 Before we go through some examples, we load the biomass dataset. This is a simulated dataset that aims to mimic a study on biomass production in grasslands. In a nutshell, virtual invertebrated were sampled once every year over 10 successive years from 20 different virtual populations. Temperature and precipitation were measured and overall species diversity and biomass were recorded for each population in each year.
 
 ```{r setup, message=FALSE}
+# remotes::install_github("mastoffel/partR2)
 library(partR2)
 library(lme4)
 data("biomass")
@@ -176,32 +177,94 @@ No warnings or messages in our case. But you might find something in your own an
 ## Special cases for part R2s
 
 ### Part R^2^s for interactions
+There are two ways in which interaction terms can be included in the `formula` argument. The familiar `*` statment allows fitting terms with their main effects and their interactions, while the `:` statement fits only the interactions. This is important to know, because we need to use the `:` version to tell `partR2` that we require a part R^2^ for an interaction.  
 
-It is possible to estimate part R^2^ for models with interaction terms. There are two ways in which interaction terms can be included in the `formula` argument. The familiar `*` statment allows fitting terms with their main effects and their interactions, while the `:` statement fits only the interactions. This is important to know, because we need to use the `:` version to tell `partR2` that we require a part R^2^ for an interaction. Nevertheless, we can fit the model with the `*` statment:
+It is possible to estimate part R^2^ for models with interaction terms, but requires some thought. To calculate the part R^2^ of a predictor,
+the predictor is removed from the model and the part R^2^ is calculated as the difference in R^2^ between the full and the reduced model. When two predictors are also involved in an interaction, we can easily remove the interaction itself. Removing one of the main effects (or predictors) will however not necessarily yield an easily interpretable part R^2^, because main effects and interactions are correlated, and when removing one of them, the other will take over some of the explained variance. Here, we present a few ways on how to deal with interactions:
+
+#### 1) Only estimate R^2^ of the interaction, but not the main effects.
+
+We can fit the model with the `*` statment (which actually fits Temperature + Precipitation + Temperature:Precipitation):
 
 ```{r, warning=FALSE}
 mod2 <- lmer(Biomass ~ Temperature * Precipitation + (1|Population), 
              data = biomass)
 ```
 
-When calculating part R^2^ of interactions we should be a careful because
-it is difficult to interpret an interaction without the main effects fitted and
-centering or standardising the variables is probably a good idea (see Schielzeth 2010).
 For now, we are only interested the explained variation of the interaction itself.
 We specify it in the `partvars` argument with `Temperature:Precipitation`.
 
 ```{r, warning=FALSE}
-R2_mod2 <- partR2(mod2, partvars = c("Temperature:Precipitation"), 
-                        R2_type = "marginal", nboot = 10, data = biomass)
-R2_mod2
+R2_mod2a <- partR2(mod2, partvars = c("Temperature:Precipitation"), 
+                   data = biomass)
+R2_mod2a
 ```
 
-It is sometimes useful to eyeball the table for jumps in variance explained when predictors are added. However, it is also important to realized the meaning of part R^2^2 of main effects when interactions are fitted in the model. When a part main effect is also involved in an interaction, the variance explained by the main effect is usually also explained by the interaction, such that the unique variance explained is often small.
+Here, the part R^2^ of the interaction is relatively small. When a part main effect is also involved in an interaction, the variance explained by the main effect is usually also explained by the interaction, such that the unique variance explained by either the interaction or the main effect is often small.
 
+Next, we'll go through the possibilities to deal with interactions when you are interested in part R^2^ of the main effects and the interaction.
+
+#### 2) Main effects and interactions alone
+
+First of all, we do what's most obvious, we specify both main effects and their interaction in the `partvars` argument. As a consequence, partR2 will iteratively remove each of those predictors and calculate the difference in R^2^ between the full model and each reduced model, respectively, to calculate part R^2^s for each predictor and combination of predictors.
+
+```{r, warning=FALSE}
+R2_mod2b <- partR2(mod2, partvars = c("Temperature", "Precipitation", "Precipitation:Temperature"),
+                   data = biomass, max_level = 1)
+R2_mod2b
+```
+
+Using a Venn diagram, we can show what we actually just estimated. Here, Y is the total variance of the response, Y_RE is the variance explained by random effects, Y_R is the residual variance. The other fields are the variance explaned by the main effects, the interaction and what's shared between them. 
+
+Basically, we estimated part R^2^ for the main effects and the interaction alone, but the
+variance shared by both is neither attributed to the main effect nor the interaction. We are
+attributing the variance Yx1 (horizontal stripes) to the first main effect (say Temperature) and Yx2 (vertical stripes) to the second main effect (Precipitation). Finally, Yint (horizontal and vertical stripes) is attributed to the the interaction.
+
+![](venn1.jpeg){ width=80% }
+
+This might not be what we are most interest in. Here's a second approach.
+
+#### 3) Pooling main effect and interaction variance
+One way to think about variance explained by main effects and their interactions is to pool the variance explained by a main effect with the variance explained by interactions that the term is involved in. Here, Temperature might be important either as a main effect or in interaction with Precipitation and we might want to estimate the total effect of Temperature. The same might be true for Temperature. This can be done using the partbatch argument, which can be used to calculate part R^2^ for batches of predictors.
+```{r, warning=FALSE}
+R2_mod2c <- partR2(mod2, partbatch = list(c("Temperature", "Temperature:Precipitation"), 
+                                          c("Precipitation", "Temperature:Precipitation")),
+                        data = biomass)
+R2_mod2c
+```
+
+We are getting part R^2^'s for the combined effects of each main effect and its interaction. These can again be visualised using a Venn diagram:
+
+![](venn2.jpeg){ width=80% }
+
+Here, X1 is the (combined) part R^2^ for Temperature and Temperature:Precipitation, and X2 is the (combined) part R^2^ for Precipitation and Temperature:Precipitation. 
+
+#### 4) Estimating main effects and interactions in seperate models and combine (Main effect priority)
+
+A fourth, which we think usually preferable option is to prioritize main effects by assigning the proportion of variance that is explained by a main effect together with the variance jointly explained with its interaction to the main effect. This implies that only the part R^2^ for an interaction is calculated from a first model fit (mod3a and R2_mod3a below). Subsequently, in a second model fit, the variance explained by the main effects is estimated when their interaction is excluded from the model (mod4b and R2_mod4b below).  We have implemented a helper function mergeR2 that allows to merge the two partR2 runs.
+
+```{r, warning=FALSE}
+
+mod3a <- lmer(Biomass ~ Temperature * Precipitation + (1|Population), data = biomass)
+R2_mod3a <- partR2(mod3a, partvars = c("Temperature:Precipitation"), data = biomass)
+
+mod3b <- lmer(Biomass ~ Temperature + Precipitation + (1|Population), data = biomass)
+R2_mod3b <- partR2(mod3a, partvars = c("Temperature", "Precipitation"), data = biomass,
+                   max_level = 1)
+
+R2_merged <- mergeR2(R2_mod3a, R2_mod3b)
+R2_merged
+
+```
+
+![](venn3.jpeg){ width=80% }
+
+Here, the part R^2^ of Temperature could be X1 (horizontal stripes), the part R^2^ of Precipitation could be X2 (vertical stripes) and the Temperature:Precipitation is X1:X2 or Yint in the Venn diagram. Here, all part R^2^s are rather low because Precipitation and Temperature are correlated.
+
+#### Note on interactions with factorial predictors
 An extreme case are interactions involving factorial predictors. With one covariate, a three-level factor and their interaction, the model has estimates six parameters in the fixed part: one intercept, one for the main effect of the covariate, two contrasts for the main-effect of the three-level factor and two contrasts for the interaction. Now, if the covariate is removed from the model, the contrasts will be reparameterized, such that there are still six parameters estimated in the fixed part: one intercept, two contrast for the main-effect of the three-level factor, and three for the interactions.
 
-There are a few other options on how to deal with interactions, which we detailed in the paper and will
-add to this vignette after the review process.
+to be continued ...
 
 ### part R^2^s for models with transformations in the formula
 
