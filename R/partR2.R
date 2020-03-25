@@ -264,7 +264,7 @@ the moment")
         mod_mat <- stats::model.matrix(mod)
         # only calculate SC for partvars
         mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop=FALSE]
-        out <- data.frame(stats::cor(Yhat, mod_mat))
+        out <- as.data.frame(stats::cor(Yhat, mod_mat))
     }
 
     # structure coefficients
