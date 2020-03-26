@@ -184,6 +184,10 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
 
     # commonality coefficients up to max_level (e.g. 3 for
     # the cc of 3 predictors)
+    if (!is.null(partbatch) & !is.null(max_level)) {
+        stop("Argument max_level does currently not work in combination with argument partbatch,
+                please use partvars or leave max_level at NULL")
+    }
     if (!is.null(max_level)) {
         remove_combs <- purrr::map_lgl(all_comb, function(x) length(x) > max_level)
         all_comb[remove_combs] <- NULL
