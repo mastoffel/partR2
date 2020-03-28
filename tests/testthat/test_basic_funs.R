@@ -20,7 +20,7 @@ test_that("Full model output is correct", {
     # IR2
     expect_equal(R2_1$IR2$IR2, c(0.022,0.3534,0.3762,0.1879,0.0235), tolerance = 0.01)
     # BW
-    expect_equal(R2_1$BW$estimate, c(-74.08, 0.104, 0.27, 0.40, 0.41, -0.13), tolerance = 0.01)
+    expect_equal(R2_1$BW$estimate, c(-74.1, 0.104, 0.27, 0.40, 0.41, -0.1094), tolerance = 0.01)
 })
 
 R2_2 <- partR2(mod1, partvars = c("Temperature", "Precipitation", "Temperature:Precipitation",
@@ -43,7 +43,7 @@ R2_4 <- partR2(mod1, partvars = c("SpeciesDiversity"),
                partbatch = list(b1 = c("Temperature","Temperature:Precipitation"), b2 = c("Precipitation", "Temperature:Precipitation")),
                data = biomass)
 
-R2_4
+#R2_4
 
 test_that("partvars and partbatch combine properly", {
     expect_equal(R2_4$R2$parts, c("Full", "b1", "b2", "SpeciesDiversity",
@@ -60,7 +60,6 @@ mod2a <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population),
 
 mod2b <- glmer(Egg ~ Treatment + Habitat + (1|Container) + (1|Population) + (1|overdisp),
                data = BeetlesFemale, family = poisson)
-
 
 test_that("olre is fitted and can be removed", {
 

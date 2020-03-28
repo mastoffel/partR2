@@ -221,7 +221,7 @@ the moment")
         broom.mixed::tidy(mod, effects = c("fixed"))
         )
     # beta weights
-    model_bws_full <- get_bw(model_ests_full, mod)
+    model_bws_full <- get_bw(mod)
 
     # R2
     R2_pe <- function(mod, expct, overdisp_name) {
@@ -286,7 +286,7 @@ the moment")
             out_scs <- SC_pe(mod_iter)
             out_ests <- broom.mixed::tidy(mod_iter, effects = "fixed")
             # beta weights
-            out_bw <- get_bw(out_ests, mod_iter)
+            out_bw <- get_bw(mod_iter)
             out <- list(r2s = out_r2s, ests = out_ests, scs = out_scs,
                         bws = out_bw)
         }

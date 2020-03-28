@@ -2,19 +2,20 @@
 % Please edit documentation in R/utils.R
 \name{get_bw}
 \alias{get_bw}
-\title{Get beta weights}
+\title{Get beta weights.}
 \usage{
-get_bw(ests, mod)
+get_bw(mod, ests)
 }
 \arguments{
-\item{ests}{tidy model output from broom.mixed}
-
 \item{mod}{merMod object.}
+
+\item{ests}{tidy merMod output form broom.mixed}
 }
 \value{
 tidy output with bw instead of raw estimates
 }
 \description{
-Get beta weights
+For Gaussian models, the predictors and the response are standardised.
+For GLMMs, only predictors are standardised.
 }
 \keyword{internal}
