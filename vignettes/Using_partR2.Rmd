@@ -21,11 +21,8 @@ The goal of `partR2` is to partition the variance explained in generalized linea
 * Marginal and conditional $R^2$ (*sensu* Nakagawa & Schielzeth, 2013)
 * Part $R^2$ unique to each predictor and for each combination of predictors (fixed effects)
 * Structure coefficients (SC), i.e. the correlation between each predictor and the predicted response (the contribution of a predictor to the model when ignoring all other predictors) (see Yeatts et al., 2017)
-* Inclusive $R^2$, which we define as explained variance of a predictor in the predicted response irrespective
-of covariances with other predictors. It is calculated as $SC^2 * R^2$, the squared structure coefficient
-times the $R^2$ of the full model.
-* Standardized model estimates called beta weights. These are calculated with
-$\beta * (sd(x)/sd(y))$, where $\beta$ is the regression slope, $x$ is the covariate and $y$ is the response. 
+* Inclusive $R^2$ defined as the variance explained by a predictor irrespective of covariances with other predictors. 
+* Standardized model estimates called beta weights
 * Confidence intervals for all relevant estimators through parametric bootstrapping
 
 The workhorse of the package is a single function, `partR2()`. It takes a fitted model from `lme4` (Bates et al. 2015), with either a Gaussian, Poisson or binomial family. The function returns a `partR2` object. The package has `print`, `summary` and `forestplot` functions for `partR2` objects, and a useful helper function `mergeR2` for models with interactions which we introduce below.

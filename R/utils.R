@@ -152,7 +152,37 @@ get_ndf <- function(partvar, mod, dat) {
 
 }
 
+#' Get beta weights
+#'
+#' @param ests tidy model output from broom.mixed
+#' @param mod merMod object.
+#' @keywords internal
+#' @return tidy output with bw instead of raw estimates
+#' @export
+#'
+#'
 
+get_bw <- function(mod){
+
+    mod_mat <- stats::model.matrix(mod) %>%
+                    as.data.frame() %>%
+                    dplyr::select(-"(Intercept)")
+    bin_preds <- purrr::map_lgl(mod_mat, function(x) length(table(x))<=2)
+    resp <- lme4::getME(mod, "y")
+    sds <- purrr::map_dbl(mod_mat, stats::sd, na.rm = TRUE)
+    # only for gaussian dividing by sd of response
+    if (stats::family(mod)$family == "gaussian") sds <- sds/stats::sd(resp, na.rm = TRUE)
+    # only standardise for non-factors
+    sds[bin_preds] <- 1
+    # simple posthoc standardisation. Doesn't work for interactions and should
+    # be turned of when standardised before
+    ests <- broom.mixed::tidy(mod, effects = "fixed")
+    ests[ests$term %in% names(sds), "estimate"] <-
+        purrr::map_dbl(names(sds), function(x) {
+            unlist(ests[ests$term %in% x, "estimate"] * sds[x])
+        })
+    ests
+}
 
 #Adds an observational level random effect to a model
 #
