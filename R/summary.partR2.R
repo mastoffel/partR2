@@ -4,7 +4,8 @@
 #' which includes R2, partial R2, model estimates and structure coefficients.
 #'
 #' @param object An partR2 object returned from one of the partR2 functions
-#' @param round_to defaults to 4 (decimals)
+#' @param round_to Defaults to 4 (decimals)
+#' @param ests Defaults to FALSE, if TRUE, also prints model estimates (without further standardization).
 #' @param \dots Additional arguments; not used at the moment
 #'
 #'
@@ -27,7 +28,7 @@
 #'
 #'
 #'
-summary.partR2 <- function(object, round_to = 4, ...) {
+summary.partR2 <- function(object, round_to = 4, ests = FALSE, ...) {
 
     x <- object
     # prep
@@ -84,8 +85,23 @@ summary.partR2 <- function(object, round_to = 4, ...) {
     cat("----------")
     cat("\n\n")
 
+    if (isTRUE(ests)) {
+        x$Ests <- x$Ests %>%
+            dplyr::select(.data$term, .data$estimate, .data$CI_lower, .data$CI_upper) %>%
+            dplyr::rename(Predictor = .data$term, Estimate = .data$estimate) %>%
+            dplyr::filter(!(.data$Predictor == "(Intercept)"))
+
+        cat("Model estimates \n")
+        ests_df <- x$Ests %>% dplyr::mutate_if(is.numeric, round, round_to)
+        print(ests_df, row.names = FALSE, right = FALSE)
+
+        cat("\n")
+        cat("----------")
+        cat("\n\n")
+
+    }
     #cat("Model estimates:\n")
-    cat("Beta weights (estimate * sd(x)/sd(y))\n")
+    cat("Beta weights (standardised estimates)\n")
     ests_df <- x$BW %>% dplyr::mutate_if(is.numeric, round, round_to)
     print(ests_df, row.names = FALSE, right = FALSE)
 

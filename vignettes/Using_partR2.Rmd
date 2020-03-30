@@ -35,7 +35,7 @@ In order to use the package appropriately, it is important to understand what th
 
 * Inclusive $R^2$ is calculated as the the squared structure coefficient times the $R^2$ of the full model ($SC^2 * R^2$). The basic reasoning it that (a) the squared of structure coefficients provides and estimate of the proportion of variance explained in the linear predictor by a predictor of interest, (b) that the total $R^2$ of the full model provides and estimated of the proportion of variance explained by the linear predictor and (c) the product of the two components gives an estimated of total contribution to prediction in proportion of the variance to be explained.
 
-* Beta weights are post-hoc calculated from the full model. For Gaussian data this is done by $\beta * (sd(x)/sd(y))$, where $\beta$ is the regression slope, $x$ is the covariate and $y$ is the response.  For non-Gaussian data this is done by $\beta * sd(x)$, since it is not useful to standardize by the response as well. Note that this posthoc standardization might not be the best option for standardization, for example for interactions or polynomial. We therefore give beta weights for orientation and refer to packages like `effectsize` (Makowski & Lüdecke, 2019). Alternatively, predictors can be standardized by the user prior to the analysis.
+* Beta weights are post-hoc calculated from the full model. For Gaussian data this is done by $\beta * (sd(x)/sd(y))$, where $\beta$ is the regression slope, $x$ is the covariate and $y$ is the response.  For non-Gaussian data this is done by $\beta * sd(x)$, since it is not useful to standardize by the response as well. Note that this posthoc standardization might not be the best option for standardization, for example for interactions or polynomial. Here, we recommend standardizing the variables yourself before fitting the model. Also, alternative packages like `effectsize` (Makowski & Lüdecke, 2019) offer more specialised ways to estimate beta weights.
 
 
 ## General use of the package
@@ -52,12 +52,7 @@ data("biomass")
 head(biomass)
 ```
 
-Before we proceed, we standardise some variables to bring them to the same scale and make their slope estimates comparable (see Schielzeth 2010 for a discussion).
-```{r}
-biomass[] <- lapply(biomass, function(x) if (is.double(x)) scale(x) else x)
-```
-
-## Partitioning R^2^ in a Gaussian mixed model
+## Partitioning $R^2$ in a Gaussian mixed model
 
 First we fit a linear mixed model in `lme4`. We assume, that the *Biomass* depends on effects of the *Year*, *Temperature*, *Precipitation* and *SpeciesDiversity*. We also fit a random effect to account for differences among populations.
 
@@ -94,7 +89,7 @@ Besides part $R^2$, `partR2` also outputs inclusive $R^2$, standardized model es
 summary(R2_mod1)
 ```
 
-Beta weights show that all four predictors seem to have some effect on *Biomass* because none of the confidence intervals overlaps zero, while the effect of *Precipitation* is the largest. Structure coefficients tell us that both *Temperature* and *Precipitation* are quite strongly correlated with overall model prediction. Structure coefficients effectively give us the contribution of a predictor to the model prediction in the absence of all other predictors (with a maximum magnitude of ±1). SC are correlation coefficients and by squaring them and multiplying by the marginal $R^2$ of the model we get what we call inclusive $R^2$ or short IR^2^ ($IR^2 = SC^2 * R^2$). SC and IR^2^ are large for *Temperature* and *Precipitation* as both are highly correlated to the predicted response, but their semi-partial or part $R^2$ (the variance that they uniquely explain) are small due to their correlation. 
+The beta weights (BW) show that all four predictors seem to have some effect on *Biomass* because none of the confidence intervals overlaps zero, while the effect of *Precipitation* is the largest. Structure coefficients tell us that both *Temperature* and *Precipitation* are quite strongly correlated with overall model prediction. Structure coefficients effectively give us the contribution of a predictor to the model prediction in the absence of all other predictors (with a maximum magnitude of ±1). SC are correlation coefficients and by squaring them and multiplying by the marginal $R^2$ of the model we get what we call inclusive $R^2$ or short IR^2^ ($IR^2 = SC^2 * R^2$). SC and IR^2^ are large for *Temperature* and *Precipitation* as both are highly correlated to the predicted response, but their semi-partial or part $R^2$ (the variance that they uniquely explain) are small due to their correlation. 
 
 ## Limiting the amount of combinations
 
@@ -112,7 +107,7 @@ Another option is `partbatch` which takes a list of character vectors. The terms
 
 ```{r, warning=FALSE}
 R2_batch <- partR2(mod1, partvars = c("SpeciesDiversity"), 
-                   partbatch = list(batch1 = c("Temperature", "Precipitation")),
+                   partbatch = list(c("Temperature", "Precipitation")),
                    R2_type = "marginal", data = biomass)
 R2_batch
 ```
@@ -186,7 +181,7 @@ No warnings or messages in this case. But you might find something in your own a
 
 ### Part $R^2$ for interactions
 
-It is possible to estimate part $R^2$ for models with interaction terms, but requires some thought. To calculate the part $R^2$ of a predictor, the predictor is removed from the model and the part $R^2$ is calculated as the difference in $R^2$ between the full and the reduced model. When two predictors are also involved in an interaction, we can easily remove the interaction itself. Removing one of the main effects, however, will not necessarily yield an easily interpretable part $R^2$, because main effects and interactions are often correlated. When removing one of the main effects, the interaction will often take over some of the explained variance. (Note that centering will often reduce the correlations such that main effects and their $R^2$ are interpretable even in the presence of interactions, see Schielzeth 2010.) In the following we present four options for how to deal with interactions.
+It is possible to estimate part $R^2$ for models with interaction terms, but this requires some thought. To calculate the part $R^2$ of a predictor, the predictor is removed from the model and the part $R^2$ is calculated as the difference in $R^2$ between the full and the reduced model. When two predictors are also involved in an interaction, we can easily remove the interaction itself. Removing one of the main effects, however, will not necessarily yield an easily interpretable part $R^2$, because main effects and interactions are often correlated. When removing one of the main effects, the interaction will often take over some of the explained variance. Note that centering will often reduce the correlations such that main effects and their $R^2$ are interpretable even in the presence of interactions (see Schielzeth 2010). In the following we present four options for how to deal with interactions.
 
 #### 1) Only estimate $R^2$ of the interaction, but not the main effects
 
@@ -297,6 +292,23 @@ R2_modSub2
 
 Now the model removing *Temperature* has just five parameters fitted. Note that year 1991 is in this case used as a reference level.
 
+### Beta Weights for interactions
+
+Standardised model estimates or beta weights are difficult to calculate for models with interactions (including polynomials, which are essentially interactions of a variable with itself). While there are specialised packages like `effectsize` (Makowski & Lüdecke, 2019) to standardize model estimates, we recommend standardising the variables involved in interactions or polynomials yourself before fitting the model. 
+
+For the biomass data, we standardise all numeric variables using `scale()` and refit the model with the standardised variables.
+```{r}
+biomass[] <- lapply(biomass, function(x) if (is.double(x)) scale(x) else x)
+mod4 <- lmer(Biomass ~ Temperature * Precipitation + (1|Population), data = biomass)
+```
+
+The we run the partR2 analysis again.  For the case of (pre-)standardised variables, `partR2` also reports the  model estimates, which we are interested in here. Using an additional summary argument `ests = TRUE` we can display them.
+```{r}
+R2_mod4 <- partR2(mod4, data = biomass)
+summary(R2_mod4, ests = TRUE)
+```
+
+
 ### Part $R^2$ for models with transformations in the formula
 
 We generally advice to do all variable transformation before fitting the model. However, if for some reason this is not possible, it is important to specify the variable in the `partvars` argument exactly (!) how it was done in the model. Here is an example where we fit and additional term for the *Precipitation^2^* in the formula. 
@@ -315,7 +327,6 @@ R2_mod3
 ```
 
 ## Running `partR2` in parallel
-
 
 Parametric bootstrapping is an inherently slow process, because it involves repeated fitting of mixed effects models. Furthermore, the computation time increases exponentially with the number of terms requested, all being tested in isolation and in combination. It is therefore advisable to run preliminary analysis first with low numbers of bootstraps, just to see that things work and make sense in principle. The final analysis should be done with a large number of bootstraps (at least 100, better 1000). This can take time.
 
@@ -384,7 +395,6 @@ The procedures described so far yield point estimates for the parameters for int
 For each bootstrap dataset we reiterate the full process of fitting a full model, estimating the variance explained by fixed effects, estimate model parameters, structure coefficients, inclusive R^2^, followed by fitting of reduced models and monitoring the change in variance explained by fixed effects. All estimates for each bootstrap iteration and are stored in the `R2_boot`, `SC_boot`, `IR2_boot`, `BW_boot` and `Ests_boot` elements of the `partR2` object. The set of bootstraps is used to estimate confidence intervals (the 2.5% and 97.5% quantile for 95% CI). Note that in particular the quantiles will be estimated accurately only with a large number of bootstraps. Computation time increases linearly with the number of bootstrap iterations. 
 
 We have implemented the analysis for Gaussian, binomial and Poisson GLMMs, because these seem to be most widely used in the study of ecology and evolution. For non-Gaussian GLMMs, part R^2^ are calculated on the link scale. Part R2 on the data-scale estimates are considered problematic and we think that link-scale estimates are usually what is more informative. Additions of other GLMM families are possible in the future (see Nakagawa et al. 2017). 
-## `rptR` and `partR2`: ratios of variance components
 
 ## `rptR` and `partR2`: ratios of variance components
 

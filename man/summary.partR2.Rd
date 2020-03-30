@@ -4,12 +4,14 @@
 \alias{summary.partR2}
 \title{Complete summary of a partR2 object}
 \usage{
-\method{summary}{partR2}(object, round_to = 4, ...)
+\method{summary}{partR2}(object, round_to = 4, ests = FALSE, ...)
 }
 \arguments{
 \item{object}{An partR2 object returned from one of the partR2 functions}
 
-\item{round_to}{defaults to 4 (decimals)}
+\item{round_to}{Defaults to 4 (decimals)}
+
+\item{ests}{Defaults to FALSE, if TRUE, also prints model estimates (without further standardization).}
 
 \item{\dots}{Additional arguments; not used at the moment}
 }

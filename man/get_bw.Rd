@@ -8,8 +8,6 @@ get_bw(mod)
 }
 \arguments{
 \item{mod}{merMod object.}
-
-\item{ests}{tidy model output from broom.mixed}
 }
 \value{
 tidy output with bw instead of raw estimates

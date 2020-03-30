@@ -79,9 +79,13 @@ predictors and their combinations}
 correlation between a predictor and the predicted response.}
 \item{IR2}{Inklusive R2. This is SC^2 * R2_full.}
 \item{BW}{Standardised model estimates (beta weights) for fixed effects and
-variances for random effects and confidence intervals. Beta weights
+variances for random effects and confidence intervals. Beta weights for Gaussian models
 are calculated as beta * sd(x)/sd(y), with beta being the estimated
-slope of a fixed effect for predictor x and response y.}
+slope of a fixed effect for predictor x and response y. Beta weight for Non-Gaussian
+models are calculated as beta * sd(x). Beta weights for interactions or polynomial
+terms are not informative at the moment and we recommend users to standardise
+variables themselves before fitting the model and to look at the model estimates (Ests)
+instead of beta weights (BW) in the partR2 output. See vignette for details. }
 \item{Ests}{Model estimates and confidence intervals. Point estimates
 were extracted with broom.mixed::tidy}
 \item{R2_boot}{Parametric bootstrap samples for R2 for full model and partitions}

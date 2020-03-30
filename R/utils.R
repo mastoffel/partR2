@@ -154,7 +154,6 @@ get_ndf <- function(partvar, mod, dat) {
 
 #' Get beta weights
 #'
-#' @param ests tidy model output from broom.mixed
 #' @param mod merMod object.
 #' @keywords internal
 #' @return tidy output with bw instead of raw estimates
