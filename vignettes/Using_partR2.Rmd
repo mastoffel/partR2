@@ -28,7 +28,7 @@ The goal of `partR2` is to partition the variance explained in generalized linea
 
 ## Installation
 
-To install the development version of `partR2` use:
+To install the development version of `partR2`:
 ```{r, eval=FALSE}
 remotes::install_github("mastoffel/partR2") 
 ```
@@ -211,22 +211,28 @@ hist(biomass$Extinction)
 
 First we fit a Poisson model using `lme4::glmer` with *Year*, *Temperature*, *Precipitation* and *SpeciesDiversity* as fixed effect predictors and *Population* as a random effect. Then we request part $R^2$ for *Temperature* and *Precipitation*. 
 
+Since a model with raw predictors produces warning messages (and the recommendation to scale variables), we scale *Temperature* and *Precipitation* and center *Year* and *SpeciesDiversity*.
 ```{r, warning=FALSE}
-modExt <- glmer(Extinction ~ Year +  Temperature * Precipitation + SpeciesDiversity + (1|Population), 
+biomass$YearC <- biomass$Year - mean(biomass$Year)
+biomass$TemperatureS <- scale(biomass$Temperature)
+biomass$PrecipitationS <- scale(biomass$Precipitation)
+biomass$SpeciesDiversityC <- biomass$SpeciesDiversity - mean(biomass$SpeciesDiversity)
+
+modExt <- glmer(Extinction ~ YearC +  TemperatureS + PrecipitationS + SpeciesDiversityC + (1|Population),
             data=biomass, family="poisson")
-R2_Ext <- partR2(modExt, partvars = c("Temperature", "Precipitation"), 
-                  data=biomass, R2_type = "marginal")
+R2_Ext <- partR2(modExt, partvars = c("TemperatureS", "PrecipitationS"),
+                  data=biomass, R2_type = "marginal", nboot=10)
 print(R2_Ext, round_to = 3) # rounding decimals in print and summary
 ```
 
-We also simulated a proportion-scale response variables *Recovered* and *NotRecoverd* for the biomass dataset. Again, we first fit a Binomial model using `lme4::glmer` with *Year*, *Temperature*, *Precipitation* and *SpeciesDiversity* as fixed effect predictors and *Population* as a random effect. Then we calculate part $R^2$ for *Temperature* and *Precipitation*. 
+We also simulated a proportion-scale response variables *Recovered* and *NotRecoverd* for the biomass dataset. Again, we first fit a Binomial model using `lme4::glmer` with *Year*, *Temperature*, *Precipitation* and *SpeciesDiversity* as fixed effect predictors and *Population* as a random effect. Then we calculate part $R^2$ for *Temperature* and *Precipitation*. Again, we use centered/scaled predictors to facilitate model convergence.
 
 ```{r, message=FALSE, warning=FALSE}
-modRecov <- glmer(cbind(Recovered, NotRecovered) ~ Year +  
-              Temperature * Precipitation + SpeciesDiversity + (1|Population), 
+modRecov <- glmer(cbind(Recovered, NotRecovered) ~ YearC + 
+              TemperatureS + PrecipitationS + SpeciesDiversityC + (1|Population),
               data=biomass, family="binomial")
-R2_Recov <- partR2(modRecov, partvars = c("Temperature", "Precipitation"), 
-                   R2_type = "marginal", data=biomass)
+R2_Recov <- partR2(modRecov, partvars = c("TemperatureS", "PrecipitationS"),
+                   R2_type = "marginal", data=biomass, nboot=10)
 summary(R2_Recov, round_to=3)
 ```
 
@@ -338,12 +344,13 @@ R2_GPFD
 Standardised model estimates or beta weights are difficult to calculate for models with interactions (including polynomials, which are essentially interactions of a variable with itself). While there are specialised packages like `effectsize` (Makowski & Lüdecke, 2019) to standardize model estimates, we recommend standardising the variables involved in interactions or polynomials before fitting the model.  We will again use the guinea pig dataset with *Rank* and *Time* fitted as a continuous, but now scaled variables.
 
 ```{r}
+GuineaPigs$TestoTransS <- scale(GuineaPigs$TestoTrans)
 GuineaPigs$TimeS <- scale(GuineaPigs$Time)
 GuineaPigs$RankS <- scale(GuineaPigs$Rank)
 modGPS <- lmer(TestoTrans ~ RankS * TimeS + (1|MaleID), data = GuineaPigs)
 ```
 
-We then run the `partR2` analysis. In the case of (pre-)standardised variables, it is useful to look at the model estimates instead of beta weights (since the latter are posthoc standardized). The `summary()` function takes an additional argument `ests = TRUE` display them.
+We then run the `partR2` analysis. In the case of (pre-)standardised variables, it is useful to look at the model estimates instead of beta weights (since the latter are posthoc standardized). The `summary()` function takes an additional argument `ests = TRUE` display them. The estimates from pre-standardized variable are preferable over post-standardized BW for interactions and polynomials. However, the difference is small in this case.
 
 ```{r}
 R2_GPS <- partR2(modGPS, data = GuineaPigs, nboot = 10)
