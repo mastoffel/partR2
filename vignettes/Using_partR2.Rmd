@@ -100,8 +100,9 @@ Beta weights (BW) show that all four predictors seem to have an effect on *Bioma
 By default, `partR2` calculates part $R^2$ for all predictors individually and in all possible combinations. The number of combinations increases exponentially with $2^n-1$ combinations for $n$ predictors. This increases computation time exponentially. There are two options to control the number of $R^2$ to be calculated. Sometimes we want only part $R^2$ for each predictor, but not for all their combinations. We can then specific the argument `max_level = 1`.
 
 ```{r, warning=FALSE}
-R2_BMb <- partR2(modBM, partvars = c("Temperature", "Precipitation", "Year", "SpeciesDiversity"), 
-                    data = biomass, R2_type = "marginal", max_level = 1)
+R2_BMb <- partR2(modBM, partvars = c("Temperature", "Precipitation", "Year", 
+                                     "SpeciesDiversity"), 
+                 data = biomass, R2_type = "marginal", max_level = 1, nboot = 10)
 R2_BMb
 ```
 
@@ -174,8 +175,9 @@ We generally advice to do all variable transformation before fitting the model. 
 
 ```{r, warning=FALSE}
 biomass$PrecipitationC <- biomass$Precipitation - mean(biomass$Precipitation)
-modBMC <- lmer(Biomass ~ Temperature + PrecipitationC + I(PrecipitationC^2) + (1|Population), 
-             data = biomass)
+modBMC <- lmer(Biomass ~ Temperature + PrecipitationC + 
+               I(PrecipitationC^2) + (1|Population), 
+               data = biomass)
 R2_BMe <- partR2(modBMC, partvars = c("Temperature"), partbatch=list(c("PrecipitationC", "I(PrecipitationC^2)")), 
                   data = biomass, nboot = 10)
 R2_BMe
@@ -218,10 +220,11 @@ biomass$TemperatureS <- scale(biomass$Temperature)
 biomass$PrecipitationS <- scale(biomass$Precipitation)
 biomass$SpeciesDiversityC <- biomass$SpeciesDiversity - mean(biomass$SpeciesDiversity)
 
-modExt <- glmer(Extinction ~ YearC +  TemperatureS + PrecipitationS + SpeciesDiversityC + (1|Population),
-            data=biomass, family="poisson")
+modExt <- glmer(Extinction ~ YearC +  TemperatureS + PrecipitationS + 
+                SpeciesDiversityC + (1|Population),
+                data=biomass, family="poisson")
 R2_Ext <- partR2(modExt, partvars = c("TemperatureS", "PrecipitationS"),
-                  data=biomass, R2_type = "marginal", nboot=10)
+                 data=biomass, R2_type = "marginal", nboot=10)
 print(R2_Ext, round_to = 3) # rounding decimals in print and summary
 ```
 
@@ -262,7 +265,8 @@ will treat interactions and main effects equally.
 
 ```{r, warning=FALSE}
 modGP <- lmer(TestoTrans ~ Rank * Time + (1|MaleID), data=GuineaPigs)
-R2_modGPa <- partR2(modGP, partvars = c("Rank", "Time", "Rank:Time"), data=GuineaPigs, nboot=10)
+R2_modGPa <- partR2(modGP, partvars = c("Rank", "Time", "Rank:Time"), 
+                    data=GuineaPigs, nboot=10)
 R2_modGPa
 ```
 
@@ -275,7 +279,8 @@ A conceptual Venn diagram shows what has been estimated. Y illustrates the total
 One way to think about variance explained by main effects and their interactions is to pool the variance explained by a main effect with the variance explained by interactions that the term is involved in. *Rank* might be considered important either as a main effect or in interaction with *Time* and we might want to estimate the total effect of *Rank*. The same might be true for *Time*. This can be done using the `partbatch` argument.
 
 ```{r, warning=FALSE}
-R2_modGPb <- partR2(modGP, partbatch = list(c("Rank", "Rank:Time"), c("Time", "Rank:Time")),
+R2_modGPb <- partR2(modGP, partbatch = list(c("Rank", "Rank:Time"), 
+                                            c("Time", "Rank:Time")),
                         data = GuineaPigs, nboot = 10)
 R2_modGPb
 ```
@@ -291,11 +296,14 @@ The last option is the one that we think is usually preferable. The option invol
 
 ```{r, warning=FALSE}
 modGP1 <- lmer(TestoTrans ~ Rank * Time + (1|MaleID), data = GuineaPigs)
-R2_GPc_part1 <- partR2(modGP1, partvars = c("Rank:Time"), data = GuineaPigs, nboot = 10)
+R2_GPc_part1 <- partR2(modGP1, partvars = c("Rank:Time"), data = GuineaPigs, 
+                       nboot = 10)
+
 modGP2 <- lmer(TestoTrans ~ Rank + Time + (1|MaleID), data = GuineaPigs)
 R2_GPc_part2 <- partR2(modGP2, partvars = c("Rank", "Time"), data = GuineaPigs,
                    max_level = 1, nboot = 10)
-R2_GPc <- mergeR2(R2_GPc_part1, R2_GPc_part2) # the first partR2 object is based on the full model
+# the first partR2 object is based on the full model
+R2_GPc <- mergeR2(R2_GPc_part1, R2_GPc_part2) 
 R2_GPc
 ```
 
@@ -311,7 +319,8 @@ Another special case are interactions involving factorial predictors. For illust
 ```{r, warning=FALSE}
 GuineaPigs$TimeF <- factor(GuineaPigs$Time)
 modGPF <- lmer(TestoTrans ~ Rank * TimeF + (1|MaleID), data=GuineaPigs)
-R2_modGPFa <- partR2(modGPF, partvars = c("Rank", "TimeF", "Rank:TimeF"), data=GuineaPigs, nboot=10)
+R2_modGPFa <- partR2(modGPF, partvars = c("Rank", "TimeF", "Rank:TimeF"), 
+                     data=GuineaPigs, nboot=10)
 R2_modGPFa
 ```
 
@@ -331,7 +340,8 @@ Now we can keep the four dummy-coded (and centered) *TimeF* variables together i
 
 ```{r, warning=FALSE}
 batch <- c("TimeF2", "TimeF3", "TimeF4", "TimeF5")
-modGPFD <- lmer(TestoTrans ~ (TimeF2 + TimeF3 + TimeF4 + TimeF5) * Rank + (1|MaleID), data=GuineaPigs)
+modGPFD <- lmer(TestoTrans ~ (TimeF2 + TimeF3 + TimeF4 + TimeF5) * Rank + 
+                (1|MaleID), data=GuineaPigs)
 R2_GPFD <- partR2(modGPFD, partvars=c("Rank"), 
                   partbatch=list(TimeF=batch, `TimeF:Rank`=paste0(batch, ":Rank")), 
                   data=GuineaPigs, nboot=10)
