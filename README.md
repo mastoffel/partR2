@@ -34,7 +34,7 @@ You can install partR2 from github with:
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("mastoffel/partR2", build_vignettes = TRUE)
+remotes::install_github("mastoffel/partR2", build_vignettes = TRUE, dependencies = TRUE) 
 # check vignette
 browseVignettes("partR2")
 ```
@@ -60,20 +60,20 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> 
 #> R2 (marginal) and 95% CI for the full model: 
 #>  R2     CI_lower CI_upper nboot ndf
-#>  0.5133 0.4238   0.5914   100   4  
+#>  0.5133 0.4208   0.6108   100   4  
 #> 
 #> ----------
 #> 
 #> Part (semi-partial) R2:
 #>  Predictor(s)                      R2     CI_lower CI_upper nboot ndf
-#>  Model                             0.5133  0.4238  0.5914   100   4  
-#>  SpeciesDiversity                  0.1653  0.0758  0.2435   100   3  
-#>  Temperature                       0.3038  0.2143  0.3819   100   3  
-#>  Year                              0.0130 -0.0764  0.0912   100   3  
-#>  SpeciesDiversity+Temperature      0.4914  0.4019  0.5695   100   2  
-#>  SpeciesDiversity+Year             0.1784  0.0889  0.2565   100   2  
-#>  Temperature+Year                  0.3250  0.2356  0.4032   100   2  
-#>  SpeciesDiversity+Temperature+Year 0.5133  0.4238  0.5914   100   1
+#>  Model                             0.5133  0.4208  0.6108   100   4  
+#>  SpeciesDiversity                  0.1653  0.0728  0.2628   100   3  
+#>  Temperature                       0.3038  0.2113  0.4013   100   3  
+#>  Year                              0.0130 -0.0795  0.1105   100   3  
+#>  SpeciesDiversity+Temperature      0.4914  0.3989  0.5889   100   2  
+#>  SpeciesDiversity+Year             0.1784  0.0859  0.2758   100   2  
+#>  Temperature+Year                  0.3250  0.2325  0.4225   100   2  
+#>  SpeciesDiversity+Temperature+Year 0.5133  0.4208  0.6108   100   1
 ```
 
 And to plot the
