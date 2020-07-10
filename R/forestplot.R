@@ -66,7 +66,7 @@ forestplot <- function(x, type = c("R2", "BW", "SC", "IR2", "Ests"), line_size =
    # if (type == "R2") x_label <-  paste0("R2 (", x$R2_type, ") and CI")
     if (type == "R2") x_label <-   bquote(R^2~and~CI)
     if (type == "SC") x_label <- "Structure coefficients and CI"
-    if (type == "IR2") x_label <-  bquote(Inclusive~R^2~(SC^2%*%R^2~full)~and~CI)
+    if (type == "IR2") x_label <- bquote(Inclusive~R^2~and~CI)  #bquote(Inclusive~R^2~(SC^2%*%R^2~full)~and~CI)
     if (type == "BW") x_label <- "Beta weights and CI"
     if (type == "Ests") x_label <- "Model estimates and CI"
 
@@ -96,6 +96,11 @@ forestplot <- function(x, type = c("R2", "BW", "SC", "IR2", "Ests"), line_size =
     p_out <- p_out +
         geom_point(size = point_size, shape = 21, fill = "#ECEFF4", col = col_all, # "grey69"
                    alpha = 1, stroke = line_size)
+
+    # if (type %in% c("R2", "IR2")) {
+    #     p_out <- p_out +
+    #                 scale_x_continuous(limits = c(0,1))
+    # }
     # when estimates are plotted, split fixed and random effects into
     # different plots
     # if (type %in% c("BW", "Ests")) {

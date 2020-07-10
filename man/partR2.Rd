@@ -6,7 +6,8 @@
 \usage{
 partR2(mod, partvars = NULL, data = NULL, R2_type = "marginal",
   max_level = NULL, nboot = NULL, CI = 0.95, parallel = FALSE,
-  expct = "meanobs", olre = TRUE, partbatch = NULL)
+  expct = "meanobs", olre = TRUE, partbatch = NULL,
+  allow_neg_r2 = FALSE)
 }
 \arguments{
 \item{mod}{Fitted lme4 model (a merMod object).}
@@ -68,6 +69,12 @@ This is useful when the number of potential subsets gets too large to
 be computationally practical, for example when dummy coding is used.
 See our vignette for details. This feature is still experimental and
 should be used with caution.}
+
+\item{allow_neg_r2}{Calculating part R2 involves fitting two models, one with
+and one without the predictor of interest. In cases where the predictor
+has little association with the response, the resulting part R2 value
+can become negative. By default we set negative values to 0, but by
+setting this parameter to TRUE, R2 values can become negative.}
 }
 \value{
 Returns an object of class \code{partR2} that is a a list with the following elements:

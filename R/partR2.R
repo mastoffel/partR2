@@ -53,6 +53,11 @@
 #'        be computationally practical, for example when dummy coding is used.
 #'        See our vignette for details. This feature is still experimental and
 #'        should be used with caution.
+#' @param allow_neg_r2 Calculating part R2 involves fitting two models, one with
+#'        and one without the predictor of interest. In cases where the predictor
+#'        has little association with the response, the resulting part R2 value
+#'        can become negative. By default we set negative values to 0, but by
+#'        setting this parameter to TRUE, R2 values can become negative.
 #'
 #'
 #'
@@ -123,7 +128,7 @@
 
 partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_level = NULL,
                    nboot = NULL, CI = 0.95, parallel = FALSE, expct = "meanobs",
-                   olre = TRUE, partbatch = NULL){
+                   olre = TRUE, partbatch = NULL, allow_neg_r2 = FALSE){
 
     # initial checks
     if(!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
@@ -254,13 +259,21 @@ the moment")
         R2_full <- R2_pe(mod, expct, overdisp_name)
         if (!partition) return(R2_full)
         # calculate R2s of reduced models and difference with full model
-        R2s_red <- purrr::map_df(all_comb, R2_of_red_mod, mod = mod,
+        R2s_red_tmp <- purrr::map_df(all_comb, R2_of_red_mod, mod = mod,
                                  R2_pe = R2_pe, dat = data_mod, expct = expct,
                                  overdisp_name = overdisp_name) %>%
-                   dplyr::mutate(R2 = R2_full$R2 - .data$R2) %>%
-                   # if by chance part R2 drops below 0, make it 0
-                   # dplyr::mutate(R2 = ifelse(.data$R2 < 0, 0, .data$R2)) %>%
-                   dplyr::bind_rows(R2_full, .)
+                   dplyr::mutate(R2 = R2_full$R2 - .data$R2)
+
+        if(!allow_neg_r2) {
+            R2s_red <-  R2s_red_tmp %>%
+                # if by chance part R2 drops below 0, make it 0
+                            dplyr::mutate(R2 = ifelse(.data$R2 < 0, 0, .data$R2)) %>%
+                            dplyr::bind_rows(R2_full, .)
+        } else if (allow_neg_r2) {
+            R2s_red <-  R2s_red_tmp %>%  dplyr::bind_rows(R2_full, .)
+        }
+
+        R2s_red
     }
 
     # calculate R2 and partial R2s
