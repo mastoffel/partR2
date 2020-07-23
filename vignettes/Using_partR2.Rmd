@@ -270,7 +270,7 @@ R2_modGPa <- partR2(modGP, partvars = c("Rank", "Time", "Rank:Time"),
 R2_modGPa
 ```
 
-A conceptual Venn diagram shows what has been estimated. Y illustrates the total variance of the response (here *TestoTrans*), Y~RE~ the variance explained by random effects (here *MaleID*) and Y~R~ the residual variance. The other fields are the variance explained by the main effects (e.g. X1 = *Rank* and X2 = *Time*) and their interaction (Xint). Intersections show parts of the phenotypic variance explained by multiple components. What we have estimated is the variance uniquely explained by main effects and uniquely explained by the interaction. The variance explained that is shared between main effects and the interaction is neither attributed to the main effect nor the interaction. Instead we have estimated the variance Y~x1~ (horizontal stripes,*Rank*) and Y~x2~ (vertical stripes, *Time*). Finally, Y~int~ (solid red) is attributed to the the interaction (*Rank*:*Time*).
+A conceptual Venn diagram shows what has been estimated. Y illustrates the total variance of the response (here *TestoTrans*), Y~RE~ the variance explained by random effects (here *MaleID*) and Y~R~ the residual variance. The other fields are the variance explained by the main effects (e.g. X1 = *Rank* and X2 = *Time*) and their interaction (Xint). Intersections show parts of the phenotypic variance explained by multiple components. What we have estimated is the variance uniquely explained by main effects and uniquely explained by the interaction. The variance explained that is shared between main effects and the interaction is neither attributed to the main effect nor the interaction. Instead we have estimated the variance Y~x1~ (horizontal stripes,*Rank*) and Y~x2~ (vertical stripes, *Time*). Finally, Y~int~ (dotted) is attributed to the the interaction (*Rank*:*Time*).
 
 ![](venn1.jpeg){ width=80% }
 
@@ -307,7 +307,7 @@ R2_GPc <- mergeR2(R2_GPc_part1, R2_GPc_part2)
 R2_GPc
 ```
 
-A conceptual Venn diagram shows what has been estimated. The model now assigns variance explained by a main effect, including the variance shared with its interaction, to the main effect. Here, X1 is the part $R^2$ for *Rank* (horizontal stripes), and X2 is the (combined) part $R^2$ for  (vertical stripes) and the variance uniquely explained by the interaction (*Rank*:*Time*) is estimated separately (solid red).
+A conceptual Venn diagram shows what has been estimated. The model now assigns variance explained by a main effect, including the variance shared with its interaction, to the main effect. Here, X1 is the part $R^2$ for *Rank* (horizontal stripes), and X2 is the (combined) part $R^2$ for  (vertical stripes) and the variance uniquely explained by the interaction (*Rank*:*Time*) is estimated separately (dotted).
 
 ![](venn3.jpeg){ width=80% }
 
