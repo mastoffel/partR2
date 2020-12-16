@@ -4,10 +4,20 @@
 \alias{partR2}
 \title{Partition the R2 for mixed models}
 \usage{
-partR2(mod, partvars = NULL, data = NULL, R2_type = "marginal",
-  max_level = NULL, nboot = NULL, CI = 0.95, parallel = FALSE,
-  expct = "meanobs", olre = TRUE, partbatch = NULL,
-  allow_neg_r2 = FALSE)
+partR2(
+  mod,
+  partvars = NULL,
+  data = NULL,
+  R2_type = "marginal",
+  max_level = NULL,
+  nboot = NULL,
+  CI = 0.95,
+  parallel = FALSE,
+  expct = "meanobs",
+  olre = TRUE,
+  partbatch = NULL,
+  allow_neg_r2 = FALSE
+)
 }
 \arguments{
 \item{mod}{Fitted lme4 model (a merMod object).}

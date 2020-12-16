@@ -4,8 +4,13 @@
 \alias{forestplot}
 \title{Plot a partR2 object}
 \usage{
-forestplot(x, type = c("R2", "BW", "SC", "IR2", "Ests"),
-  line_size = 0.5, text_size = 12, point_size = 3)
+forestplot(
+  x,
+  type = c("R2", "BW", "SC", "IR2", "Ests"),
+  line_size = 0.5,
+  text_size = 12,
+  point_size = 3
+)
 }
 \arguments{
 \item{x}{A partR2 object.}

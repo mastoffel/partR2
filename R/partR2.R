@@ -266,7 +266,7 @@ the moment")
 
         if(!allow_neg_r2) {
             R2s_red <-  R2s_red_tmp %>%
-                # if by chance part R2 drops below 0, make it 0
+                # if by chance part R2 drops below 0, set to 0
                             dplyr::mutate(R2 = ifelse(.data$R2 < 0, 0, .data$R2)) %>%
                             dplyr::bind_rows(R2_full, .)
         } else if (allow_neg_r2) {
