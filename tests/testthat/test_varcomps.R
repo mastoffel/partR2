@@ -41,9 +41,10 @@ test_that("get_ran_var removes overdisp effect when present", {
   expect_equal(nrow(get_ran_var(fit3, overdisp_name = "overdisp")), 1)
 })
 
+# this needs more testing
 test_that("get_ran_var gives correct random slope variances", {
 
-    get_ran_var(fit4)
+    expect_equal(get_ran_var(fit4)$estimate, 25.40946, tolerance = 0.001)
 
 
 })

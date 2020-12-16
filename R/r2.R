@@ -55,6 +55,12 @@ get_ran_var <- function(mod, overdisp_name = NULL){
         # check whether component is a matrix (--> random slopes)
         if (sum(dim(var_comps[[grname]])) > 2){
             sigma <- var_comps[[grname]]
+            # a problem arises here for random slope models, when in the reduced
+            # model the fixed effect isn't there anymore
+            if (!all(colnames(sigma) %in% colnames(stats::model.matrix(mod)))){
+                stop("Currently, it is not possible to calculate part R2
+                     for fixed effects involved in random slope terms")
+            }
             # design matrix subsetted for the elements of sigma
             Z <- stats::model.matrix(mod)[, colnames(sigma)]
             # average variance across covariate
