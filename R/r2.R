@@ -27,6 +27,52 @@ R2_pe <- function(mod, expct, overdisp_name) {
     R2_out
 }
 
+#' Extracts random effect variances
+#'
+#' This function computes the sum of random effect variances where one
+#' or more of the random effects are random slopes. It uses Paul Johnson' method
+#' to compute the average group variance across the levels of a covariate.
+#' This function extracts only grouping factors, no residual or overdispersion.
+#'
+#'
+#' @param mod An lme4 model object.
+#' @param overdisp_name name of overdispersion term
+#' @keywords internal
+#'
+get_ran_var <- function(mod, overdisp_name = NULL){
+
+    var_comps <- lme4::VarCorr(mod)
+
+    # gives only grouping factors, no Residual, no overdisp
+    if (!is.null(overdisp_name)) {
+        grnames <- names(var_comps)[!(names(var_comps) %in% overdisp_name)]
+    } else {
+        grnames <- names(var_comps)
+    }
+
+
+    var_raneff <- function(grname, var_comps) {
+        # check whether component is a matrix (--> random slopes)
+        if (sum(dim(var_comps[[grname]])) > 2){
+            sigma <- var_comps[[grname]]
+            # design matrix subsetted for the elements of sigma
+            Z <- stats::model.matrix(mod)[, colnames(sigma)]
+            # average variance across covariate
+            var_grname <- sum(rowSums((Z %*% sigma) * Z))/stats::nobs(mod)
+        } else {
+            var_grname <- as.numeric(var_comps[[grname]])
+        }
+        var_grname
+    }
+
+    # random effect variances
+    var_raneffs <- data.frame(group = grnames,
+                              estimate = purrr::map_dbl(grnames, var_raneff, var_comps))
+
+    var_raneffs
+
+}
+
 #' Extract variance components from merMod.
 #'
 #' @param mod A merMod object.
@@ -288,49 +334,5 @@ var_comps_binary <- function(mod, expct) {
 }
 
 
-#' Estimates random effect variance from random slope models
-#'
-#' This function computes the sum of random effect variances where one
-#' or more of the random effects are random slopes. It the method from Paul Johnson
-#' to compute the average group variance across the levels of a covariate.
-#' This function extracts only grouping factors, no residual or overdispersion.
-#'
-#'
-#' @param mod An lme4 model object.
-#' @param overdisp_name name of overdispersion term
-#' @keywords internal
-#'
-get_ran_var <- function(mod, overdisp_name = NULL){
 
-    var_comps <- lme4::VarCorr(mod)
-
-    # gives only grouping factors, no Residual, no overdisp
-    if (!is.null(overdisp_name)) {
-        grnames <- names(var_comps)[!(names(var_comps) %in% overdisp_name)]
-    } else {
-        grnames <- names(var_comps)
-    }
-
-
-    var_raneff <- function(grname, var_comps) {
-        # check whether component is a matrix (--> random slopes)
-        if (sum(dim(var_comps[[grname]])) > 2){
-            sigma <- var_comps[[grname]]
-            # design matrix subsetted for the elements of sigma
-            Z <- stats::model.matrix(mod)[, colnames(sigma)]
-            # average variance across covariate
-            var_grname <- sum(rowSums((Z %*% sigma) * Z))/stats::nobs(mod)
-        } else {
-            var_grname <- as.numeric(var_comps[[grname]])
-        }
-        var_grname
-    }
-
-    # random effect variances
-    var_raneffs <- data.frame(group = grnames,
-                              estimate = purrr::map_dbl(grnames, var_raneff, var_comps))
-
-    var_raneffs
-
-}
 

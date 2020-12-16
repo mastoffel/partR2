@@ -131,3 +131,12 @@ NULL
 #' @keywords internal
 #' @name BeetlesBody
 NULL
+
+#' sim_data dataset
+#'
+#' @details Simulated dataset to test random slope models. Source:
+#' https://stats.stackexchange.com/questions/162553/how-to-simulate-a-random-slope-model
+#'
+#' @keywords internal
+#' @name sim_data
+NULL

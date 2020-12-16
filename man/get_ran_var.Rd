@@ -2,7 +2,7 @@
 % Please edit documentation in R/r2.R
 \name{get_ran_var}
 \alias{get_ran_var}
-\title{Estimates random effect variance from random slope models}
+\title{Extracts random effect variances}
 \usage{
 get_ran_var(mod, overdisp_name = NULL)
 }
@@ -13,7 +13,7 @@ get_ran_var(mod, overdisp_name = NULL)
 }
 \description{
 This function computes the sum of random effect variances where one
-or more of the random effects are random slopes. It the method from Paul Johnson
+or more of the random effects are random slopes. It uses Paul Johnson' method
 to compute the average group variance across the levels of a covariate.
 This function extracts only grouping factors, no residual or overdispersion.
 }
