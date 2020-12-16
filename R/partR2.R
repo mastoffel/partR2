@@ -232,27 +232,6 @@ the moment")
     # beta weights
     model_bws_full <- get_bw(mod)
 
-    # R2
-    R2_pe <- function(mod, expct, overdisp_name) {
-
-        # get variance components
-        var_comps <- get_var_comps(mod, expct, overdisp_name)
-
-        if (R2_type == "marginal") {
-            R2_out <- var_comps %>%
-                dplyr::mutate(R2 = .data$var_fix /
-                             (.data$var_fix + .data$var_ran + .data$var_res)) %>%
-                dplyr::select(.data$R2)
-        } else if (R2_type == "conditional") {
-            R2_out <- var_comps %>%
-                dplyr::mutate(R2 = (.data$var_fix  + .data$var_ran) /
-                             (.data$var_fix + .data$var_ran + .data$var_res)) %>%
-                dplyr::select(.data$R2)
-        }
-        R2_out
-    }
-
-
     # partition R2
     part_R2s <- function(mod, expct, overdisp_name) {
         # calculate full model R2

@@ -1,3 +1,32 @@
+#' Calculate R2
+#'
+#' @param mod merMod object
+#' @param expct Expectation
+#' @param overdisp_name Name of overdispersion term
+#'
+#' @return R2, atm data.frame with one element
+#'
+#' @examples
+#'
+R2_pe <- function(mod, expct, overdisp_name) {
+
+    # get variance components
+    var_comps <- get_var_comps(mod, expct, overdisp_name)
+
+    if (R2_type == "marginal") {
+        R2_out <- var_comps %>%
+            dplyr::mutate(R2 = .data$var_fix /
+                              (.data$var_fix + .data$var_ran + .data$var_res)) %>%
+            dplyr::select(.data$R2)
+    } else if (R2_type == "conditional") {
+        R2_out <- var_comps %>%
+            dplyr::mutate(R2 = (.data$var_fix  + .data$var_ran) /
+                              (.data$var_fix + .data$var_ran + .data$var_res)) %>%
+            dplyr::select(.data$R2)
+    }
+    R2_out
+}
+
 #' Extract variance components from merMod.
 #'
 #' @param mod A merMod object.
@@ -6,7 +35,6 @@
 #'
 #' @keywords internal
 #' @return Fixed, random and residual variance
-#' @export
 #'
 get_var_comps <- function(mod, expct, overdisp_name) {
 
@@ -44,7 +72,6 @@ get_var_comps <- function(mod, expct, overdisp_name) {
 #' @param mod merMod object with gaussian family.
 #' @keywords internal
 #' @return Fixed, random and residual variance
-#' @export
 #'
 var_comps_gaussian <- function(mod, ...) {
 
@@ -70,7 +97,6 @@ var_comps_gaussian <- function(mod, ...) {
 #'
 #' @keywords internal
 #' @return Fixed, random and residual variance
-#' @export
 #'
 var_comps_poisson <- function(mod, expct, overdisp_name) {
 
@@ -126,7 +152,6 @@ var_comps_poisson <- function(mod, expct, overdisp_name) {
 #' @param expct "latent", "meanobs" of "liability"
 #' @keywords internal
 #' @return Fixed, random and residual variance
-#' @export
 #'
 var_comps_proportion <- function(mod, expct, overdisp_name) {
 
@@ -204,7 +229,6 @@ var_comps_proportion <- function(mod, expct, overdisp_name) {
 #' @param expct "latent", "meanobs" of "liability"
 #' @keywords internal
 #' @return Fixed, random and residual variance
-#' @export
 #'
 var_comps_binary <- function(mod, expct) {
 
@@ -309,3 +333,4 @@ get_ran_var <- function(mod, overdisp_name = NULL){
     var_raneffs
 
 }
+
