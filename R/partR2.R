@@ -229,34 +229,13 @@ the moment")
     model_ests_full <- suppressMessages(
         broom.mixed::tidy(mod, effects = c("fixed"))
         )
+
     # beta weights
     model_bws_full <- get_bw(mod)
 
-    # partition R2
-    part_R2s <- function(mod, expct, overdisp_name) {
-        # calculate full model R2
-        R2_full <- R2_pe(mod, expct, overdisp_name)
-        if (!partition) return(R2_full)
-        # calculate R2s of reduced models and difference with full model
-        R2s_red_tmp <- purrr::map_df(all_comb, R2_of_red_mod, mod = mod,
-                                 R2_pe = R2_pe, dat = data_mod, expct = expct,
-                                 overdisp_name = overdisp_name) %>%
-                   dplyr::mutate(R2 = R2_full$R2 - .data$R2)
-
-        if(!allow_neg_r2) {
-            R2s_red <-  R2s_red_tmp %>%
-                # if by chance part R2 drops below 0, set to 0
-                            dplyr::mutate(R2 = ifelse(.data$R2 < 0, 0, .data$R2)) %>%
-                            dplyr::bind_rows(R2_full, .)
-        } else if (allow_neg_r2) {
-            R2s_red <-  R2s_red_tmp %>%  dplyr::bind_rows(R2_full, .)
-        }
-
-        R2s_red
-    }
-
     # calculate R2 and partial R2s
-    R2_org <- part_R2s(mod, expct, overdisp_name)
+    R2_org <- part_R2s(mod, expct, overdisp_name, R2_type, all_comb,
+                       partition, data_mod, allow_neg_r2)
 
     # structure coefficients
     SC_pe <- function(mod) {
@@ -278,7 +257,8 @@ the moment")
         # main bootstrap function
         bootstr <- function(y, mod, expct, overdisp_name) {
             mod_iter <- lme4::refit(mod, newresp = y)
-            out_r2s <- part_R2s(mod_iter, expct, overdisp_name)
+            out_r2s <- part_R2s(mod_iter, expct, overdisp_name, R2_type,
+                                all_comb, partition, data_mod, allow_neg_r2)
             out_scs <- SC_pe(mod_iter)
             out_ests <- broom.mixed::tidy(mod_iter, effects = "fixed")
             # beta weights

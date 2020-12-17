@@ -89,44 +89,6 @@ calc_CI <- function(x, CI) {
 }
 
 
-# reduced model R2 (mod without partvar)
-
-#' Calculate R2 from a reduced model
-#'
-#' @param partvar One or more fixed effect variables which are taken out
-#' of the model.
-#' @param mod merMod object.
-#' @param R2_pe R2 function.
-#' @param data Data.frame to fit the model
-#' @param expct Expectation
-#' @param overdisp_name Name of overdispersion term
-#' @keywords internal
-#' @return R2 of reduced model.
-#' @export
-#'
-R2_of_red_mod <- function(partvar, mod, R2_pe, dat, expct, overdisp_name) {
-
-
-    # which variables to reduce?
-    to_del <- paste(paste("-", partvar, sep= ""), collapse = " ")
-    # reduced formula
-    formula_red <- stats::update(stats::formula(mod), paste(". ~ . ", to_del, sep=""))
-
-    # check if old and new formula are different and hence the partvar does
-    # not exist
-    formula_terms <- attr(stats::terms(stats::formula(mod)), "term.labels")
-    formula_terms_red <- attr(stats::terms(formula_red), "term.labels")
-    if (all(formula_terms %in% formula_terms_red)) {
-        stop(paste0("partvar ", partvar, " not found in the model formula"))
-    }
-
-    # fit reduced model
-    mod_red <-  stats::update(object = mod, formula. = formula_red, data = dat)
-    # reduced model R2
-    R2_red <- R2_pe(mod_red, expct, overdisp_name)
-
-}
-
 
 #' Get numerator dfs for reduced models
 #'
