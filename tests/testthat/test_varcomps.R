@@ -1,6 +1,6 @@
 context("Variance components: Random effects")
 data(biomass)
-data(sim_dat)
+sim_dat <- readRDS("sim_data.RDS")
 
 # scale everything dbl
 biomass[] <- lapply(biomass, function(x) if (is.double(x)) scale(x) else x)
@@ -35,8 +35,8 @@ fit5 <- lme4::lmer(Biomass ~ Temperature + Precipitation + (1 | Population),
 test_that("get_ran_var gives correct variances for random intercepts", {
 
   # gaussian
-  vc1 <- as.data.frame(VarCorr(fit1))
-  vc2 <- as.data.frame(VarCorr(fit2))
+  vc1 <- as.data.frame(lme4::VarCorr(fit1))
+  vc2 <- as.data.frame(lme4::VarCorr(fit2))
   expect_equal(get_ran_var(fit1)$estimate, vc1[1, "vcov"])
   expect_equal(get_ran_var(fit2)$estimate, vc2[1:2, "vcov"])
 })
@@ -44,13 +44,13 @@ test_that("get_ran_var gives correct variances for random intercepts", {
 test_that("get_ran_var removes overdisp effect when present", {
 
   # poisson with overdisp
-  vc3 <- as.data.frame(VarCorr(fit3))
+  vc3 <- as.data.frame(lme4::VarCorr(fit3))
   expect_equal(nrow(get_ran_var(fit3, overdisp_name = "overdisp")), 1)
 })
 
 # this needs more testing
 test_that("get_ran_var gives correct random slope variances", {
-  expect_equal(get_ran_var(fit4)$estimate, 25.40946, tolerance = 0.001)
+  expect_equal(get_ran_var(fit4)$estimate, 34.47225, tolerance = 0.001)
 })
 
 

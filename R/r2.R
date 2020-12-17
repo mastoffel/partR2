@@ -3,10 +3,9 @@
 #' @param mod merMod object
 #' @param expct Expectation
 #' @param overdisp_name Name of overdispersion term
+#' @param R2_type "marginal" or "conditional"
 #'
 #' @return R2, atm data.frame with one element
-#'
-#' @examples
 #'
 R2_pe <- function(mod, expct, overdisp_name, R2_type) {
 
@@ -33,10 +32,13 @@ R2_pe <- function(mod, expct, overdisp_name, R2_type) {
 #' @param mod merMod object
 #' @param expct Expectation
 #' @param overdisp_name Name of overdispersion term
+#' @param R2_type "marginal" or "conditional"
+#' @param all_comb variable combinations to remove to calculate R2
+#' @param partition check if R2 partitioning is needed
+#' @param data_mod data.frame
+#' @param allow_neg_r2 TRUE or FALSE
 #'
 #' @return R2, atm data.frame with one element
-#'
-#' @examples
 #'
 # partition R2
 part_R2s <- function(mod, expct, overdisp_name, R2_type, all_comb, partition,
@@ -73,12 +75,12 @@ part_R2s <- function(mod, expct, overdisp_name, R2_type, all_comb, partition,
 #' @param data Data.frame to fit the model
 #' @param expct Expectation
 #' @param overdisp_name Name of overdispersion term
+#' @param R2_type "marginal" or "conditional"
 #' @keywords internal
 #' @return R2 of reduced model.
 #' @export
 #'
 R2_of_red_mod <- function(partvar, mod, R2_pe, dat, expct, overdisp_name, R2_type) {
-
 
     # which variables to reduce?
     to_del <- paste(paste("-", partvar, sep= ""), collapse = " ")

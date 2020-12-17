@@ -18,6 +18,8 @@ of the model.}
 
 \item{overdisp_name}{Name of overdispersion term}
 
+\item{R2_type}{"marginal" or "conditional"}
+
 \item{data}{Data.frame to fit the model}
 }
 \value{

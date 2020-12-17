@@ -12,13 +12,12 @@ R2_pe(mod, expct, overdisp_name, R2_type)
 \item{expct}{Expectation}
 
 \item{overdisp_name}{Name of overdispersion term}
+
+\item{R2_type}{"marginal" or "conditional"}
 }
 \value{
 R2, atm data.frame with one element
 }
 \description{
 Calculate R2
-}
-\examples{
-
 }

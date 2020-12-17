@@ -21,13 +21,20 @@ part_R2s(
 \item{expct}{Expectation}
 
 \item{overdisp_name}{Name of overdispersion term}
+
+\item{R2_type}{"marginal" or "conditional"}
+
+\item{all_comb}{variable combinations to remove to calculate R2}
+
+\item{partition}{check if R2 partitioning is needed}
+
+\item{data_mod}{data.frame}
+
+\item{allow_neg_r2}{TRUE or FALSE}
 }
 \value{
 R2, atm data.frame with one element
 }
 \description{
 Calculate part R2
-}
-\examples{
-
 }
