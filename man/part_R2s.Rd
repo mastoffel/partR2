@@ -38,3 +38,4 @@ R2, atm data.frame with one element
 \description{
 Calculate part R2
 }
+\keyword{internal}

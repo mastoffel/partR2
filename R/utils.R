@@ -35,6 +35,8 @@ with_warnings <- function(expr) {
 #'
 #' @inheritParams partR2
 #'
+#' @keywords internal
+#'
 #' @return list with all combinations of predictors specified in partvars/partbatch
 #'
 make_combs <- function(partvars, partbatch, max_level) {

@@ -21,3 +21,4 @@ R2, atm data.frame with one element
 \description{
 Calculate R2
 }
+\keyword{internal}

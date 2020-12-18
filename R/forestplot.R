@@ -17,11 +17,9 @@
 #'
 #' @keywords models
 #'
-#' @import ggplot2 dplyr
 #' @export
 #'
 #'
-
 
 forestplot <- function(x, type = c("R2", "BW", "SC", "IR2", "Ests"), line_size = 0.5, text_size = 12, point_size = 3) {
 
@@ -72,29 +70,29 @@ forestplot <- function(x, type = c("R2", "BW", "SC", "IR2", "Ests"), line_size =
 
     col_all <- "#2E3440"
     p_out <-
-        ggplot(aes_string("pe", "combs", xmax = "CI_upper", xmin = "CI_lower"),
+        ggplot2::ggplot(ggplot2::aes_string("pe", "combs", xmax = "CI_upper", xmin = "CI_lower"),
                data = mod_out) +
-        geom_vline(xintercept = 0, color = col_all, linetype='dashed', size = line_size) +
+        ggplot2::geom_vline(xintercept = 0, color = col_all, linetype='dashed', size = line_size) +
         #geom_point(size = point_size, shape = 21, col = "black", fill = "grey69", # "grey69"
         #           alpha = 1, stroke = line_size) +
-        theme_classic(base_line_size = line_size, base_size = text_size) +
-        theme(
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(),
-            axis.line.y = element_blank(),
-            axis.ticks.y = element_blank(),
-            axis.title.y = element_blank(),
-            axis.text = element_text(color = col_all),
-            axis.title.x = element_text(margin=margin(t=8), color = col_all)
+        ggplot2::theme_classic(base_line_size = line_size, base_size = text_size) +
+        ggplot2::theme(
+            panel.grid.major = ggplot2::element_blank(),
+            panel.grid.minor = ggplot2::element_blank(),
+            axis.line.y = ggplot2::element_blank(),
+            axis.ticks.y = ggplot2::element_blank(),
+            axis.title.y = ggplot2::element_blank(),
+            axis.text = ggplot2::element_text(color = col_all),
+            axis.title.x = ggplot2::element_text(margin=ggplot2::margin(t=8), color = col_all)
         ) +
-        xlab(x_label)
+        ggplot2::xlab(x_label)
     # if bootstrap plot errorbars
     if (!is.na(x[[type]][["CI_lower"]][1])) {
-        p_out <- p_out + geom_errorbarh(alpha = 1, color = col_all, height = 0,
+        p_out <- p_out + ggplot2::geom_errorbarh(alpha = 1, color = col_all, height = 0,
                                         size = line_size)
     }
     p_out <- p_out +
-        geom_point(size = point_size, shape = 21, fill = "#ECEFF4", col = col_all, # "grey69"
+        ggplot2::geom_point(size = point_size, shape = 21, fill = "#ECEFF4", col = col_all, # "grey69"
                    alpha = 1, stroke = line_size)
 
     # if (type %in% c("R2", "IR2")) {

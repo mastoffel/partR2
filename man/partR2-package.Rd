@@ -3,16 +3,11 @@
 \docType{package}
 \name{partR2-package}
 \alias{partR2-package}
-\title{partR2: partitioning R2 in mixed models}
+\title{partR2: Partitioning R2 in generalized linear mixed models}
 \description{
-The goal of partR2 is variance decomposition in mixed models with
-R2, semi-partial R2 for predictors and their combinations, inclusive R2,
-structure coefficients and beta weights. The package works with Gaussian,
-binomial and Poisson models fitted in lme4.
+The goals of partR2 are:
 }
 \details{
-The goals of partR2 are:
-
 \itemize{
 \item To estimate marginal and conditional R2 for LMMs and GLMMs.
 \item To partition the R2 into variance explained uniquely by each predictor

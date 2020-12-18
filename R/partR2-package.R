@@ -1,9 +1,4 @@
-#' partR2: partitioning R2 in mixed models
-#'
-#' The goal of partR2 is variance decomposition in mixed models with
-#' R2, semi-partial R2 for predictors and their combinations, inclusive R2,
-#' structure coefficients and beta weights. The package works with Gaussian,
-#' binomial and Poisson models fitted in lme4.
+#' partR2: Partitioning R2 in generalized linear mixed models
 #'
 #' The goals of partR2 are:
 #'
@@ -47,5 +42,6 @@
 #'
 #'
 NULL
+#> NULL
 ## quiets concerns of R CMD check re: the .'s that appear in pipelines
 if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))

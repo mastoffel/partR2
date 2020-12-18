@@ -34,3 +34,4 @@ list with all combinations of predictors specified in partvars/partbatch
 \description{
 Create list of combination of variables.
 }
+\keyword{internal}

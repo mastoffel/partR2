@@ -67,3 +67,4 @@ Bootstrap samples for all statistics, plus associated warnings
 \description{
 Parametric bootstrapping
 }
+\keyword{internal}

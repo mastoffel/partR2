@@ -60,7 +60,6 @@ calc_CI <- function(x, CI) {
 #' @param data Data.frame to fit the model
 #' @keywords internal
 #' @return Numerator degrees of freedom
-#' @export
 #'
 get_ndf <- function(partvar, mod, dat) {
 
@@ -136,6 +135,7 @@ get_bw <- function(mod){
 #' @param overdisp_name Name of overdispersion term
 #' @inheritParams partR2
 #'
+#' @keywords internal
 #' @return Bootstrap samples for all statistics, plus associated warnings
 #'
 bootstrap_all <- function(nboot, mod, R2_type, all_comb, partition,

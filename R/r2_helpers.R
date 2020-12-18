@@ -5,6 +5,7 @@
 #' @param overdisp_name Name of overdispersion term
 #' @param R2_type "marginal" or "conditional"
 #'
+#' @keywords internal
 #' @return R2, atm data.frame with one element
 #'
 R2_pe <- function(mod, expct, overdisp_name, R2_type) {
@@ -38,6 +39,7 @@ R2_pe <- function(mod, expct, overdisp_name, R2_type) {
 #' @param data_mod data.frame
 #' @param allow_neg_r2 TRUE or FALSE
 #'
+#' @keywords internal
 #' @return R2, atm data.frame with one element
 #'
 # partition R2
@@ -78,7 +80,6 @@ part_R2s <- function(mod, expct, overdisp_name, R2_type, all_comb, partition,
 #' @param R2_type "marginal" or "conditional"
 #' @keywords internal
 #' @return R2 of reduced model.
-#' @export
 #'
 R2_of_red_mod <- function(partvar, mod, R2_pe, dat, expct, overdisp_name, R2_type) {
 
