@@ -14,6 +14,11 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{r echo=FALSE, results="hide", message=FALSE}
+#library("txtplot")
+library("badger")
+```
+
 # partR2
 
 The goal of partR2 is to estimate R^2^ in GLMMs (sensu Nakagawa & Schielzeth 2013) and to partition the R^2^ into the variance explained by the predictors.
@@ -66,3 +71,14 @@ And to plot the results:
 ```{r plot, results = TRUE, warning=FALSE, fig.width=7, fig.height=4}
 forestplot(R2, type = "R2", line_size = 0.7, text_size = 14, point_size = 3)
 ```
+
+
+### Citation
+
+The package is still in development, but will hopefully be uploaded to CRAN soon.
+
+When using it, please cite our [preprint](https://www.biorxiv.org/content/10.1101/2020.07.26.221168v1.abstract) for now:
+
+Stoffel, MA, Nakagawa, S, & Schielzeth, H (2020). partR2: Partitioning R2 in generalized linear mixed models. bioRxiv. doi:10.1101/2020.07.26.221168
+
+`r badge_doi("10.1101/2020.07.26.221168", "green")`
