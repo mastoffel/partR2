@@ -110,236 +110,200 @@
 #' biomass[] <- lapply(biomass, function(x) if (is.double(x)) scale(x) else x)
 #'
 #' # Gaussian data
-#' mod <- lmer(Biomass ~  Year + Temperature + Precipitation + SpeciesDiversity + (1|Population),
-#'             data = biomass)
+#' mod <- lmer(Biomass ~ Year + Temperature + Precipitation + SpeciesDiversity + (1 | Population),
+#'   data = biomass
+#' )
 #'
 #' # Only R2 with CI
 #' (R2 <- partR2(mod, data = biomass, R2_type = "marginal", nboot = 15, CI = 0.95))
 #'
 #' # Partitioned R2
-#' (R2 <- partR2(mod,  data = biomass,
-#'              partvars = c("SpeciesDiversity", "Temperature", "Precipitation"),
-#'              R2_type = "marginal", nboot = 10, CI = 0.95))
-#'
-#'
-#'
+#' (R2 <- partR2(mod,
+#'   data = biomass,
+#'   partvars = c("SpeciesDiversity", "Temperature", "Precipitation"),
+#'   R2_type = "marginal", nboot = 10, CI = 0.95
+#' ))
 #' @export
 
 
 partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_level = NULL,
                    nboot = NULL, CI = 0.95, parallel = FALSE, expct = "meanobs",
-                   olre = TRUE, partbatch = NULL, allow_neg_r2 = FALSE){
+                   olre = TRUE, partbatch = NULL, allow_neg_r2 = FALSE) {
 
-    # initial checks
-    if(!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
-    partition <- ifelse(is.null(partvars) & is.null(partbatch), FALSE, TRUE)
+  # initial checks
+  if (!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
+  partition <- ifelse(is.null(partvars) & is.null(partbatch), FALSE, TRUE)
 
-    if (!is.null(nboot)) {
-        if (nboot < 2) stop("nboot has to be greater than 1 or NULL")
-    }
+  if (!is.null(nboot)) {
+    if (nboot < 2) stop("nboot has to be greater than 1 or NULL")
+  }
 
-    if (!(R2_type %in% c("marginal", "conditional"))) {
-        stop("R2_type has to be marginal or conditional")
-    }
+  if (!(R2_type %in% c("marginal", "conditional"))) {
+    stop("R2_type has to be marginal or conditional")
+  }
 
-    # check if data is there
-    if (is.null(data)) {
-        dat_name <- deparse(mod@call$data)
-        stop(paste0("data ", dat_name, " cannot be found. Please provide data argument"))
-    }
-   data_org <- data
+  # check if data is there
+  if (is.null(data)) {
+    dat_name <- deparse(mod@call$data)
+    stop(paste0("data ", dat_name, " cannot be found. Please provide data argument"))
+  }
+  data_org <- data
 
-    # make combinations of predictors from partvars and partbatch
-    all_comb <- make_combs(partvars, partbatch, max_level)
+  # make combinations of predictors from partvars and partbatch
+  all_comb <- make_combs(partvars, partbatch, max_level)
 
-    # names for partitions
-    if (partition) {
-        part_terms <- c("Full", unlist(lapply(all_comb, paste, collapse = "+")))
-    } else if (!partition) {
-        part_terms <- "Full"
-    }
+  # names for partitions
+  if (partition) {
+    part_terms <- c("Full", unlist(lapply(all_comb, paste, collapse = "+")))
+  } else if (!partition) {
+    part_terms <- "Full"
+  }
 
-   # get family and response variable
-    mod_fam <- stats::family(mod)[[1]]
-    if (!(mod_fam %in% c("gaussian", "binomial", "poisson"))) {
-        stop("partR2 only handles gaussian, binomial and poisson models at
+  # get family and response variable
+  mod_fam <- stats::family(mod)[[1]]
+  if (!(mod_fam %in% c("gaussian", "binomial", "poisson"))) {
+    stop("partR2 only handles gaussian, binomial and poisson models at
               the moment")
+  }
+  resp <- lme4::getME(mod, "y")
+
+  # overdispersion
+  overdisp_out <- model_overdisp(mod = mod, dat = data_org, olre = olre)
+  mod <- overdisp_out$mod
+  data_mod <- overdisp_out$dat
+  overdisp_name <- overdisp_out$overdisp_name
+
+  # extract some essential info
+  # we suppress messages here to avoid the notice that broom.mixed
+  # overwrites the broom S3 methods.
+  model_ests_full <- suppressMessages(
+    broom.mixed::tidy(mod, effects = c("fixed"))
+  )
+
+  # beta weights
+  model_bws_full <- get_bw(mod)
+
+  # calculate R2 and partial R2s
+  R2_org <- part_R2s(
+    mod, expct, overdisp_name, R2_type, all_comb,
+    partition, data_mod, allow_neg_r2
+  )
+
+  # structure coefficients
+  SC_org <- SC_pe(mod)
+
+  # param. bootstrapping
+  if (!is.null(nboot)) {
+
+    # get bootstrap estimates
+    boot_r2s_scs_ests <- bootstrap_all(nboot, mod, R2_type, all_comb, partition,
+                                       data_mod, allow_neg_r2, parallel,
+                                       expct, overdisp_name)
+
+    # reshaping bootstrap output
+    # put all commonality coefficients in one data.frame
+    boot_r2s <- purrr::map(boot_r2s_scs_ests, function(x) x$result[["r2s"]]) %>%
+      purrr::map_df(function(x) stats::setNames(as.data.frame(t(x[[1]])), part_terms))
+    # put all structure coefficients in a data.frame
+    boot_scs <- purrr::map_df(boot_r2s_scs_ests, function(x) x$result[["scs"]])
+    # calculate inklusive R2
+    # square the SC and multiply by full R2
+    boot_ir2s <- purrr::map_df(boot_scs, function(sc) sc^2 * boot_r2s$Full)
+    # put all model estimates in a data.frame
+    boot_ests <- purrr::map(boot_r2s_scs_ests, function(x) x$result[["ests"]])
+    boot_bws <- purrr::map(boot_r2s_scs_ests, function(x) x$result[["bws"]])
+    # warnings and messages
+    boot_warnings <- purrr::map(boot_r2s_scs_ests, function(x) x$warnings)
+    boot_messages <- purrr::map(boot_r2s_scs_ests, function(x) x$messages)
+  }
+
+  # if no bootstrap return same data.frames only with NA
+  if (is.null(nboot)) {
+    boot_r2s <- rep(NA, length(part_terms)) %>%
+      as.list() %>%
+      as.data.frame() %>%
+      stats::setNames(part_terms)
+    boot_scs <- matrix(nrow = 1, ncol = ncol(SC_org)) %>%
+      as.data.frame() %>%
+      stats::setNames(names(SC_org))
+    boot_ir2s <- matrix(nrow = 1, ncol = ncol(SC_org)) %>%
+      as.data.frame() %>%
+      stats::setNames(names(SC_org))
+    boot_ests <- model_ests_full %>%
+      dplyr::mutate(estimate = NA) %>%
+      # cut off std.err and statistic from broom output
+      dplyr::select(-.data$std.error, -.data$statistic) %>%
+      list(sim1 = .)
+    boot_bws <- boot_ests
+    boot_warnings <- character(0)
+    boot_messages <- character(0)
+  }
+
+  # calculate CIs
+  r2_cis <- purrr::map_df(boot_r2s, calc_CI, CI, .id = "parts") %>%
+    tibble::add_column(R2 = as.numeric(unlist(R2_org)), .after = "parts")
+
+  ests_cis <- purrr::map_df(boot_ests, "estimate") %>%
+    purrr::pmap_df(function(...) calc_CI(c(...), CI)) %>%
+    cbind(model_ests_full[1:4], .)
+
+  bws_cis <- purrr::map_df(boot_bws, "estimate") %>%
+    purrr::pmap_df(function(...) calc_CI(c(...), CI)) %>%
+    cbind(model_bws_full[1:4], .)
+
+  sc_cis <- purrr::map_df(boot_scs, calc_CI, CI, .id = "parts") %>%
+    tibble::add_column(SC = as.numeric(SC_org), .after = "parts")
+
+  ir2_cis <- purrr::map_df(boot_ir2s, calc_CI, CI, .id = "parts") %>%
+    tibble::add_column(IR2 = as.numeric(SC_org^2 * R2_org$R2[1]), .after = "parts") %>%
+    as.data.frame()
+
+  # calculate numerator degrees of freedom and add to partial R2 object
+  if ((length(all_comb) == 1) & (any(is.na(all_comb)))) {
+    ndf_terms <- "Full"
+  } else {
+    ndf_terms <- c("Full", all_comb)
+  }
+  ndf <- suppressWarnings(purrr::map_int(ndf_terms, get_ndf, mod, data_mod))
+  r2_cis$ndf <- ndf
+
+  # change partbatch with names, if present
+  if (!is.null(names(partbatch))) {
+    added_batches <- purrr::map(partbatch, function(x) {
+      out <- paste(x, collapse = "+")
+      out
+    })
+
+    part_names <- r2_cis$parts
+    for (i in 1:length(added_batches)) {
+      if (is.null(names(added_batches)[i])) next()
+      part_names <- gsub(added_batches[[i]], names(added_batches)[i], part_names, fixed = TRUE)
     }
-    resp <- lme4::getME(mod, "y")
+    r2_cis$parts <- part_names
+    names(boot_r2s) <- part_names
+  }
 
-    # overdispersion
-    overdisp_out <- model_overdisp(mod = mod, dat = data_org, olre = olre)
-    mod <- overdisp_out$mod
-    data_mod <- overdisp_out$dat
-    overdisp_name <- overdisp_out$overdisp_name
+  res <- list(
+    call = mod@call,
+    # datatype = "gaussian",
+    R2_type = R2_type,
+    R2 = r2_cis,
+    SC = sc_cis,
+    IR2 = ir2_cis,
+    BW = bws_cis,
+    Ests = ests_cis,
+    R2_boot = boot_r2s,
+    SC_boot = boot_scs,
+    IR2_boot = boot_ir2s,
+    BW_boot = boot_bws,
+    Ests_boot = boot_ests,
+    partvars = partvars,
+    partbatch = ifelse(is.null(partbatch), NA, partbatch),
+    CI = CI,
+    boot_warnings = boot_warnings,
+    boot_messages = boot_messages
+  )
 
-    # extract some essential info
-    # we suppress messages here to avoid the notice that broom.mixed
-    # overwrites the broom S3 methods.
-    model_ests_full <- suppressMessages(
-        broom.mixed::tidy(mod, effects = c("fixed"))
-        )
-
-    # beta weights
-    model_bws_full <- get_bw(mod)
-
-    # calculate R2 and partial R2s
-    R2_org <- part_R2s(mod, expct, overdisp_name, R2_type, all_comb,
-                       partition, data_mod, allow_neg_r2)
-
-    # structure coefficients
-    SC_pe <- function(mod) {
-        Yhat <- stats::predict(mod, re.form=NA)
-        mod_mat <- stats::model.matrix(mod)
-        # only calculate SC for partvars
-        mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop=FALSE]
-        out <- as.data.frame(stats::cor(Yhat, mod_mat))
-    }
-
-    # structure coefficients
-    SC_org <- SC_pe(mod)
-
-    # param. bootstrapping
-    if (!is.null(nboot)) {
-
-        # simulating new responses for param. bootstraps
-        if (nboot > 0)  Ysim <- as.data.frame(stats::simulate(mod, nsim = nboot))
-        # main bootstrap function
-        bootstr <- function(y, mod, expct, overdisp_name) {
-            mod_iter <- lme4::refit(mod, newresp = y)
-            out_r2s <- part_R2s(mod_iter, expct, overdisp_name, R2_type,
-                                all_comb, partition, data_mod, allow_neg_r2)
-            out_scs <- SC_pe(mod_iter)
-            out_ests <- broom.mixed::tidy(mod_iter, effects = "fixed")
-            # beta weights
-            out_bw <- get_bw(mod_iter)
-            out <- list(r2s = out_r2s, ests = out_ests, scs = out_scs,
-                        bws = out_bw)
-        }
-        # capture warnings and messages
-        bootstr_quiet <-  purrr::quietly(bootstr)
-
-        # refit model with new responses
-        if (!parallel) {
-            boot_r2s_scs_ests <- pbapply::pblapply(Ysim, bootstr_quiet, mod, expct, overdisp_name)
-        }
-
-        if (parallel) {
-            if (!requireNamespace("furrr", quietly = TRUE)) {
-                stop("Package \"furrr\" needed for parallelisation. Please install it.",
-                     call. = FALSE)
-            }
-            # if (is.null(ncores)) ncores <- parallel::detectCores()-1
-            # let the user plan
-            #future::plan(future::multiprocess, workers = ncores)
-            boot_r2s_scs_ests <- furrr::future_map(Ysim, bootstr_quiet, mod,
-                                                   expct, overdisp_name,
-                                                   .options = furrr::future_options(packages = "lme4"),
-                                                   .progress = TRUE)
-        }
-
-        # reshaping bootstrap output
-        # put all commonality coefficients in one data.frame
-        boot_r2s <- purrr::map(boot_r2s_scs_ests , function(x) x$result[["r2s"]]) %>%
-                    purrr::map_df(function(x) stats::setNames(as.data.frame(t(x[[1]])), part_terms))
-        # put all structure coefficients in a data.frame
-        boot_scs <- purrr::map_df(boot_r2s_scs_ests, function(x) x$result[["scs"]])
-        # calculate inklusive R2
-        # square the SC and multiply by full R2
-        boot_ir2s <- purrr::map_df(boot_scs, function(sc) sc^2 * boot_r2s$Full)
-        # put all model estimates in a data.frame
-        boot_ests <- purrr::map(boot_r2s_scs_ests, function(x) x$result[["ests"]])
-        boot_bws <- purrr::map(boot_r2s_scs_ests, function(x) x$result[["bws"]])
-        # warnings and messages
-        boot_warnings <- purrr::map(boot_r2s_scs_ests, function(x) x$warnings)
-        boot_messages <- purrr::map(boot_r2s_scs_ests, function(x) x$messages)
-    }
-
-    # if no bootstrap return same data.frames only with NA
-    if (is.null(nboot)) {
-        boot_r2s <- rep(NA, length(part_terms)) %>%
-                            as.list() %>%
-                            as.data.frame() %>%
-                            stats::setNames(part_terms)
-        boot_scs <- matrix(nrow = 1, ncol = ncol(SC_org)) %>%
-                     as.data.frame() %>%
-                     stats::setNames(names(SC_org))
-        boot_ir2s <- matrix(nrow = 1, ncol = ncol(SC_org)) %>%
-                     as.data.frame() %>%
-                     stats::setNames(names(SC_org))
-        boot_ests <- model_ests_full %>%
-                        dplyr::mutate(estimate = NA) %>%
-                        # cut off std.err and statistic from broom output
-                        dplyr::select(-.data$std.error, -.data$statistic) %>%
-                        list(sim1 = .)
-        boot_bws <- boot_ests
-        boot_warnings <- character(0)
-        boot_messages <- character(0)
-    }
-
-    # calculate CIs
-    r2_cis <- purrr::map_df(boot_r2s, calc_CI, CI, .id = "parts") %>%
-              tibble::add_column(R2 = as.numeric(unlist(R2_org)), .after = "parts")
-
-    ests_cis <- purrr::map_df(boot_ests, "estimate") %>%
-                purrr::pmap_df(function(...) calc_CI(c(...), CI)) %>%
-                cbind(model_ests_full[1:4], .)
-
-    bws_cis <- purrr::map_df(boot_bws, "estimate") %>%
-               purrr::pmap_df(function(...) calc_CI(c(...), CI)) %>%
-               cbind(model_bws_full[1:4], .)
-
-    sc_cis <- purrr::map_df(boot_scs, calc_CI, CI, .id = "parts") %>%
-              tibble::add_column(SC = as.numeric(SC_org), .after = "parts")
-
-    ir2_cis <- purrr::map_df(boot_ir2s, calc_CI, CI, .id = "parts") %>%
-               tibble::add_column(IR2 = as.numeric(SC_org^2 * R2_org$R2[1]), .after = "parts") %>%
-               as.data.frame()
-
-    # calculate numerator degrees of freedom and add to partial R2 object
-    if((length(all_comb) == 1) & (any(is.na(all_comb)))) {
-        ndf_terms <- "Full"
-    } else {
-        ndf_terms <- c("Full", all_comb)
-    }
-    ndf <- suppressWarnings(purrr::map_int(ndf_terms, get_ndf, mod, data_mod))
-    r2_cis$ndf <- ndf
-
-    # change partbatch with names, if present
-    if (!is.null(names(partbatch))) {
-        added_batches <- purrr::map(partbatch, function(x){
-            out <- paste(x, collapse = "+")
-            out
-        } )
-
-        part_names <- r2_cis$parts
-        for (i in 1:length(added_batches)) {
-            if (is.null(names(added_batches)[i])) next()
-            part_names <- gsub(added_batches[[i]], names(added_batches)[i], part_names, fixed = TRUE)
-        }
-        r2_cis$parts <- part_names
-        names(boot_r2s) <- part_names
-    }
-
-    res <- list(call = mod@call,
-                #datatype = "gaussian",
-                R2_type = R2_type,
-                R2 =  r2_cis,
-                SC =  sc_cis,
-                IR2 = ir2_cis,
-                BW = bws_cis,
-                Ests =  ests_cis,
-                R2_boot =   boot_r2s,
-                SC_boot = boot_scs,
-                IR2_boot = boot_ir2s,
-                BW_boot = boot_bws,
-                Ests_boot =   boot_ests,
-                partvars = partvars,
-                partbatch = ifelse(is.null(partbatch), NA, partbatch),
-                CI = CI,
-                boot_warnings = boot_warnings ,
-                boot_messages = boot_messages)
-
-    class(res) <- "partR2"
-    return(res)
+  class(res) <- "partR2"
+  return(res)
 }

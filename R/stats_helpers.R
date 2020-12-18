@@ -35,7 +35,6 @@ to account for overdispersion.")
     out <- list(mod = mod, dat = dat, overdisp_name = overdisp_name)
 }
 
-
 #' Calculates CI from bootstrap replicates
 #'
 #'
@@ -77,12 +76,26 @@ get_ndf <- function(partvar, mod, dat) {
 
 }
 
+#' Structure coefficients
+#'
+#' @param mod merMod object.
+#' @keywords internal
+#' @return data.frame with structure coefficients
+#'
+#'
+# structure coefficients
+SC_pe <- function(mod) {
+    Yhat <- stats::predict(mod, re.form=NA)
+    mod_mat <- stats::model.matrix(mod)
+    mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop=FALSE]
+    out <- as.data.frame(stats::cor(Yhat, mod_mat))
+}
+
 #' Get beta weights
 #'
 #' @param mod merMod object.
 #' @keywords internal
 #' @return tidy output with bw instead of raw estimates
-#' @export
 #'
 #'
 
@@ -106,4 +119,71 @@ get_bw <- function(mod){
             unlist(ests[ests$term %in% x, "estimate"] * sds[x])
         })
     ests
+}
+
+
+
+
+
+
+
+#' Parametric bootstrapping
+#'
+#' @param mod merMod object, lme4 fit
+#' @param all_comb list of predictor combinations
+#' @param partition TRUE or FALSE
+#' @param data_mod Data for model
+#' @param overdisp_name Name of overdispersion term
+#' @inheritParams partR2
+#'
+#' @return Bootstrap samples for all statistics, plus associated warnings
+#'
+bootstrap_all <- function(nboot, mod, R2_type, all_comb, partition,
+                          data_mod, allow_neg_r2, parallel,
+                          expct, overdisp_name) {
+
+  # simulating new responses for param. bootstraps
+  if (nboot > 0) Ysim <- as.data.frame(stats::simulate(mod, nsim = nboot))
+  # main bootstrap function
+  bootstr <- function(y, mod, expct, overdisp_name) {
+      mod_iter <- lme4::refit(mod, newresp = y)
+      out_r2s <- part_R2s(
+          mod_iter, expct, overdisp_name, R2_type,
+          all_comb, partition, data_mod, allow_neg_r2
+      )
+      out_scs <- SC_pe(mod_iter)
+      out_ests <- broom.mixed::tidy(mod_iter, effects = "fixed")
+      out_bw <- get_bw(mod_iter)
+      out <- list(
+          r2s = out_r2s, ests = out_ests, scs = out_scs,
+          bws = out_bw
+      )
+  }
+  # capture warnings and messages
+  bootstr_quiet <- purrr::quietly(bootstr)
+
+  # refit model with new responses
+  if (!parallel) {
+      boot_r2s_scs_ests <- pbapply::pblapply(Ysim, bootstr_quiet,
+                                             mod, expct, overdisp_name)
+  }
+
+  if (parallel) {
+      if (!requireNamespace("furrr", quietly = TRUE)) {
+          stop("Package \"furrr\" needed for parallelisation. Please install it.",
+               call. = FALSE
+          )
+      }
+      # if (is.null(ncores)) ncores <- parallel::detectCores()-1
+      # let the user plan
+      # future::plan(future::multiprocess, workers = ncores)
+      boot_r2s_scs_ests <- furrr::future_map(Ysim, bootstr_quiet, mod,
+                                             expct, overdisp_name,
+                                             .options = furrr::future_options(packages = "lme4"),
+                                             .progress = TRUE
+      )
+  }
+
+  boot_r2s_scs_ests
+
 }
