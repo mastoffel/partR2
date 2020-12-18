@@ -163,7 +163,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
     mod_fam <- stats::family(mod)[[1]]
     if (!(mod_fam %in% c("gaussian", "binomial", "poisson"))) {
         stop("partR2 only handles gaussian, binomial and poisson models at
-the moment")
+              the moment")
     }
     resp <- lme4::getME(mod, "y")
 
