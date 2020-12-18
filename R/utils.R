@@ -31,153 +31,65 @@ with_warnings <- function(expr) {
     list(warnings = myWarnings)
 }
 
-
-#' Adds an observational level random effect to a model
+#' Create list of combination of variables.
 #'
+#' @inheritParams partR2
 #'
-#' @param mod merMod object.
-#' @param dat The underlying data.frame
-#' @keywords internal
-#' @export
+#' @return list with all combinations of predictors specified in partvars/partbatch
 #'
-model_overdisp <- function(mod, dat, olre) {
-    # family
-    mod_fam <- stats::family(mod)[[1]]
-    resp <- lme4::getME(mod, "y")
-    overdisp_name <- "overdisp"
-
-    # fit olre if not FALSE and family is either poisson or binomial but not binary
-    if (olre & (mod_fam == "poisson" | ((mod_fam == "binomial") & (length(table(resp)) > 2)))) {
-        # check if OLRE already there
-        overdisp_term <- lme4::getME(mod, "l_i") == nrow(dat)
-        # if so, get variable name
-        if (sum(overdisp_term) == 1) {
-            overdisp_name <- names(overdisp_term)[overdisp_term]
-            # rename OLRE to overdisp if not done so already
-            if (!(overdisp_name == "overdisp")) {
-                # names(dat[overdisp]) <- "overdisp"
-                message(paste0("'", overdisp_name, "' has been recognized as observational
-level random effect and is used to quantify overdispersion"))
-            }
-        } else if ((sum(overdisp_term) == 0)) {
-            dat[[overdisp_name]] <- as.factor(1:nrow(dat))
-            mod <- stats::update(mod, . ~ . + (1 | overdisp), data = dat)
-            message("An observational level random-effect has been fitted
-to account for overdispersion.")
+make_combs <- function(partvars, partbatch, max_level) {
+    # create list of all unique combinations except for the full model
+    if (!is.null(partvars)) {
+        if (length(partvars) > 1){
+            all_comb <- unlist(lapply(1:(length(partvars)),
+                                      function(x) utils::combn(partvars, x, simplify = FALSE)),
+                               recursive = FALSE)
+        } else if (length(partvars) == 1) {
+            all_comb <- as.list(partvars)
         }
+    }  else {
+        all_comb <- NA
     }
-    out <- list(mod = mod, dat = dat, overdisp_name = overdisp_name)
-}
 
+    # check batches
+    if (!is.null(partbatch)) {
+        if(!is.list(partbatch)) stop("partbatch must be a list")
+        if (is.null(all_comb)) all_comb <-NA
+        # first, make combinations of partbatches
+        combs_num <- purrr::map(1:length(partbatch),
+                                function(m) utils::combn(length(partbatch), m,
+                                                         simplify = FALSE)) %>%
+            unlist(recursive = FALSE)
+        comb_batches <- purrr::map(combs_num, function(x) unlist(partbatch[x]))
+        # now add those to partvar combs
+        comb_batches2 <- purrr::map(comb_batches, function(x)
+            purrr::map(all_comb, function(z) c(z, x))) %>%
+            unlist(recursive = FALSE)
+        # now add those to all_combs
+        all_comb <- c(partbatch, all_comb, comb_batches2)
+        # check for duplicates or NA and remove in case
+        all_comb <- purrr::map(all_comb, function(x) x[!(duplicated(x) | is.na(x))])
+        # last step remove any empty list elements
+        all_comb[purrr::map(all_comb, length) == 0] <- NULL
+        # remove potential duplicates
+        all_comb <- all_comb[!(duplicated(purrr::map(all_comb, function(x) as.character(sort(x)))))]
+        # change all formats to unnamed character vecotr
+        all_comb <- purrr::map(all_comb, function(x) as.character(unname(x)))
+    }
 
+    # commonality coefficients up to max_level (e.g. 3 for
+    # the cc of 3 predictors)
+    if (!is.null(partbatch) & !is.null(max_level)) {
+        stop("Argument max_level does currently not work in combination with argument partbatch,
+                please use partvars or leave max_level at NULL")
+    }
+    if (!is.null(max_level)) {
+        remove_combs <- purrr::map_lgl(all_comb, function(x) length(x) > max_level)
+        all_comb[remove_combs] <- NULL
+    }
 
-#' Calculates CI from bootstrap replicates
-#'
-#'
-#' @param x numeric vector
-#' @param CI CI level, e.g. 0.95
-#' @keywords internal
-#'
-#
-# CI function
-calc_CI <- function(x, CI) {
-    out <- stats::quantile(x, c((1 - CI)/2, 1 - (1 - CI)/2), na.rm = TRUE)
-    out <- as.data.frame(t(out))
-    names(out) <- c("CI_lower", "CI_upper")
-    rownames(out) <- NULL
-    out
-}
+    all_comb
 
-
-
-#' Get numerator dfs for reduced models
-#'
-#' @param partvar One or more fixed effect variables which are taken out
-#' of the model.
-#' @param mod merMod object.
-#' @param data Data.frame to fit the model
-#' @keywords internal
-#' @return Numerator degrees of freedom
-#' @export
-#'
-get_ndf <- function(partvar, mod, dat) {
-
-    if (("Full" %in% partvar)&(length(partvar) == 1)) return(ncol(stats::model.matrix(mod)))
-
-    # which variables to reduce?
-    to_del <- paste(paste("-", partvar, sep= ""), collapse = " ")
-    # reduced formula
-    formula_red <- stats::update(stats::formula(mod), paste(". ~ . ", to_del, sep=""))
-    # fit reduced model
-    mod_red <-  stats::update(mod, formula. = formula_red, data = dat)
-    ncol(stats::model.matrix(mod_red))
 
 }
-
-#' Get beta weights
-#'
-#' @param mod merMod object.
-#' @keywords internal
-#' @return tidy output with bw instead of raw estimates
-#' @export
-#'
-#'
-
-get_bw <- function(mod){
-
-    mod_mat <- stats::model.matrix(mod) %>%
-                    as.data.frame() %>%
-                    dplyr::select(-"(Intercept)")
-    bin_preds <- purrr::map_lgl(mod_mat, function(x) length(table(x))<=2)
-    resp <- lme4::getME(mod, "y")
-    sds <- purrr::map_dbl(mod_mat, stats::sd, na.rm = TRUE)
-    # only for gaussian dividing by sd of response
-    if (stats::family(mod)$family == "gaussian") sds <- sds/stats::sd(resp, na.rm = TRUE)
-    # only standardise for non-factors
-    sds[bin_preds] <- 1
-    # simple posthoc standardisation. Doesn't work for interactions and should
-    # be turned of when standardised before
-    ests <- broom.mixed::tidy(mod, effects = "fixed")
-    ests[ests$term %in% names(sds), "estimate"] <-
-        purrr::map_dbl(names(sds), function(x) {
-            unlist(ests[ests$term %in% x, "estimate"] * sds[x])
-        })
-    ests
-}
-
-#Adds an observational level random effect to a model
-#
-#
-##' @param mod merMod object.
-##' @param dat The underlying data.frame
-##' @keywords internal
-##' @export
-##'
-#model_overdisp2 <- function(mod) {
-#    # family
-#    mod_fam <- stats::family(mod)[[1]]
-#    resp <- lme4::getME(mod, "y")
-#
-#    if (mod_fam == "poisson" | ((mod_fam == "binomial") & (length(table(resp)) > 2))) {
-#        # check if OLRE already there
-#        overdisp_term <- lme4::getME(mod, "l_i") == stats::nobs(mod)
-#        # if so, get variable name
-#        if (sum(overdisp_term) == 1) {
-#            overdisp_name <- names(overdisp_term)[overdisp_term]
-#            mod <- stats::update(mod, eval(paste(". ~ . ", paste("- (1 |", overdisp_name, ")"))))
-#            overdisp <- as.factor(1:stats::nobs(mod))
-#            mod <- stats::update(mod, . ~ . + (1 | overdisp))
-#            # rename OLRE to overdisp if not done so already
-#            message("The OLRE or overdispersion term has been renamed to 'overdisp',
-#                    it is recommended to call it overdisp from the start.")
-#        } else if ((sum(overdisp_term) == 0)) {
-#            overdisp <- as.factor(1:stats::nobs(mod))
-#            mod <- stats::update(mod, . ~ . + (1 | overdisp))
-#            message("An observational level random-effect has been fitted
-#to account for overdispersion.")
-#        }
-#    }
-#    return(mod)
-#}
-
 

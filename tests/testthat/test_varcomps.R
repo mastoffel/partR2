@@ -1,4 +1,4 @@
-context("Variance components: Random effects")
+context("Variance components")
 data(biomass)
 sim_dat <- readRDS("sim_data.RDS")
 

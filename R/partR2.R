@@ -149,58 +149,8 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
     }
    data_org <- data
 
-    # check whether partvars are fixed effects
-    # this is now done in the R2_of_red_mod function
-
-    # create list of all unique combinations except for the full model
-    if (!is.null(partvars)) {
-        if (length(partvars) > 1){
-            all_comb <- unlist(lapply(1:(length(partvars)),
-                        function(x) utils::combn(partvars, x, simplify = FALSE)),
-                        recursive = FALSE)
-        } else if (length(partvars) == 1) {
-            all_comb <- as.list(partvars)
-        }
-    }  else {
-        all_comb <- NA
-    }
-
-    # check batches
-    if (!is.null(partbatch)) {
-        if(!is.list(partbatch)) stop("partbatch must be a list")
-        if (is.null(all_comb)) all_comb <-NA
-        # first, make combinations of partbatches
-        combs_num <- purrr::map(1:length(partbatch),
-                           function(m) utils::combn(length(partbatch), m,
-                                                    simplify = FALSE)) %>%
-                      unlist(recursive = FALSE)
-        comb_batches <- purrr::map(combs_num, function(x) unlist(partbatch[x]))
-        # now add those to partvar combs
-        comb_batches2 <- purrr::map(comb_batches, function(x)
-                                    purrr::map(all_comb, function(z) c(z, x))) %>%
-                         unlist(recursive = FALSE)
-        # now add those to all_combs
-        all_comb <- c(partbatch, all_comb, comb_batches2)
-        # check for duplicates or NA and remove in case
-        all_comb <- purrr::map(all_comb, function(x) x[!(duplicated(x) | is.na(x))])
-        # last step remove any empty list elements
-        all_comb[purrr::map(all_comb, length) == 0] <- NULL
-        # remove potential duplicates
-        all_comb <- all_comb[!(duplicated(purrr::map(all_comb, function(x) as.character(sort(x)))))]
-        # change all formats to unnamed character vecotr
-        all_comb <- purrr::map(all_comb, function(x) as.character(unname(x)))
-    }
-
-    # commonality coefficients up to max_level (e.g. 3 for
-    # the cc of 3 predictors)
-    if (!is.null(partbatch) & !is.null(max_level)) {
-        stop("Argument max_level does currently not work in combination with argument partbatch,
-                please use partvars or leave max_level at NULL")
-    }
-    if (!is.null(max_level)) {
-        remove_combs <- purrr::map_lgl(all_comb, function(x) length(x) > max_level)
-        all_comb[remove_combs] <- NULL
-    }
+    # make combinations of predictors from partvars and partbatch
+    all_comb <- make_combs(partvars, partbatch, max_level)
 
     # names for partitions
     if (partition) {
