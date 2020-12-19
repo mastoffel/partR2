@@ -1,5 +1,6 @@
 context("Variance components")
 data(biomass)
+data(BeetlesMale)
 sim_dat <- readRDS("sim_data.RDS")
 
 # scale everything dbl
@@ -29,6 +30,8 @@ fit5 <- lme4::lmer(Biomass ~ Temperature + Precipitation + (1 | Population),
 )
 
 # binary
+fit6 <- lme4::glmer(Colour ~ Habitat + Treatment + (1|Population),
+                      data = BeetlesMale, family = binomial)
 
 
 #### random effect variances ####
@@ -82,4 +85,18 @@ test_that("Poisson variance components are correct", {
     overdisp_name = "overdisp"
   )
   expect_equal(var_comps2$var_res, 0.2987275, tol = 0.00001)
+})
+
+test_that("Binary variance components are correct", {
+
+  var_comps1 <- var_comps_binary(fit6, expct = "meanobs")
+  expect_equal(var_comps1$var_fix, 0.370202, tol = 0.00001)
+  expect_equal(var_comps1$var_ran, 1.109169, tol = 0.00001)
+  expect_equal(var_comps1$var_res, 4.086918, tol = 0.00001)
+
+  var_comps2 <- var_comps_binary(fit6, expct = "liability")
+  expect_equal(var_comps2$var_res, pi^2/3, tol = 0.00001)
+
+  var_comps3 <- var_comps_binary(fit6, expct = "latent")
+  expect_equal(var_comps3$var_res, 5.125394, tol = 0.00001)
 })
