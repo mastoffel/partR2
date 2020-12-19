@@ -1,6 +1,8 @@
 context("Variance components")
 data(biomass)
 data(BeetlesMale)
+data(BeetlesMale)
+
 sim_dat <- readRDS("sim_data.RDS")
 
 # scale everything dbl
@@ -33,6 +35,14 @@ fit5 <- lme4::lmer(Biomass ~ Temperature + Precipitation + (1 | Population),
 fit6 <- lme4::glmer(Colour ~ Habitat + Treatment + (1|Population),
                       data = BeetlesMale, family = binomial)
 
+# proportion data
+BeetlesMale$Dark <- BeetlesMale$Colour
+BeetlesMale$Reddish <- (BeetlesMale$Colour-1)*-1
+BeetlesColour <- aggregate(cbind(Dark, Reddish) ~ Treatment + Population + Container,
+                           data=BeetlesMale, FUN=sum)
+
+fit7 <- lme4::glmer(cbind(Dark, Reddish) ~ Treatment + (1|Population),
+              family = "binomial", data = BeetlesColour)
 
 #### random effect variances ####
 test_that("get_ran_var gives correct variances for random intercepts", {
@@ -99,4 +109,23 @@ test_that("Binary variance components are correct", {
 
   var_comps3 <- var_comps_binary(fit6, expct = "latent")
   expect_equal(var_comps3$var_res, 5.125394, tol = 0.00001)
+})
+
+test_that("Binomial/proportion variance components are correct", {
+
+  var_comps1 <- var_comps_proportion(fit7, expct = "meanobs",
+                                     overdisp_name = "overdisp")
+
+  expect_equal(var_comps1$var_fix, 0.2453422, tol = 0.00001)
+  expect_equal(var_comps1$var_ran, 1.054674, tol = 0.00001)
+  expect_equal(var_comps1$var_res, 4.086918, tol = 0.00001)
+
+  var_comps2 <-  var_comps_proportion(fit7, expct = "liability",
+                                      overdisp_name = "overdisp")
+  expect_equal(var_comps2$var_res, 3.289868, tol = 0.00001)
+
+  var_comps3 <- var_comps_proportion(fit7, expct = "latent",
+                                     overdisp_name = "overdisp")
+  expect_equal(var_comps3$var_res, 4.572481, tol = 0.00001)
+
 })
