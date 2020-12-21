@@ -258,8 +258,8 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   } else {
     ndf_terms <- c("Full", all_comb)
   }
-  ndf <- suppressWarnings(purrr::map_int(ndf_terms, get_ndf, mod, data_mod))
-  r2_cis$ndf <- ndf
+  pe_cis$r2s$ndf <- suppressWarnings(purrr::map_int(ndf_terms, get_ndf,
+                                                    mod, data_mod))
 
   # change partbatch with names, if present
   if (!is.null(names(partbatch))) {
@@ -268,29 +268,29 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
       out
     })
 
-    part_names <- r2_cis$parts
+    part_names <- pe_cis$r2s$term
     for (i in 1:length(added_batches)) {
       if (is.null(names(added_batches)[i])) next()
       part_names <- gsub(added_batches[[i]], names(added_batches)[i], part_names, fixed = TRUE)
     }
-    r2_cis$parts <- part_names
-    names(boot_r2s) <- part_names
+    pe_cis$r2s$term <- part_names
+    boot_r2s_scs_ests$r2s <- purrr::map(boot_r2s_scs_ests$r2s, function(x) x$term <- part_names)
   }
 
   res <- list(
     call = mod@call,
     # datatype = "gaussian",
     R2_type = R2_type,
-    R2 = r2_cis,
-    SC = sc_cis,
-    IR2 = ir2_cis,
-    BW = bws_cis,
-    Ests = ests_cis,
-    R2_boot = boot_r2s,
-    SC_boot = boot_scs,
-    IR2_boot = boot_ir2s,
-    BW_boot = boot_bws,
-    Ests_boot = boot_ests,
+    R2 = pe_cis$r2s,
+    SC = pe_cis$scs,
+    IR2 = pe_cis$ir2s,
+    BW = pe_cis$bws,
+    Ests = pe_cis$ests,
+    R2_boot = boot_r2s_scs_ests$r2s,
+    SC_boot = boot_r2s_scs_ests$scs,
+    IR2_boot = boot_r2s_scs_ests$ir2s,
+    BW_boot = boot_r2s_scs_ests$bws,
+    Ests_boot = boot_r2s_scs_ests$ests,
     partvars = partvars,
     partbatch = ifelse(is.null(partbatch), NA, partbatch),
     CI = CI,
