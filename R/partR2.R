@@ -152,13 +152,6 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   # make combinations of predictors from partvars and partbatch
   all_comb <- make_combs(partvars, partbatch, max_level)
 
-  # names for partitions
-  if (partition) {
-    part_terms <- c("Full", unlist(lapply(all_comb, paste, collapse = "+")))
-  } else if (!partition) {
-    part_terms <- "Full"
-  }
-
   # get family and response variable
   mod_fam <- stats::family(mod)[[1]]
   if (!(mod_fam %in% c("gaussian", "binomial", "poisson"))) {
@@ -167,7 +160,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   }
   resp <- lme4::getME(mod, "y")
 
-  # overdispersion
+  # overdispersion, will only apply when poisson/proportion
   overdisp_out <- model_overdisp(mod = mod, dat = data_org, olre = olre)
   mod <- overdisp_out$mod
   data_mod <- overdisp_out$dat
@@ -197,9 +190,18 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   if (!is.null(nboot)) {
 
     # get bootstrap estimates
-    boot_r2s_scs_ests <- bootstrap_all(nboot, mod, R2_type, all_comb, partition,
+    boot_all <- bootstrap_all(nboot, mod, R2_type, all_comb, partition,
                                        data_mod, allow_neg_r2, parallel,
                                        expct, overdisp_name)
+
+    # all iterations in one df as list columns and calculating inclusive r2
+    boot_r2s_scs_ests <- purrr::map_dfr(boot_all, "result", .id = "iter") %>%
+                          dplyr::mutate(ir2s = purrr::map2(scs, r2s, function(x, y) {
+                            dplyr::tibble(term = x$term, ir2 = x$sc^2 * y[y$term == "Full", "R2"])
+                          }))
+
+    boot_warnings <- purrr::map(boot_all, "warnings",.id = "iter")
+    boot_messages <- purrr::map(boot_all, "messages",.id = "iter")
 
     # reshaping bootstrap output
     # put all commonality coefficients in one data.frame

@@ -63,7 +63,14 @@ part_R2s <- function(mod, expct, overdisp_name, R2_type, all_comb, partition,
         R2s_red <-  R2s_red_tmp %>%  dplyr::bind_rows(R2_full, .)
     }
 
-    R2s_red
+    # names for partitions
+    if (partition) {
+        part_terms <- c("Full", unlist(lapply(all_comb, paste, collapse = "+")))
+    } else if (!partition) {
+        part_terms <- "Full"
+    }
+
+    R2s_red <- dplyr::tibble(term = part_terms, R2 = R2s_red$R2)
 }
 
 # reduced model R2 (mod without partvar)

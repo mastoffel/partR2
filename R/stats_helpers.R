@@ -87,7 +87,8 @@ SC_pe <- function(mod) {
     Yhat <- stats::predict(mod, re.form=NA)
     mod_mat <- stats::model.matrix(mod)
     mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop=FALSE]
-    out <- as.data.frame(stats::cor(Yhat, mod_mat))
+    scs <- stats::cor(Yhat, mod_mat)
+    out <- dplyr::tibble(term = colnames(scs), sc = as.numeric(scs))
 }
 
 #' Get beta weights
@@ -121,11 +122,6 @@ get_bw <- function(mod){
 }
 
 
-
-
-
-
-
 #' Parametric bootstrapping
 #'
 #' @param mod merMod object, lme4 fit
@@ -154,9 +150,9 @@ bootstrap_all <- function(nboot, mod, R2_type, all_comb, partition,
       out_scs <- SC_pe(mod_iter)
       out_ests <- broom.mixed::tidy(mod_iter, effects = "fixed")
       out_bw <- get_bw(mod_iter)
-      out <- list(
-          r2s = out_r2s, ests = out_ests, scs = out_scs,
-          bws = out_bw
+      out <- dplyr::tibble(
+          r2s = list(out_r2s), ests = list(out_ests), scs = list(out_scs),
+          bws = list(out_bw)
       )
   }
   # capture warnings and messages
