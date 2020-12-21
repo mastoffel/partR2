@@ -185,8 +185,9 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
 
   # calculate R2 and partial R2s
   R2_org <- part_R2s(
-    mod, expct, overdisp_name, R2_type, all_comb,
-    partition, data_mod, allow_neg_r2
+    mod = mod, expct = expct, overdisp_name = overdisp_name,
+    R2_type = R2_type, all_comb = all_comb,
+    partition = partition, data_mod = data_mod, allow_neg_r2 = allow_neg_r2
   )
 
   # structure coefficients
