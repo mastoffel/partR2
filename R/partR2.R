@@ -166,25 +166,31 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   data_mod <- overdisp_out$dat
   overdisp_name <- overdisp_out$overdisp_name
 
-  # extract some essential info
-  # we suppress messages here to avoid the notice that broom.mixed
-  # overwrites the broom S3 methods.
-  model_ests_full <- suppressMessages(
+
+  # point estimates for all statistics
+
+  # model estimates
+  ests_pe <- suppressMessages(
     broom.mixed::tidy(mod, effects = c("fixed"))
   )
+  ests_pe <- ests_pe[ests_pe$term != "(Intercept)", c("term", "estimate")]
 
   # beta weights
-  model_bws_full <- get_bw(mod)
+  bws_pe <- get_bw(mod)
 
   # calculate R2 and partial R2s
-  R2_org <- part_R2s(
+  r2s_pe <- part_R2s(
     mod = mod, expct = expct, overdisp_name = overdisp_name,
     R2_type = R2_type, all_comb = all_comb,
     partition = partition, data_mod = data_mod, allow_neg_r2 = allow_neg_r2
   )
 
   # structure coefficients
-  SC_org <- SC_pe(mod)
+  scs_pe <- SC_pe(mod)
+
+  # inclusive r2s
+  ir2s_pe <-   scs_pe %>%
+    dplyr::mutate(estimate = estimate^2 * unlist(r2s_pe[r2s_pe$term == "Full", "estimate"]))
 
   # param. bootstrapping
   if (!is.null(nboot)) {
@@ -197,7 +203,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
     # all iterations in one df as list columns and calculating inclusive r2
     boot_r2s_scs_ests <- purrr::map_dfr(boot_all, "result", .id = "iter") %>%
                           dplyr::mutate(ir2s = purrr::map2(scs, r2s, function(sc, r2) {
-                            dplyr::tibble(term = sc$term, ir2 = sc$estimate^2 * r2[r2$term == "Full", "estimate"])
+                            dplyr::tibble(term = sc$term, estimate = sc$estimate^2 * unlist(r2[r2$term == "Full", "estimate"]))
                           }))
 
     boot_warnings <- purrr::map(boot_all, "warnings",.id = "iter")
@@ -210,13 +216,13 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
       as.list() %>%
       as.data.frame() %>%
       stats::setNames(part_terms)
-    boot_scs <- matrix(nrow = 1, ncol = ncol(SC_org)) %>%
+    boot_scs <- matrix(nrow = 1, ncol = ncol(scs_pe)) %>%
       as.data.frame() %>%
-      stats::setNames(names(SC_org))
-    boot_ir2s <- matrix(nrow = 1, ncol = ncol(SC_org)) %>%
+      stats::setNames(names(scs_pe))
+    boot_ir2s <- matrix(nrow = 1, ncol = ncol(scs_pe)) %>%
       as.data.frame() %>%
-      stats::setNames(names(SC_org))
-    boot_ests <- model_ests_full %>%
+      stats::setNames(names(scs_pe))
+    boot_ests <- ests_pe %>%
       dplyr::mutate(estimate = NA) %>%
       # cut off std.err and statistic from broom output
       dplyr::select(-.data$std.error, -.data$statistic) %>%
@@ -226,40 +232,25 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
     boot_messages <- character(0)
   }
 
-  # calculate CIs
-  get_cis <- function(ests) {
-    ests %>%
+  # calculate CIs over list columns
+  get_cis <- function(stc, df_pe) {
+    #stc <- dplyr::enquo(stc)
+    boot_r2s_scs_ests[[stc]] %>%
       dplyr::bind_rows() %>%
       dplyr::group_by(term) %>%
       dplyr::summarise(estimate = list(estimate)) %>%
       dplyr::rowwise() %>%
       dplyr::mutate(calc_CI(unlist(estimate), CI)) %>%
-      dplyr::select(-estimate)
+      dplyr::select(-estimate) %>%
+      dplyr::right_join(x = df_pe, by = "term")
   }
 
-  r2_cis <- get_cis(boot_r2s_scs_ests$r2s) %>%
-    dplyr::right_join(x = R2_org, by = "term")
-  ests_cis <- get_cis(boot_r2s_scs_ests$ests) %>%
-    dplyr::right_join(x = R2_org, by = "term")
+  ststcs <- list("r2s", "ests", "bws", "scs", "ir2s")
 
-
-  r2_cis <- purrr::map_df(boot_r2s, calc_CI, CI, .id = "parts") %>%
-    tibble::add_column(R2 = as.numeric(unlist(R2_org)), .after = "parts")
-
-  ests_cis <- purrr::map_df(boot_ests, "estimate") %>%
-    purrr::pmap_df(function(...) calc_CI(c(...), CI)) %>%
-    cbind(model_ests_full[1:4], .)
-
-  bws_cis <- purrr::map_df(boot_bws, "estimate") %>%
-    purrr::pmap_df(function(...) calc_CI(c(...), CI)) %>%
-    cbind(model_bws_full[1:4], .)
-
-  sc_cis <- purrr::map_df(boot_scs, calc_CI, CI, .id = "parts") %>%
-    tibble::add_column(SC = as.numeric(SC_org), .after = "parts")
-
-  ir2_cis <- purrr::map_df(boot_ir2s, calc_CI, CI, .id = "parts") %>%
-    tibble::add_column(IR2 = as.numeric(SC_org^2 * R2_org$R2[1]), .after = "parts") %>%
-    as.data.frame()
+  pe_cis <- purrr::map2(ststcs,
+              list(r2s_pe, ests_pe, bws_pe, scs_pe, ir2s_pe),
+              get_cis) %>%
+              stats::setNames(ststcs)
 
   # calculate numerator degrees of freedom and add to partial R2 object
   if ((length(all_comb) == 1) & (any(is.na(all_comb)))) {

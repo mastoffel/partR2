@@ -118,7 +118,7 @@ get_bw <- function(mod){
         purrr::map_dbl(names(sds), function(x) {
             unlist(ests[ests$term %in% x, "estimate"] * sds[x])
         })
-    ests
+    ests[ests$term != "(Intercept)", c("term", "estimate")]
 }
 
 
@@ -148,7 +148,8 @@ bootstrap_all <- function(nboot, mod, R2_type, all_comb, partition,
           all_comb, partition, data_mod, allow_neg_r2
       )
       out_scs <- SC_pe(mod_iter)
-      out_ests <- broom.mixed::tidy(mod_iter, effects = "fixed")
+      ests <- broom.mixed::tidy(mod_iter, effects = "fixed")
+      out_ests <- ests[ests$term != "(Intercept)", c("term", "estimate")]
       out_bw <- get_bw(mod_iter)
       out <- dplyr::tibble(
           r2s = list(out_r2s), ests = list(out_ests), scs = list(out_scs),
