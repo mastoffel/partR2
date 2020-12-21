@@ -196,28 +196,12 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
 
     # all iterations in one df as list columns and calculating inclusive r2
     boot_r2s_scs_ests <- purrr::map_dfr(boot_all, "result", .id = "iter") %>%
-                          dplyr::mutate(ir2s = purrr::map2(scs, r2s, function(x, y) {
-                            dplyr::tibble(term = x$term, ir2 = x$sc^2 * y[y$term == "Full", "R2"])
+                          dplyr::mutate(ir2s = purrr::map2(scs, r2s, function(sc, r2) {
+                            dplyr::tibble(term = sc$term, ir2 = sc$estimate^2 * r2[r2$term == "Full", "estimate"])
                           }))
 
     boot_warnings <- purrr::map(boot_all, "warnings",.id = "iter")
     boot_messages <- purrr::map(boot_all, "messages",.id = "iter")
-
-    # reshaping bootstrap output
-    # put all commonality coefficients in one data.frame
-    boot_r2s <- purrr::map(boot_r2s_scs_ests, function(x) x$result[["r2s"]]) %>%
-      purrr::map_df(function(x) stats::setNames(as.data.frame(t(x[[1]])), part_terms))
-    # put all structure coefficients in a data.frame
-    boot_scs <- purrr::map_df(boot_r2s_scs_ests, function(x) x$result[["scs"]])
-    # calculate inklusive R2
-    # square the SC and multiply by full R2
-    boot_ir2s <- purrr::map_df(boot_scs, function(sc) sc^2 * boot_r2s$Full)
-    # put all model estimates in a data.frame
-    boot_ests <- purrr::map(boot_r2s_scs_ests, function(x) x$result[["ests"]])
-    boot_bws <- purrr::map(boot_r2s_scs_ests, function(x) x$result[["bws"]])
-    # warnings and messages
-    boot_warnings <- purrr::map(boot_r2s_scs_ests, function(x) x$warnings)
-    boot_messages <- purrr::map(boot_r2s_scs_ests, function(x) x$messages)
   }
 
   # if no bootstrap return same data.frames only with NA
@@ -243,6 +227,11 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   }
 
   # calculate CIs
+  boot_r2s_scs_ests$r2s %>%
+    dplyr::bind_rows() %>%
+    dplyr::group_by(term) %>%
+    summarise(R2 = list(R2)) -> test
+
   r2_cis <- purrr::map_df(boot_r2s, calc_CI, CI, .id = "parts") %>%
     tibble::add_column(R2 = as.numeric(unlist(R2_org)), .after = "parts")
 

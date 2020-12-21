@@ -88,7 +88,7 @@ SC_pe <- function(mod) {
     mod_mat <- stats::model.matrix(mod)
     mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop=FALSE]
     scs <- stats::cor(Yhat, mod_mat)
-    out <- dplyr::tibble(term = colnames(scs), sc = as.numeric(scs))
+    out <- dplyr::tibble(term = colnames(scs), estimate = as.numeric(scs))
 }
 
 #' Get beta weights
