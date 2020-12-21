@@ -227,10 +227,21 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   }
 
   # calculate CIs
-  boot_r2s_scs_ests$r2s %>%
-    dplyr::bind_rows() %>%
-    dplyr::group_by(term) %>%
-    summarise(R2 = list(R2)) -> test
+  get_cis <- function(ests) {
+    ests %>%
+      dplyr::bind_rows() %>%
+      dplyr::group_by(term) %>%
+      dplyr::summarise(estimate = list(estimate)) %>%
+      dplyr::rowwise() %>%
+      dplyr::mutate(calc_CI(unlist(estimate), CI)) %>%
+      dplyr::select(-estimate)
+  }
+
+  r2_cis <- get_cis(boot_r2s_scs_ests$r2s) %>%
+    dplyr::right_join(x = R2_org, by = "term")
+  ests_cis <- get_cis(boot_r2s_scs_ests$ests) %>%
+    dplyr::right_join(x = R2_org, by = "term")
+
 
   r2_cis <- purrr::map_df(boot_r2s, calc_CI, CI, .id = "parts") %>%
     tibble::add_column(R2 = as.numeric(unlist(R2_org)), .after = "parts")

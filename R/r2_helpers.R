@@ -24,7 +24,7 @@ R2_pe <- function(mod, expct, overdisp_name, R2_type) {
                               (.data$var_fix + .data$var_ran + .data$var_res)) %>%
             dplyr::select(.data$R2)
     }
-    R2_out
+    dplyr::as_tibble(R2_out)
 }
 
 
