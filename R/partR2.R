@@ -169,9 +169,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   # point estimates for all statistics
 
   # model estimates
-  ests_pe <- suppressMessages(
-    broom.mixed::tidy(mod, effects = c("fixed"))
-  )
+  ests_pe <- suppressMessages(broom.mixed::tidy(mod, effects = c("fixed")))
   ests_pe <- ests_pe[ests_pe$term != "(Intercept)", c("term", "estimate")]
   # beta weights
   bws_pe <- get_bw(mod)
@@ -198,40 +196,32 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
     )
 
     # all iterations in one df as list columns and calculating inclusive r2
-    boot_r2s_scs_ests <- purrr::map_dfr(boot_all, "result", .id = "iter") %>%
+    boot_out <- purrr::map_dfr(boot_all, "result", .id = "iter") %>%
       dplyr::mutate(ir2s = purrr::map2(scs, r2s, function(sc, r2) {
         dplyr::tibble(term = sc$term, estimate = sc$estimate^2 * unlist(r2[r2$term == "Full", "estimate"]))
-      }))
-    boot_warnings <- purrr::map(boot_all, "warnings", .id = "iter")
-    boot_messages <- purrr::map(boot_all, "messages", .id = "iter")
+      })) %>%
+      dplyr::mutate(warnings = purrr::map(boot_all, "warnings"),
+                    messages = purrr::map(boot_all, "messages"))
   }
 
   # if no bootstrap return same data.frames only with NA
   if (is.null(nboot)) {
-    boot_r2s <- rep(NA, length(part_terms)) %>%
-      as.list() %>%
-      as.data.frame() %>%
-      stats::setNames(part_terms)
-    boot_scs <- matrix(nrow = 1, ncol = ncol(scs_pe)) %>%
-      as.data.frame() %>%
-      stats::setNames(names(scs_pe))
-    boot_ir2s <- matrix(nrow = 1, ncol = ncol(scs_pe)) %>%
-      as.data.frame() %>%
-      stats::setNames(names(scs_pe))
-    boot_ests <- ests_pe %>%
-      dplyr::mutate(estimate = NA) %>%
-      # cut off std.err and statistic from broom output
-      dplyr::select(-.data$std.error, -.data$statistic) %>%
-      list(sim1 = .)
-    boot_bws <- boot_ests
-    boot_warnings <- character(0)
-    boot_messages <- character(0)
+    dfs_pe <- list(r2s_pe, ests_pe, bws_pe, scs_pe, ir2s_pe)
+    boot_out <- purrr::map(dfs_pe, function(x){
+      x$estimate <- NA
+      list(x)
+    }) %>%
+    stats::setNames(c("r2s", "ests", "scs", "bws", "ir2s")) %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(iter = NA, .before = 1,
+                  warnings = NA,
+                  messages = NA)
   }
 
   # calculate CIs over list columns
   get_cis <- function(stc, df_pe) {
     # stc <- dplyr::enquo(stc)
-    boot_r2s_scs_ests[[stc]] %>%
+    boot_out[[stc]] %>%
       dplyr::bind_rows() %>%
       dplyr::group_by(term) %>%
       dplyr::summarise(estimate = list(estimate)) %>%
@@ -243,7 +233,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
 
   ststcs <- list("r2s", "ests", "bws", "scs", "ir2s")
   dfs_pe <- list(r2s_pe, ests_pe, bws_pe, scs_pe, ir2s_pe)
-  pe_cis <- purrr::map2( ststcs,dfs_pe,get_cis) %>%
+  pe_cis <- purrr::map2(ststcs,dfs_pe,get_cis) %>%
     stats::setNames(ststcs)
 
   # calculate numerator degrees of freedom and add to partial R2 object
@@ -270,7 +260,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
       part_names <- gsub(added_batches[[i]], names(added_batches)[i], part_names, fixed = TRUE)
     }
     pe_cis$r2s$term <- part_names
-    boot_r2s_scs_ests$r2s <- purrr::map(boot_r2s_scs_ests$r2s, function(x) x$term <- part_names)
+    boot_out$r2s <- purrr::map(boot_out$r2s, function(x) x$term <- part_names)
   }
 
   res <- list(
@@ -282,11 +272,11 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
     IR2 = pe_cis$ir2s,
     BW = pe_cis$bws,
     Ests = pe_cis$ests,
-    R2_boot = boot_r2s_scs_ests$r2s,
-    SC_boot = boot_r2s_scs_ests$scs,
-    IR2_boot = boot_r2s_scs_ests$ir2s,
-    BW_boot = boot_r2s_scs_ests$bws,
-    Ests_boot = boot_r2s_scs_ests$ests,
+    R2_boot = boot_out$r2s,
+    SC_boot = boot_out$scs,
+    IR2_boot = boot_out$ir2s,
+    BW_boot = boot_out$bws,
+    Ests_boot = boot_out$ests,
     partvars = partvars,
     partbatch = ifelse(is.null(partbatch), NA, partbatch),
     CI = CI,
