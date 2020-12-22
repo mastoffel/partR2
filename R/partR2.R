@@ -82,7 +82,7 @@
 #' were extracted with broom.mixed::tidy}
 #' \item{R2_boot}{Parametric bootstrap samples for R2 for full model and partitions}
 #' \item{SC_boot}{Parametric bootstrap samples for structure coefficients}
-#' \item{IR2_boot}{Parametric bootstrap samples for inklusive R2 values}
+#' \item{IR2_boot}{Parametric bootstrap samples for inclusive R2 values}
 #' \item{BW_boot}{Parametric bootstrap samples for beta weights}
 #' \item{Ests_boot}{Parametric bootstrap samples for model estimates}
 #' \item{partvars}{predictors to partition}
@@ -166,7 +166,6 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   data_mod <- overdisp_out$dat
   overdisp_name <- overdisp_out$overdisp_name
 
-
   # point estimates for all statistics
 
   # model estimates
@@ -174,40 +173,37 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
     broom.mixed::tidy(mod, effects = c("fixed"))
   )
   ests_pe <- ests_pe[ests_pe$term != "(Intercept)", c("term", "estimate")]
-
   # beta weights
   bws_pe <- get_bw(mod)
-
   # calculate R2 and partial R2s
   r2s_pe <- part_R2s(
     mod = mod, expct = expct, overdisp_name = overdisp_name,
     R2_type = R2_type, all_comb = all_comb,
     partition = partition, data_mod = data_mod, allow_neg_r2 = allow_neg_r2
   )
-
   # structure coefficients
   scs_pe <- SC_pe(mod)
-
   # inclusive r2s
-  ir2s_pe <-   scs_pe %>%
+  ir2s_pe <- scs_pe %>%
     dplyr::mutate(estimate = estimate^2 * unlist(r2s_pe[r2s_pe$term == "Full", "estimate"]))
 
   # param. bootstrapping
   if (!is.null(nboot)) {
 
     # get bootstrap estimates
-    boot_all <- bootstrap_all(nboot, mod, R2_type, all_comb, partition,
-                                       data_mod, allow_neg_r2, parallel,
-                                       expct, overdisp_name)
+    boot_all <- bootstrap_all(
+      nboot, mod, R2_type, all_comb, partition,
+      data_mod, allow_neg_r2, parallel,
+      expct, overdisp_name
+    )
 
     # all iterations in one df as list columns and calculating inclusive r2
     boot_r2s_scs_ests <- purrr::map_dfr(boot_all, "result", .id = "iter") %>%
-                          dplyr::mutate(ir2s = purrr::map2(scs, r2s, function(sc, r2) {
-                            dplyr::tibble(term = sc$term, estimate = sc$estimate^2 * unlist(r2[r2$term == "Full", "estimate"]))
-                          }))
-
-    boot_warnings <- purrr::map(boot_all, "warnings",.id = "iter")
-    boot_messages <- purrr::map(boot_all, "messages",.id = "iter")
+      dplyr::mutate(ir2s = purrr::map2(scs, r2s, function(sc, r2) {
+        dplyr::tibble(term = sc$term, estimate = sc$estimate^2 * unlist(r2[r2$term == "Full", "estimate"]))
+      }))
+    boot_warnings <- purrr::map(boot_all, "warnings", .id = "iter")
+    boot_messages <- purrr::map(boot_all, "messages", .id = "iter")
   }
 
   # if no bootstrap return same data.frames only with NA
@@ -234,7 +230,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
 
   # calculate CIs over list columns
   get_cis <- function(stc, df_pe) {
-    #stc <- dplyr::enquo(stc)
+    # stc <- dplyr::enquo(stc)
     boot_r2s_scs_ests[[stc]] %>%
       dplyr::bind_rows() %>%
       dplyr::group_by(term) %>%
@@ -246,11 +242,9 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   }
 
   ststcs <- list("r2s", "ests", "bws", "scs", "ir2s")
-
-  pe_cis <- purrr::map2(ststcs,
-              list(r2s_pe, ests_pe, bws_pe, scs_pe, ir2s_pe),
-              get_cis) %>%
-              stats::setNames(ststcs)
+  dfs_pe <- list(r2s_pe, ests_pe, bws_pe, scs_pe, ir2s_pe)
+  pe_cis <- purrr::map2( ststcs,dfs_pe,get_cis) %>%
+    stats::setNames(ststcs)
 
   # calculate numerator degrees of freedom and add to partial R2 object
   if ((length(all_comb) == 1) & (any(is.na(all_comb)))) {
@@ -258,8 +252,10 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   } else {
     ndf_terms <- c("Full", all_comb)
   }
-  pe_cis$r2s$ndf <- suppressWarnings(purrr::map_int(ndf_terms, get_ndf,
-                                                    mod, data_mod))
+  pe_cis$r2s$ndf <- suppressWarnings(purrr::map_int(
+    ndf_terms, get_ndf,
+    mod, data_mod
+  ))
 
   # change partbatch with names, if present
   if (!is.null(names(partbatch))) {
