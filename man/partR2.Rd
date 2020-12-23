@@ -103,8 +103,7 @@ models are calculated as beta * sd(x). Beta weights for interactions or polynomi
 terms are not informative at the moment and we recommend users to standardise
 variables themselves before fitting the model and to look at the model estimates (Ests)
 instead of beta weights (BW) in the partR2 output. See vignette for details. }
-\item{Ests}{Model estimates and confidence intervals. Point estimates
-were extracted with broom.mixed::tidy}
+\item{Ests}{Model estimates and confidence intervals.}
 \item{R2_boot}{Parametric bootstrap samples for R2 for full model and partitions}
 \item{SC_boot}{Parametric bootstrap samples for structure coefficients}
 \item{IR2_boot}{Parametric bootstrap samples for inclusive R2 values}

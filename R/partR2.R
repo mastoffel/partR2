@@ -78,8 +78,7 @@
 #' terms are not informative at the moment and we recommend users to standardise
 #' variables themselves before fitting the model and to look at the model estimates (Ests)
 #' instead of beta weights (BW) in the partR2 output. See vignette for details. }
-#' \item{Ests}{Model estimates and confidence intervals. Point estimates
-#' were extracted with broom.mixed::tidy}
+#' \item{Ests}{Model estimates and confidence intervals.}
 #' \item{R2_boot}{Parametric bootstrap samples for R2 for full model and partitions}
 #' \item{SC_boot}{Parametric bootstrap samples for structure coefficients}
 #' \item{IR2_boot}{Parametric bootstrap samples for inclusive R2 values}
@@ -152,11 +151,9 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   all_comb <- make_combs(partvars, partbatch, max_level)
 
   # get family and response variable
-  mod_fam <- stats::family(mod)[[1]]
-  if (!(mod_fam %in% c("gaussian", "binomial", "poisson"))) {
-    stop("partR2 currentlu only handles gaussian, binomial and poisson models")
+  if (!(stats::family(mod)[[1]] %in% c("gaussian", "binomial", "poisson"))) {
+    stop("partR2 currently only handles gaussian, binomial and poisson models")
   }
-  resp <- lme4::getME(mod, "y")
 
   # overdispersion, will only apply when poisson/proportion
   overdisp_out <- model_overdisp(mod = mod, dat = data, olre = olre)
@@ -166,10 +163,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
 
   # point estimates for all statistics
   # model estimates
-  ests_pe <- suppressMessages(broom.mixed::tidy(mod, effects = c("fixed"))) %>%
-              dplyr::filter(.data$term != "(Intercept)") %>%
-              dplyr::select(.data$term, .data$estimate)
-
+  ests_pe <- fixef_simple(mod, intcp = FALSE)
   # beta weights
   bws_pe <- get_bw(mod)
   # calculate R2 and partial R2s
@@ -182,7 +176,8 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   scs_pe <- SC_pe(mod)
   # inclusive r2s
   ir2s_pe <- scs_pe %>%
-    dplyr::mutate(estimate = c(.data$estimate)^2 * r2s_pe[r2s_pe$term == "Full", "estimate", drop = TRUE])
+    dplyr::mutate(estimate = c(.data$estimate)^2 * r2s_pe[r2s_pe$term == "Full",
+                                                          "estimate", drop = TRUE])
 
   # param. bootstrapping
   if (!is.null(nboot)) {

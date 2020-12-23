@@ -1,3 +1,19 @@
+#' Get tidy summary of fixed effect estimates
+#'
+#' @param mod merMod object
+#' @param intcp include intercept in summary? Defaults to FALSE
+#'
+#' @return tibble with two columns: term and estimate
+#' @keywords internal
+#'
+fixef_simple <- function(mod, intcp = FALSE) {
+  if (!inherits(mod, "merMod")) stop("only merMod supported atm")
+  out <- dplyr::as_tibble(lme4::fixef(mod), rownames = "term") %>%
+          dplyr::rename(estimate = .data$value)
+  if (!intcp)  out <- out[!(out$term == "(Intercept)"), ]
+  out
+}
+
 
 #' Adds an observational level random effect to a model
 #'
@@ -112,12 +128,12 @@ get_bw <- function(mod){
     sds[bin_preds] <- 1
     # simple posthoc standardisation. Doesn't work for interactions and should
     # be turned of when standardised before
-    ests <- broom.mixed::tidy(mod, effects = "fixed")
+    ests <- fixef_simple(mod, intcp = FALSE)
     ests[ests$term %in% names(sds), "estimate"] <-
         purrr::map_dbl(names(sds), function(x) {
             unlist(ests[ests$term %in% x, "estimate"] * sds[x])
         })
-    ests[ests$term != "(Intercept)", c("term", "estimate")]
+    ests
 }
 
 
@@ -147,8 +163,7 @@ bootstrap_all <- function(nboot, mod, R2_type, all_comb, partition,
           all_comb, partition, data_mod, allow_neg_r2
       )
       out_scs <- SC_pe(mod_iter)
-      ests <- broom.mixed::tidy(mod_iter, effects = "fixed")
-      out_ests <- ests[ests$term != "(Intercept)", c("term", "estimate")]
+      out_ests <- fixef_simple(mod_iter, intcp = FALSE)
       out_bw <- get_bw(mod_iter)
       out <- tidyr::tibble(
           r2s = list(out_r2s), ests = list(out_ests), scs = list(out_scs),
