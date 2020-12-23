@@ -15,6 +15,9 @@ data_mod <- biomass
 allow_neg_r2 <- TRUE
 nboot <- 10
 parallel = FALSE
+partbatch <- NULL
+max_level <- NULL
+olre <- TRUE
 
 boot_all <- bootstrap_all(
     nboot, mod, R2_type, all_comb, partition,

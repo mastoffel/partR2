@@ -147,7 +147,6 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
     dat_name <- deparse(mod@call$data)
     stop(paste0("data ", dat_name, " cannot be found. Please provide data argument"))
   }
-  data_org <- data
 
   # make combinations of predictors from partvars and partbatch
   all_comb <- make_combs(partvars, partbatch, max_level)
@@ -155,22 +154,22 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   # get family and response variable
   mod_fam <- stats::family(mod)[[1]]
   if (!(mod_fam %in% c("gaussian", "binomial", "poisson"))) {
-    stop("partR2 only handles gaussian, binomial and poisson models at
-              the moment")
+    stop("partR2 currentlu only handles gaussian, binomial and poisson models")
   }
   resp <- lme4::getME(mod, "y")
 
   # overdispersion, will only apply when poisson/proportion
-  overdisp_out <- model_overdisp(mod = mod, dat = data_org, olre = olre)
+  overdisp_out <- model_overdisp(mod = mod, dat = data, olre = olre)
   mod <- overdisp_out$mod
   data_mod <- overdisp_out$dat
   overdisp_name <- overdisp_out$overdisp_name
 
   # point estimates for all statistics
-
   # model estimates
-  ests_pe <- suppressMessages(broom.mixed::tidy(mod, effects = c("fixed")))
-  ests_pe <- ests_pe[ests_pe$term != "(Intercept)", c("term", "estimate")]
+  ests_pe <- suppressMessages(broom.mixed::tidy(mod, effects = c("fixed"))) %>%
+              dplyr::filter(.data$term != "(Intercept)") %>%
+              dplyr::select(.data$term, .data$estimate)
+
   # beta weights
   bws_pe <- get_bw(mod)
   # calculate R2 and partial R2s
@@ -183,7 +182,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   scs_pe <- SC_pe(mod)
   # inclusive r2s
   ir2s_pe <- scs_pe %>%
-    dplyr::mutate(estimate = estimate^2 * unlist(r2s_pe[r2s_pe$term == "Full", "estimate"]))
+    dplyr::mutate(estimate = c(.data$estimate)^2 * r2s_pe[r2s_pe$term == "Full", "estimate", drop = TRUE])
 
   # param. bootstrapping
   if (!is.null(nboot)) {
@@ -197,14 +196,14 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
 
     # all iterations in one df as list columns and calculating inclusive r2
     boot_out <- purrr::map_dfr(boot_all, "result", .id = "iter") %>%
-      dplyr::mutate(ir2s = purrr::map2(scs, r2s, function(sc, r2) {
-        dplyr::tibble(term = sc$term, estimate = sc$estimate^2 * unlist(r2[r2$term == "Full", "estimate"]))
+      dplyr::mutate(ir2s = purrr::map2(.data$scs, .data$r2s, function(sc, r2) {
+        tidyr::tibble(term = sc$term, estimate = sc$estimate^2 * unlist(r2[r2$term == "Full", "estimate"]))
       })) %>%
       dplyr::mutate(warnings = purrr::map(boot_all, "warnings"),
                     messages = purrr::map(boot_all, "messages"))
   }
 
-  # if no bootstrap return same data.frames only with NA
+  # if no bootstrap return same data structure with NA
   if (is.null(nboot)) {
     dfs_pe <- list(r2s_pe, ests_pe, bws_pe, scs_pe, ir2s_pe)
     boot_out <- purrr::map(dfs_pe, function(x){
@@ -213,8 +212,8 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
     }) %>%
     stats::setNames(c("r2s", "ests", "scs", "bws", "ir2s")) %>%
     dplyr::as_tibble() %>%
-    dplyr::mutate(iter = NA, .before = 1,
-                  warnings = NA,
+    dplyr::mutate(iter = NA, .before = 1) %>%
+    dplyr::mutate(warnings = NA,
                   messages = NA)
   }
 
@@ -223,17 +222,17 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
     # stc <- dplyr::enquo(stc)
     boot_out[[stc]] %>%
       dplyr::bind_rows() %>%
-      dplyr::group_by(term) %>%
-      dplyr::summarise(estimate = list(estimate)) %>%
+      dplyr::group_by(.data$term) %>%
+      dplyr::summarise(estimate = list(.data$estimate)) %>%
       dplyr::rowwise() %>%
-      dplyr::mutate(calc_CI(unlist(estimate), CI)) %>%
-      dplyr::select(-estimate) %>%
+      dplyr::mutate(calc_CI(unlist(.data$estimate), CI)) %>%
+      dplyr::select(-.data$estimate) %>%
       dplyr::right_join(x = df_pe, by = "term")
   }
 
   ststcs <- list("r2s", "ests", "bws", "scs", "ir2s")
   dfs_pe <- list(r2s_pe, ests_pe, bws_pe, scs_pe, ir2s_pe)
-  pe_cis <- purrr::map2(ststcs,dfs_pe,get_cis) %>%
+  pe_cis <- purrr::map2(ststcs, dfs_pe, get_cis) %>%
     stats::setNames(ststcs)
 
   # calculate numerator degrees of freedom and add to partial R2 object
@@ -249,39 +248,29 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
 
   # change partbatch with names, if present
   if (!is.null(names(partbatch))) {
-    added_batches <- purrr::map(partbatch, function(x) {
-      out <- paste(x, collapse = "+")
-      out
-    })
-
-    part_names <- pe_cis$r2s$term
-    for (i in 1:length(added_batches)) {
-      if (is.null(names(added_batches)[i])) next()
-      part_names <- gsub(added_batches[[i]], names(added_batches)[i], part_names, fixed = TRUE)
-    }
+    part_names <- mod_names_partbatch(partbatch, pe_cis$r2s$term)
     pe_cis$r2s$term <- part_names
     boot_out$r2s <- purrr::map(boot_out$r2s, function(x) x$term <- part_names)
   }
 
   res <- list(
     call = mod@call,
-    # datatype = "gaussian",
     R2_type = R2_type,
     R2 = pe_cis$r2s,
     SC = pe_cis$scs,
     IR2 = pe_cis$ir2s,
     BW = pe_cis$bws,
     Ests = pe_cis$ests,
-    R2_boot = boot_out$r2s,
-    SC_boot = boot_out$scs,
-    IR2_boot = boot_out$ir2s,
-    BW_boot = boot_out$bws,
-    Ests_boot = boot_out$ests,
+    R2_boot = boot_to_df(boot_out$r2s),
+    SC_boot = boot_to_df(boot_out$scs),
+    IR2_boot = boot_to_df(boot_out$ir2s),
+    BW_boot = boot_to_df(boot_out$bws),
+    Ests_boot = boot_to_df(boot_out$ests),
     partvars = partvars,
     partbatch = ifelse(is.null(partbatch), NA, partbatch),
     CI = CI,
-    boot_warnings = boot_warnings,
-    boot_messages = boot_messages
+    boot_warnings = boot_out$warnings,
+    boot_messages = boot_out$messages
   )
 
   class(res) <- "partR2"

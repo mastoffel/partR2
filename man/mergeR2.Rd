@@ -24,10 +24,11 @@ reduced model is used to infer main effect semi-partial R2s. This function
 essentially takes over the complete partR2 object for the full model and
 adds semi-partial R2s which have been calculated based on the reduced
 model and are not already present in the full model partR2 object (which
-can be main effects).
+can be main effects). The function also combines the bootstrap estimates,
+accessible with partR2_obj$R2_boot.
 }
 \details{
-This function is a bit experimental and should be used with caution.
+This function is experimental and should be used with caution.
 See vignette or paper on how to use it to obtain semi-partial R2s
 for main effects which are also involved in interactions.
 }

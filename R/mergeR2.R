@@ -6,9 +6,10 @@
 #' essentially takes over the complete partR2 object for the full model and
 #' adds semi-partial R2s which have been calculated based on the reduced
 #' model and are not already present in the full model partR2 object (which
-#' can be main effects).
+#' can be main effects). The function also combines the bootstrap estimates,
+#' accessible with partR2_obj$R2_boot.
 #'
-#' This function is a bit experimental and should be used with caution.
+#' This function is experimental and should be used with caution.
 #' See vignette or paper on how to use it to obtain semi-partial R2s
 #' for main effects which are also involved in interactions.
 #'
@@ -53,6 +54,8 @@ mergeR2 <- function(R2_full, ...) {
     redmods <- list(...)
     allmods <- c(list(R2_full), redmods)
     R2_full$R2 <- purrr::reduce(purrr::map(allmods, "R2"), rbind) %>%
-                  dplyr::filter(!duplicated(.data$parts))
+                  dplyr::filter(!duplicated(.data$term))
+    R2_full$R2_boot <- purrr::reduce(purrr::map(allmods, "R2_boot"), rbind) %>%
+        dplyr::filter(!duplicated(.data$term))
     R2_full
 }

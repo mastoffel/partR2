@@ -92,6 +92,44 @@ make_combs <- function(partvars, partbatch, max_level) {
 
     all_comb
 
-
 }
 
+
+#' List to data.frame with bootstrap samples per row
+#'
+#'
+#' @param lcol A bootstrap list-column
+#' @keywords internal
+
+boot_to_df <- function(lcol){
+    out <- lcol %>%
+        dplyr::bind_rows() %>%
+        dplyr::group_by(.data$term) %>%
+        dplyr::summarise(boot_estimates = list(.data$estimate))
+    out
+}
+
+
+#' Modify term names if partbatch is a named list
+#'
+#'
+#' @param  partbatch list with batches
+#' @param part_names character vector with names of terms (and their combinations)
+#' @keywords internal
+#'
+# change partbatch with names, if present
+mod_names_partbatch <- function(partbatch, part_names) {
+
+      added_batches <- purrr::map(partbatch, function(x) {
+          out <- paste(x, collapse = "+")
+          out
+      })
+
+      for (i in 1:length(added_batches)) {
+          if (is.null(names(added_batches)[i])) next()
+          part_names <- gsub(added_batches[[i]], names(added_batches)[i], part_names, fixed = TRUE)
+      }
+
+    part_names
+
+}

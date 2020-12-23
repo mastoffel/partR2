@@ -47,7 +47,7 @@ part_R2s <- function(mod, expct, overdisp_name, R2_type, all_comb, partition,
                      data_mod, allow_neg_r2) {
     # calculate full model R2
     R2_full <- R2_pe(mod, expct, overdisp_name, R2_type)
-    if (!partition) return(R2_full)
+    if (!partition) return( tidyr::tibble(term = "Full", estimate = R2_full$R2))
     # calculate R2s of reduced models and difference with full model
     R2s_red_tmp <- purrr::map_df(all_comb, R2_of_red_mod, mod = mod,
                                  R2_pe = R2_pe, dat = data_mod, expct = expct,
@@ -70,7 +70,7 @@ part_R2s <- function(mod, expct, overdisp_name, R2_type, all_comb, partition,
         part_terms <- "Full"
     }
 
-    R2s_red <- dplyr::tibble(term = part_terms, estimate = R2s_red$R2)
+    R2s_red <- tidyr::tibble(term = part_terms, estimate = R2s_red$R2)
 }
 
 # reduced model R2 (mod without partvar)

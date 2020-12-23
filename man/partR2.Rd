@@ -107,7 +107,7 @@ instead of beta weights (BW) in the partR2 output. See vignette for details. }
 were extracted with broom.mixed::tidy}
 \item{R2_boot}{Parametric bootstrap samples for R2 for full model and partitions}
 \item{SC_boot}{Parametric bootstrap samples for structure coefficients}
-\item{IR2_boot}{Parametric bootstrap samples for inklusive R2 values}
+\item{IR2_boot}{Parametric bootstrap samples for inclusive R2 values}
 \item{BW_boot}{Parametric bootstrap samples for beta weights}
 \item{Ests_boot}{Parametric bootstrap samples for model estimates}
 \item{partvars}{predictors to partition}

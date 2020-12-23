@@ -82,13 +82,12 @@ get_ndf <- function(partvar, mod, dat) {
 #' @return data.frame with structure coefficients
 #'
 #'
-# structure coefficients
 SC_pe <- function(mod) {
     Yhat <- stats::predict(mod, re.form=NA)
     mod_mat <- stats::model.matrix(mod)
     mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop=FALSE]
     scs <- stats::cor(Yhat, mod_mat)
-    out <- dplyr::tibble(term = colnames(scs), estimate = as.numeric(scs))
+    out <- tidyr::tibble(term = colnames(scs), estimate = as.numeric(scs))
 }
 
 #' Get beta weights
@@ -151,7 +150,7 @@ bootstrap_all <- function(nboot, mod, R2_type, all_comb, partition,
       ests <- broom.mixed::tidy(mod_iter, effects = "fixed")
       out_ests <- ests[ests$term != "(Intercept)", c("term", "estimate")]
       out_bw <- get_bw(mod_iter)
-      out <- dplyr::tibble(
+      out <- tidyr::tibble(
           r2s = list(out_r2s), ests = list(out_ests), scs = list(out_scs),
           bws = list(out_bw)
       )
