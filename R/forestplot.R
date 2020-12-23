@@ -33,7 +33,7 @@ forestplot <- function(x, type = c("R2", "BW", "SC", "IR2", "Ests"), line_size =
     mod_out <- x[[to_plot]]
 
     if (type == "R2") {
-        mod_out[mod_out$parts == "Full", 1] <- "Model"
+        mod_out[mod_out$term == "Full", 1] <- "Model"
         names(mod_out) <- c("combs", "pe", "CI_lower", "CI_upper", "ndf")
     } else if (type %in% c("Ests", "BW")) {
         mod_out <- mod_out %>%

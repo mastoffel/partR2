@@ -133,3 +133,7 @@ mod_names_partbatch <- function(partbatch, part_names) {
     part_names
 
 }
+
+add_CI_cols <- function(df) {
+  df %>% dplyr::mutate(CI_lower = NA, CI_upper = NA)
+}

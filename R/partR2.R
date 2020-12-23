@@ -177,16 +177,17 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   # inclusive r2s
   ir2s_pe <- scs_pe %>%
     dplyr::mutate(estimate = c(.data$estimate)^2 * r2s_pe[r2s_pe$term == "Full",
-                                                          "estimate", drop = TRUE])
+                                     "estimate", drop = TRUE])
 
   # param. bootstrapping
   if (!is.null(nboot)) {
 
     # get bootstrap estimates
     boot_all <- bootstrap_all(
-      nboot, mod, R2_type, all_comb, partition,
-      data_mod, allow_neg_r2, parallel,
-      expct, overdisp_name
+      nboot = nboot, mod = mod, R2_type = R2_type,
+      all_comb = all_comb, partition = partition,
+      data_mod = data_mod, allow_neg_r2 = allow_neg_r2,
+      parallel = parallel, expct = expct, overdisp_name = overdisp_name
     )
 
     # all iterations in one df as list columns and calculating inclusive r2
@@ -225,10 +226,10 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
       dplyr::right_join(x = df_pe, by = "term")
   }
 
-  ststcs <- list("r2s", "ests", "bws", "scs", "ir2s")
+  stcs <- list("r2s", "ests", "bws", "scs", "ir2s")
   dfs_pe <- list(r2s_pe, ests_pe, bws_pe, scs_pe, ir2s_pe)
-  pe_cis <- purrr::map2(ststcs, dfs_pe, get_cis) %>%
-    stats::setNames(ststcs)
+  pe_cis <- purrr::map2(stcs, dfs_pe, get_cis) %>%
+    stats::setNames(stcs)
 
   # calculate numerator degrees of freedom and add to partial R2 object
   if ((length(all_comb) == 1) & (any(is.na(all_comb)))) {
