@@ -38,3 +38,7 @@ test_that("Part R2 point estimates work", {
     expect_equal(r2s_pe2[r2s_pe2$term == "SpeciesDiversity+Temperature", "estimate",
                         drop = TRUE], 0.0564, tolerance = 0.001)
 })
+
+
+
+

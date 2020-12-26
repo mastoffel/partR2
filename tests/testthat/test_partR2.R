@@ -6,6 +6,8 @@ mod <- lme4::lmer(Biomass ~ Year + Temperature + Precipitation + SpeciesDiversit
                   data = biomass)
 
 
+
+
 partvars <- c("Temperature", "Precipitation", "SpeciesDiversity")
 data <- biomass
 R2_type <- "marginal"
@@ -17,3 +19,4 @@ expct <- "meanobs"
 olre <- TRUE
 partbatch <- NULL
 allow_neg_r2 <- FALSE
+
