@@ -1,8 +1,13 @@
 
+<!-- badges: start -->
+
 ![Build
 Status](https://travis-ci.org/mastoffel/partR2.svg?branch=master)
 [![Lifecycle:
 maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+[![Codecov test
+coverage](https://codecov.io/gh/mastoffel/partR2/branch/master/graph/badge.svg)](https://codecov.io/gh/mastoffel/partR2?branch=master)
+<!-- badges: end -->
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # partR2
@@ -59,21 +64,25 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> 
 #> 
 #> R2 (marginal) and 95% CI for the full model: 
-#>  R2     CI_lower CI_upper nboot ndf
-#>  0.5133 0.4462   0.6026   100   4  
+#> # A tibble: 1 x 5
+#>      R2 CI_lower CI_upper nboot   ndf
+#>   <dbl>    <dbl>    <dbl> <int> <dbl>
+#> 1 0.513    0.423    0.608   100     4
 #> 
 #> ----------
 #> 
 #> Part (semi-partial) R2:
-#>  Predictor(s)                      R2     CI_lower CI_upper nboot ndf
-#>  Model                             0.5133 0.4462   0.6026   100   4  
-#>  SpeciesDiversity                  0.1653 0.0982   0.2546   100   3  
-#>  Temperature                       0.3038 0.2367   0.3931   100   3  
-#>  Year                              0.0130 0.0000   0.1023   100   3  
-#>  SpeciesDiversity+Temperature      0.4914 0.4243   0.5807   100   2  
-#>  SpeciesDiversity+Year             0.1784 0.1112   0.2677   100   2  
-#>  Temperature+Year                  0.3250 0.2579   0.4143   100   2  
-#>  SpeciesDiversity+Temperature+Year 0.5133 0.4462   0.6026   100   1
+#> # A tibble: 8 x 6
+#>   `Predictor(s)`                       R2 CI_lower CI_upper nboot   ndf
+#>   <chr>                             <dbl>    <dbl>    <dbl> <int> <dbl>
+#> 1 Model                             0.513   0.423     0.608   100     4
+#> 2 SpeciesDiversity                  0.165   0.0748    0.260   100     3
+#> 3 Temperature                       0.304   0.213     0.399   100     3
+#> 4 Year                              0.013   0         0.108   100     3
+#> 5 SpeciesDiversity+Temperature      0.491   0.401     0.586   100     2
+#> 6 SpeciesDiversity+Year             0.178   0.0879    0.273   100     2
+#> 7 Temperature+Year                  0.325   0.234     0.420   100     2
+#> 8 SpeciesDiversity+Temperature+Year 0.513   0.423     0.608   100     1
 ```
 
 And to plot the results:
