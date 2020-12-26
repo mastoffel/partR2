@@ -29,5 +29,6 @@ Suggests:
     furrr,
     knitr,
     rmarkdown,
-    patchwork
+    patchwork,
+    covr
 VignetteBuilder: knitr

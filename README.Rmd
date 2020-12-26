@@ -1,9 +1,11 @@
 ---
 output: github_document
 ---
-
+<!-- badges: start -->
 ![Build Status](https://travis-ci.org/mastoffel/partR2.svg?branch=master)
 [![Lifecycle: maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+[![Codecov test coverage](https://codecov.io/gh/mastoffel/partR2/branch/master/graph/badge.svg)](https://codecov.io/gh/mastoffel/partR2?branch=master)
+<!-- badges: end -->
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, echo = FALSE}
