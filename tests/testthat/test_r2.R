@@ -11,7 +11,7 @@ expct <- "meanobs"
 overdisp_name <- "overdisp"
 R2_type <- "marginal"
 partition <- TRUE
-data_mod <- biomass
+data_mod <- data <- biomass
 allow_neg_r2 <- TRUE
 
 r2s_pe <- part_R2s(

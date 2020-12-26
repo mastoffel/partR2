@@ -39,3 +39,28 @@ test_that("predictor combinations with partbatch are correct", {
     partbatch = batch1, max_level = NULL
   ))), 8)
 })
+
+
+# test that full part R2 works
+data(biomass)
+modBM <- lme4::lmer(Biomass ~ Year + Temperature + Precipitation +
+                SpeciesDiversity + (1|Population), data = biomass)
+
+R2_BMc <- partR2(modBM, partbatch = list(c("Temperature", "Precipitation")),
+                 R2_type = "marginal", data = biomass, nboot = 10)
+
+R2_BMd <- partR2(modBM, partvars = c("SpeciesDiversity"),
+                 partbatch = list(ClimateVars = c("Temperature", "Precipitation")),
+                 R2_type = "marginal", data = biomass, nboot = 10)
+
+test_that("partbatch without partvars works", {
+    expect_equal(nrow(R2_BMc$R2), 2)
+    expect_equal(R2_BMc$R2$term, c("Full", "Temperature+Precipitation"))
+    expect_equal(R2_BMc$R2$estimate, c(0.6005510, 0.3910285), tolerance = 0.00001)
+})
+
+
+all_combs <- make_combs(partvars = c("SpeciesDiversity"),
+           partbatch = list(ClimateVars = c("Temperature", "Precipitation")),
+           max_level = NULL)
+

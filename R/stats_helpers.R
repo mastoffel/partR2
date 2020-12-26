@@ -190,7 +190,7 @@ bootstrap_all <- function(nboot, mod, R2_type, all_comb, partition,
       # future::plan(future::multiprocess, workers = ncores)
       boot_r2s_scs_ests <- furrr::future_map(Ysim, bootstr_quiet, mod,
                                              expct, overdisp_name,
-                                             .options = furrr::future_options(packages = "lme4"),
+                                             .options = furrr::furrr_options(packages = "lme4"),
                                              .progress = TRUE
       )
   }

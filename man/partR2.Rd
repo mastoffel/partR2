@@ -59,10 +59,10 @@ when you want to use 4 cores. To detect how many cores you have, use
 sequentially.}
 
 \item{expct}{A string specifying the method for estimating the expectation in Poisson models
-with log link and in Binomial models with logit link (in all other cases the agrument is ignored).
+with log link and in Binomial models with logit link (in all other cases the argument is ignored).
 The only valid terms are 'meanobs' and 'latent' (and 'liability for binary and proportion data).
 With the default 'meanobs', the expectation is estimated as the mean of the observations in the sample.
-With 'latent', the expectation is estimated from estiamtes of the intercept and variances on the link scale.
+With 'latent', the expectation is estimated from estimates of the intercept and variances on the link scale.
 While this is a preferred solution, it is susceptible to the distribution of fixed effect covariates and gives
 appropriate results typically only when all covariances are centered to zero. With 'liability'
 estimates follow formulae as presented in Nakagawa & Schielzeth (2010).}
@@ -72,7 +72,7 @@ an obervation level random effect (by setting it to FALSE) in Poisson and binomi
 The OLRE is used to account for overdispersion.}
 
 \item{partbatch}{List of character vectors with predictors that should be fitted and
-removed together. E.g. partbatch = list(batch1 = c("V1", "V2", "V3"),
+removed together. For example, partbatch = list(batch1 = c("V1", "V2", "V3"),
 batch2 = c("V4", "V5", "V6")) would calculate part R2 only for combinations of
 predictors which contain the variables V1, V2, V3 together or/and V4,V5,V6 together.
 This is useful when the number of potential subsets gets too large to

@@ -13,7 +13,7 @@ specified in partvars have to be named precisely like the terms in the formula t
 fit the model.}
 
 \item{partbatch}{List of character vectors with predictors that should be fitted and
-removed together. E.g. partbatch = list(batch1 = c("V1", "V2", "V3"),
+removed together. For example, partbatch = list(batch1 = c("V1", "V2", "V3"),
 batch2 = c("V4", "V5", "V6")) would calculate part R2 only for combinations of
 predictors which contain the variables V1, V2, V3 together or/and V4,V5,V6 together.
 This is useful when the number of potential subsets gets too large to
