@@ -141,7 +141,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
     stop("R2_type has to be marginal or conditional")
   }
 
-  # check if data is there
+  # check if data is there and if not try to get it
   if (is.null(data)) {
     dat_name <- deparse(mod@call$data)
     data <- tryCatch(eval(mod@call$data), error=function(x) return(NA))
