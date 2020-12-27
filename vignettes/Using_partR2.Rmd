@@ -70,7 +70,7 @@ modBM <- lmer(Biomass ~ Year + Temperature + Precipitation +
 
 Now we would usually do the standard model checks and evaluations to ensure that the model works well. For the sake of simplicity (and because we simulated the data from Gaussian distributions), we skip this step here and go straight into the analysis with `partR2`. We first calculate the overall marginal $R^2$ and use parametric bootstrapping to estimate confidence intervals. Marginal $R^2$ refers to the variance explained by fixed effect predictors relative to the total variance in the response. Alternatively, we can estimate conditional $R^2$ (by setting `R2_type ="conditional"`), which is the variance explained by fixed effects and random effects together relative to the total variance in the response.
 
-Note that we supply the fitted `merMod` object (the `lme4` output) and the original dataset used to fit the model (in the `data` argument). This is required, because the `merMod` object does not contain all necessary information to perform the `partR2` analysis. There is one important thing to pay attention to: If there are missing observations for some of the predictors/response, `lmer` and `glmer` will remove all rows containing `NA`, which will result in a mismatch between the data in the `data` object and the data used to fit the model. In order to avoid complications, it is advisable to remove rows with missing data prior to the fitting the model. 
+Note that we supply the fitted `merMod` object (the `lme4` output) and the original dataset used to fit the model. If no data is provided, partR2 will try to fetch it, so it is usually not necessary to provide the data. There is one important thing to pay attention to: If there are missing observations for some of the predictors/response, `lmer` and `glmer` will remove all rows containing `NA`, which will result in a mismatch between the data in the `data` object and the data used to fit the model. In order to avoid complications, it is advisable to remove rows with missing data prior to the fitting the model. 
 
 ```{r, message=FALSE}
 R2_BM <- partR2(modBM, data = biomass, R2_type = "marginal", nboot = 10)
@@ -81,7 +81,7 @@ Marginal $R^2$ is around 60% and confidence intervals are fairly narrow. *Temper
 
 ```{r, warning=FALSE}
 R2_BMa <- partR2(modBM, partvars = c("Temperature", "Precipitation"), 
-                  data = biomass, R2_type = "marginal", nboot = 10)
+                  R2_type = "marginal", nboot = 10)
 R2_BMa
 ```
 
@@ -102,7 +102,7 @@ By default, `partR2` calculates part $R^2$ for all predictors individually and i
 ```{r, warning=FALSE}
 R2_BMb <- partR2(modBM, partvars = c("Temperature", "Precipitation", "Year", 
                                      "SpeciesDiversity"), 
-                 data = biomass, R2_type = "marginal", max_level = 1, nboot = 10)
+                R2_type = "marginal", max_level = 1, nboot = 10)
 R2_BMb
 ```
 
@@ -110,7 +110,7 @@ Another option is offered by the `partbatch` argument. `partbatch` takes a list 
 
 ```{r, warning=FALSE}
 R2_BMc <- partR2(modBM, partbatch = list(c("Temperature", "Precipitation")),
-                   R2_type = "marginal", data = biomass, nboot = 10)
+                   R2_type = "marginal", nboot = 10)
 R2_BMc
 ```
 
@@ -119,7 +119,7 @@ R2_BMc
 ```{r, warning=FALSE}
 R2_BMd <- partR2(modBM, partvars = c("SpeciesDiversity"), 
                    partbatch = list(ClimateVars = c("Temperature", "Precipitation")),
-                   R2_type = "marginal", data = biomass, nboot = 10)
+                   R2_type = "marginal", nboot = 10)
 R2_BMd
 ```
 
@@ -179,7 +179,7 @@ modBMC <- lmer(Biomass ~ Temperature + PrecipitationC +
                I(PrecipitationC^2) + (1|Population), 
                data = biomass)
 R2_BMe <- partR2(modBMC, partvars = c("Temperature"), partbatch=list(c("PrecipitationC", "I(PrecipitationC^2)")), 
-                  data = biomass, nboot = 10)
+                 nboot = 10)
 R2_BMe
 ```
 
@@ -200,7 +200,7 @@ parallel::detectCores()
 # specify plan
 plan(multisession, workers = 3)
 R2_BMf <- partR2(modBM, partvars = c("Temperature", "Precipitation"), 
-                        nboot = 10, parallel = TRUE, data = biomass)
+                        parallel = TRUE, data = biomass)
 ```
 
 ## Part $R^2$ for Poisson and binomial mixed models
@@ -224,7 +224,7 @@ modExt <- glmer(Extinction ~ YearC +  TemperatureS + PrecipitationS +
                 SpeciesDiversityC + (1|Population),
                 data=biomass, family="poisson")
 R2_Ext <- partR2(modExt, partvars = c("TemperatureS", "PrecipitationS"),
-                 data=biomass, R2_type = "marginal", nboot=10)
+                 R2_type = "marginal", nboot=10)
 print(R2_Ext, round_to = 3) # rounding decimals in print and summary
 ```
 
@@ -235,7 +235,7 @@ modRecov <- glmer(cbind(Recovered, NotRecovered) ~ YearC +
               TemperatureS + PrecipitationS + SpeciesDiversityC + (1|Population),
               data=biomass, family="binomial")
 R2_Recov <- partR2(modRecov, partvars = c("TemperatureS", "PrecipitationS"),
-                   R2_type = "marginal", data=biomass, nboot=10)
+                   R2_type = "marginal", nboot=10)
 summary(R2_Recov, round_to=3)
 ```
 
@@ -266,7 +266,7 @@ will treat interactions and main effects equally.
 ```{r, warning=FALSE}
 modGP <- lmer(TestoTrans ~ Rank * Time + (1|MaleID), data=GuineaPigs)
 R2_modGPa <- partR2(modGP, partvars = c("Rank", "Time", "Rank:Time"), 
-                    data=GuineaPigs, nboot=10)
+                    nboot=10)
 R2_modGPa
 ```
 
@@ -320,7 +320,7 @@ Another special case are interactions involving factorial predictors. For illust
 GuineaPigs$TimeF <- factor(GuineaPigs$Time)
 modGPF <- lmer(TestoTrans ~ Rank * TimeF + (1|MaleID), data=GuineaPigs)
 R2_modGPFa <- partR2(modGPF, partvars = c("Rank", "TimeF", "Rank:TimeF"), 
-                     data=GuineaPigs, nboot=10)
+                     nboot=10)
 R2_modGPFa
 ```
 
@@ -344,7 +344,7 @@ modGPFD <- lmer(TestoTrans ~ (TimeF2 + TimeF3 + TimeF4 + TimeF5) * Rank +
                 (1|MaleID), data=GuineaPigs)
 R2_GPFD <- partR2(modGPFD, partvars=c("Rank"), 
                   partbatch=list(TimeF=batch, `TimeF:Rank`=paste0(batch, ":Rank")), 
-                  data=GuineaPigs, nboot=10)
+                  nboot=10)
 R2_GPFD
 ```
 
@@ -363,7 +363,7 @@ modGPS <- lmer(TestoTrans ~ RankS * TimeS + (1|MaleID), data = GuineaPigs)
 We then run the `partR2` analysis. In the case of (pre-)standardised variables, it is useful to look at the model estimates instead of beta weights (since the latter are posthoc standardized). The `summary()` function takes an additional argument `ests = TRUE` display them. The estimates from pre-standardized variable are preferable over post-standardized BW for interactions and polynomials. However, the difference is small in this case.
 
 ```{r}
-R2_GPS <- partR2(modGPS, data = GuineaPigs, nboot = 10)
+R2_GPS <- partR2(modGPS, nboot = 10)
 summary(R2_GPS, ests = TRUE)
 ```
 

@@ -27,8 +27,8 @@ Can be main effects like c("Var1", "Var2") and interactions ("Var1:Var2"). Predi
 specified in partvars have to be named precisely like the terms in the formula to
 fit the model.}
 
-\item{data}{data.frame used to fit the lme4 model. Has to be provided because
-the model is refitted to calculate semi-partial R2s.}
+\item{data}{The data.frame used to fit the lme4 model. If not provided,
+partR2 will try to fetch it.}
 
 \item{R2_type}{"marginal" or "conditional" R2. With "marginal", the variance explained
 by fixed effects is calculated. With "conditional", the variance explained by
@@ -136,11 +136,10 @@ mod <- lmer(Biomass ~ Year + Temperature + Precipitation + SpeciesDiversity + (1
 )
 
 # Only R2 with CI
-(R2 <- partR2(mod, data = biomass, R2_type = "marginal", nboot = 15, CI = 0.95))
+(R2 <- partR2(mod, R2_type = "marginal", nboot = 15, CI = 0.95))
 
 # Partitioned R2
 (R2 <- partR2(mod,
-  data = biomass,
   partvars = c("SpeciesDiversity", "Temperature", "Precipitation"),
   R2_type = "marginal", nboot = 10, CI = 0.95
 ))

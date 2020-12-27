@@ -9,8 +9,8 @@
 #'        Can be main effects like c("Var1", "Var2") and interactions ("Var1:Var2"). Predictors
 #'        specified in partvars have to be named precisely like the terms in the formula to
 #'        fit the model.
-#' @param data data.frame used to fit the lme4 model. Has to be provided because
-#'        the model is refitted to calculate semi-partial R2s.
+#' @param data The data.frame used to fit the lme4 model. If not provided,
+#'        partR2 will try to fetch it.
 #' @param R2_type "marginal" or "conditional" R2. With "marginal", the variance explained
 #'        by fixed effects is calculated. With "conditional", the variance explained by
 #'        both fixed and random effects is calculated.
@@ -114,11 +114,10 @@
 #' )
 #'
 #' # Only R2 with CI
-#' (R2 <- partR2(mod, data = biomass, R2_type = "marginal", nboot = 15, CI = 0.95))
+#' (R2 <- partR2(mod, R2_type = "marginal", nboot = 15, CI = 0.95))
 #'
 #' # Partitioned R2
 #' (R2 <- partR2(mod,
-#'   data = biomass,
 #'   partvars = c("SpeciesDiversity", "Temperature", "Precipitation"),
 #'   R2_type = "marginal", nboot = 10, CI = 0.95
 #' ))
