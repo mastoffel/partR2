@@ -135,11 +135,14 @@ mod <- lmer(Biomass ~ Year + Temperature + Precipitation + SpeciesDiversity + (1
   data = biomass
 )
 
-# Only R2 with CI
-(R2 <- partR2(mod, R2_type = "marginal", nboot = 15, CI = 0.95))
+# R2
+(R2_1 <- partR2(mod))
 
-# Partitioned R2
-(R2 <- partR2(mod,
+# R2 with CI
+(R2_2 <- partR2(mod, R2_type = "marginal", nboot = 15, CI = 0.95))
+
+# Part (semi-partial) R2s with CIs
+(R2_3 <- partR2(mod,
   partvars = c("SpeciesDiversity", "Temperature", "Precipitation"),
   R2_type = "marginal", nboot = 10, CI = 0.95
 ))
