@@ -144,7 +144,9 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   # check if data is there
   if (is.null(data)) {
     dat_name <- deparse(mod@call$data)
-    stop(paste0("data ", dat_name, " cannot be found. Please provide data argument"))
+    data <- tryCatch(eval(mod@call$data), error=function(x) return(NA))
+    if (is.na(data)) stop(paste0("data ", dat_name,
+                          " cannot be found. Please provide it with the data argument"))
   }
 
   # make combinations of predictors from partvars and partbatch
