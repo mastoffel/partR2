@@ -70,7 +70,7 @@ part_R2s <- function(mod, expct, overdisp_name, R2_type, all_comb, partition,
         part_terms <- "Full"
     }
 
-    R2s_red <- tidyr::tibble(term = part_terms, estimate = R2s_red$R2)
+    R2s_red <- tibble::tibble(term = part_terms, estimate = R2s_red$R2)
 }
 
 # reduced model R2 (mod without partvar)
