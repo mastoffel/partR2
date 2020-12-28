@@ -50,7 +50,7 @@ part_R2s <- function(mod, expct, overdisp_name, R2_type, all_comb, partition,
     if (!partition) return( tidyr::tibble(term = "Full", estimate = R2_full$R2))
     # calculate R2s of reduced models and difference with full model
     R2s_red_tmp <- purrr::map_df(all_comb, R2_of_red_mod, mod = mod,
-                                 R2_pe = R2_pe, dat = data_mod, expct = expct,
+                                 dat = data_mod, expct = expct,
                                  overdisp_name = overdisp_name, R2_type = R2_type) %>%
         dplyr::mutate(R2 = R2_full$R2 - .data$R2)
 
@@ -80,7 +80,6 @@ part_R2s <- function(mod, expct, overdisp_name, R2_type, all_comb, partition,
 #' @param partvar One or more fixed effect variables which are taken out
 #' of the model.
 #' @param mod merMod object.
-#' @param R2_pe R2 function.
 #' @param data Data.frame to fit the model
 #' @param expct Expectation
 #' @param overdisp_name Name of overdispersion term
@@ -88,7 +87,7 @@ part_R2s <- function(mod, expct, overdisp_name, R2_type, all_comb, partition,
 #' @keywords internal
 #' @return R2 of reduced model.
 #'
-R2_of_red_mod <- function(partvar, mod, R2_pe, dat, expct, overdisp_name, R2_type) {
+R2_of_red_mod <- function(partvar, mod, dat, expct, overdisp_name, R2_type) {
 
     # which variables to reduce?
     to_del <- paste(paste("-", partvar, sep= ""), collapse = " ")
