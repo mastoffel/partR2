@@ -146,7 +146,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   # check if data is there and if not try to get it
   if (is.null(data)) {
     dat_name <- deparse(mod@call$data)
-    data <- tryCatch(eval(mod@call$data), error=function(x) return(NULL))
+    data <- tryCatch(eval(mod@call$data), error=function(e) return(NULL))
     if (is.null(data)) stop(paste0("data ", dat_name,
                           " cannot be found. Please provide it with the data argument"))
   }

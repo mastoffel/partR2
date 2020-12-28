@@ -65,8 +65,7 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
             data = biomass)
 # R2s and partial R2s
 (R2 <- partR2(mod,  partvars = c("SpeciesDiversity", "Temperature", "Year"),
-                                 R2_type = "marginal", nboot = 100, CI = 0.95,
-                                 data = biomass))
+              R2_type = "marginal", nboot = 100, CI = 0.95))
 ```
 
 And to plot the results:

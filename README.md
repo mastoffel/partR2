@@ -59,15 +59,14 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
             data = biomass)
 # R2s and partial R2s
 (R2 <- partR2(mod,  partvars = c("SpeciesDiversity", "Temperature", "Year"),
-                                 R2_type = "marginal", nboot = 100, CI = 0.95,
-                                 data = biomass))
+                                 R2_type = "marginal", nboot = 100, CI = 0.95))
 #> 
 #> 
 #> R2 (marginal) and 95% CI for the full model: 
 #> # A tibble: 1 x 5
 #>      R2 CI_lower CI_upper nboot   ndf
 #>   <dbl>    <dbl>    <dbl> <int> <dbl>
-#> 1 0.513    0.423    0.608   100     4
+#> 1 0.513    0.414    0.614   100     4
 #> 
 #> ----------
 #> 
@@ -75,14 +74,14 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> # A tibble: 8 x 6
 #>   `Predictor(s)`                       R2 CI_lower CI_upper nboot   ndf
 #>   <chr>                             <dbl>    <dbl>    <dbl> <int> <dbl>
-#> 1 Model                             0.513   0.423     0.608   100     4
-#> 2 SpeciesDiversity                  0.165   0.0748    0.260   100     3
-#> 3 Temperature                       0.304   0.213     0.399   100     3
-#> 4 Year                              0.013   0         0.108   100     3
-#> 5 SpeciesDiversity+Temperature      0.491   0.401     0.586   100     2
-#> 6 SpeciesDiversity+Year             0.178   0.0879    0.273   100     2
-#> 7 Temperature+Year                  0.325   0.234     0.420   100     2
-#> 8 SpeciesDiversity+Temperature+Year 0.513   0.423     0.608   100     1
+#> 1 Model                             0.513   0.414     0.614   100     4
+#> 2 SpeciesDiversity                  0.165   0.0661    0.266   100     3
+#> 3 Temperature                       0.304   0.204     0.404   100     3
+#> 4 Year                              0.013   0         0.114   100     3
+#> 5 SpeciesDiversity+Temperature      0.491   0.392     0.592   100     2
+#> 6 SpeciesDiversity+Year             0.178   0.0791    0.279   100     2
+#> 7 Temperature+Year                  0.325   0.226     0.426   100     2
+#> 8 SpeciesDiversity+Temperature+Year 0.513   0.414     0.614   100     1
 ```
 
 And to plot the results:
