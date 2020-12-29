@@ -2,11 +2,11 @@ Package: partR2
 Title: Partitioning R2 in GLMMs
 Version: 0.9.0
 Depends: R (>= 3.5.0)
-Author: Martin Stoffel <martin.adam.stoffel@gmail.com>,
+Author: Martin Stoffel <mstoffel@posteo.de>,
           Shinichi Nakagawa <s.nakagawa@unsw.edu.au>,
           Holger Schielzeth <holger.schielzeth@uni-jena.de>
-Maintainer: Martin Stoffel <martin.adam.stoffel@gmail.com>
-Description: Partitioning the R2 of GLMMs into variation unique to each predictor and shared among predictors.
+Maintainer: Martin Stoffel <mstoffel@posteo.de>
+Description: Partitioning the R2 of GLMMs into explained variation unique to each predictor and shared among predictors.
 License: GPL (>= 2)
 Imports: 
     methods,

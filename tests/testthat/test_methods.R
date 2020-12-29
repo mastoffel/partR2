@@ -16,7 +16,6 @@ mod <- lme4::lmer(Biomass ~ Year + Temperature + Precipitation + SpeciesDiversit
   R2_type = "marginal", nboot = 10, CI = 0.95
 ))
 
-summary(R2)
 
 test_that("print does not throw an error", {
 
