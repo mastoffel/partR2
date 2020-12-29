@@ -38,9 +38,7 @@ summary.partR2 <- function(object, round_to = 4, ests = FALSE, ...) {
     names(x$IR2) <- c("Predictor", "IR2", "CI_lower", "CI_upper")
     x$BW <- x$BW %>%
         dplyr::select(.data$term, .data$estimate, .data$CI_lower, .data$CI_upper) %>%
-        dplyr::rename(Predictor = .data$term, BW = .data$estimate) %>%
-        dplyr::filter(!(.data$Predictor == "(Intercept)"))
-    # names(x$CC_df) <- c("Predictor(s)", "R2", "CI_lower", "CI_upper")
+        dplyr::rename(Predictor = .data$term, BW = .data$estimate)
     # check how many bootstraps
     num_boot <- ifelse(length(x$boot_warnings) == 0, NA, length(x$boot_warnings))
     cat("\n\n")
@@ -109,7 +107,7 @@ summary.partR2 <- function(object, round_to = 4, ests = FALSE, ...) {
     cat("----------")
     cat("\n\n")
 
-    if (!(is.null(x$boot_warnings) & (is.null(x$boot_messages)))) {
+    if (!(is.null(unlist(x$boot_warnings)) & (is.null(unlist(x$boot_messages))))) {
         cat("Parametric bootstrapping resulted in warnings or messages:")
         cat("\n")
         cat("Check r2obj$boot_warnings and r2obj$boot_messages.")
