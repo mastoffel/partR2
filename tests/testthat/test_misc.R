@@ -16,18 +16,4 @@ test_that("CI calc is correct", {
 })
 
 
-# parameteric bootstrapping
-all_comb <- list("Temperature", "Precipitation", c("Temperature", "Precipitation"))
-boot_out <- bootstrap_all(nboot = 3, mod = fit1, R2_type = "marginal",
-                                   all_comb = all_comb,
-                                   partition = TRUE,
-                                   data_mod = biomass, allow_neg_r2 = FALSE,
-                                   parallel = FALSE,
-                                   expct = "meanobs", overdisp_name = NULL)
 
-
-test_that("parametric bootstrapping works", {
-
-    expect_equal(length(boot_out), 3)
-
-})

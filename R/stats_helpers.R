@@ -156,11 +156,14 @@ bootstrap_all <- function(nboot, mod, R2_type, all_comb, partition,
   # simulating new responses for param. bootstraps
   if (nboot > 0) Ysim <- as.data.frame(stats::simulate(mod, nsim = nboot))
   # main bootstrap function
-  bootstr <- function(y, mod, expct, overdisp_name) {
+  bootstr <- function(y, mod, expct, overdisp_name, R2_type, all_comb,
+                      partition, data_mod, allow_neg_r2) {
+
       mod_iter <- lme4::refit(mod, newresp = y)
       out_r2s <- part_R2s(
-          mod_iter, expct, overdisp_name, R2_type,
-          all_comb, partition, data_mod, allow_neg_r2
+          mod = mod_iter, expct = expct, overdisp_name = overdisp_name,
+          R2_type = R2_type, all_comb= all_comb,  partition =  partition,
+          data_mod = data_mod, allow_neg_r2 = allow_neg_r2
       )
       out_scs <- SC_pe(mod_iter)
       out_ests <- fixef_simple(mod_iter, intcp = FALSE)
@@ -176,7 +179,10 @@ bootstrap_all <- function(nboot, mod, R2_type, all_comb, partition,
   # refit model with new responses
   if (!parallel) {
       boot_r2s_scs_ests <- pbapply::pblapply(Ysim, bootstr_quiet,
-                                             mod, expct, overdisp_name)
+                                             mod, expct, overdisp_name,
+                                             R2_type, all_comb,
+                                             partition, data_mod,
+                                             allow_neg_r2)
   }
 
   if (parallel) {
@@ -188,8 +194,11 @@ bootstrap_all <- function(nboot, mod, R2_type, all_comb, partition,
       # if (is.null(ncores)) ncores <- parallel::detectCores()-1
       # let the user plan
       # future::plan(future::multiprocess, workers = ncores)
-      boot_r2s_scs_ests <- furrr::future_map(Ysim, bootstr_quiet, mod,
-                                             expct, overdisp_name,
+      boot_r2s_scs_ests <- furrr::future_map(Ysim, bootstr_quiet,
+                                             mod, expct, overdisp_name,
+                                             R2_type, all_comb,
+                                             partition, data_mod,
+                                             allow_neg_r2,
                                              .options = furrr::furrr_options(packages = "lme4"),
                                              .progress = TRUE
       )

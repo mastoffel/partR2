@@ -18,8 +18,6 @@ of the model.}
 
 \item{R2_type}{"marginal" or "conditional"}
 
-\item{R2_pe}{R2 function.}
-
 \item{data}{Data.frame to fit the model}
 }
 \value{
