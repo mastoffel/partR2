@@ -1,6 +1,6 @@
 #' Partition the R2 for mixed models
 #'
-#' R2, semi-partial R2 for predictors and their combinations, inclusive R2,
+#' R2, semi-partial (part) R2 for predictors and their combinations as well as inclusive R2,
 #' structure coefficients and beta weights for Gaussian, Poisson and binomial
 #' mixed models.
 #'
@@ -15,14 +15,14 @@
 #'        by fixed effects is calculated. With "conditional", the variance explained by
 #'        both fixed and random effects is calculated.
 #' @param max_level Level up to which shared semi-partial R2s are calculated.
-#'        The number of sets for which to calculate R2 increases exponantially,
+#'        The number of sets for which to calculate R2 increases exponentially,
 #'        i.e. for 10 variables 2^10 - 1 R2s  can be calculated. If you are
 #'        only interested in the unique but not the shared effects, use max_level = 1.
 #'        If interested in unique effects and combinations of two terms,
 #'        use max_level = 2 etc.
-#' @param nboot Number of parametric bootstraps for interval estimation
-#'        (defaults to NULL). Larger numbers of bootstraps give a better
-#'        asymtotic CI, but may be time-consuming. Bootstrapping can be switch on by setting
+#' @param nboot Number of parametric bootstrap iterations for confidence interval estimation
+#'        (defaults to NULL, i.e. no bootstrapping). Larger numbers of bootstraps give a better
+#'        asymptotic CI, but may be time-consuming. Bootstrapping can be switched on by setting
 #'        \code{nboot = 1000}.
 #' @param CI Width of the required confidence interval between 0 and 1 (defaults to
 #'        0.95).
@@ -43,7 +43,7 @@
 #'        appropriate results typically only when all covariances are centered to zero. With 'liability'
 #'        estimates follow formulae as presented in Nakagawa & Schielzeth (2010).
 #' @param olre Logical, defaults to TRUE. This argument allows the user to prevent the automatic fitting of
-#'        an obervation level random effect (by setting it to FALSE) in Poisson and binomial models.
+#'        an observation level random effect (by setting it to FALSE) in Poisson and binomial models.
 #'        The OLRE is used to account for overdispersion.
 #' @param partbatch List of character vectors with predictors that should be fitted and
 #'        removed together. For example, partbatch = list(batch1 = c("V1", "V2", "V3"),
@@ -70,8 +70,7 @@
 #' \item{SC}{Structure coefficients and confidence intervals. SC are the
 #' correlation between a predictor and the predicted response.}
 #' \item{IR2}{Inklusive R2. This is SC^2 * R2_full.}
-#' \item{BW}{Standardised model estimates (beta weights) for fixed effects and
-#' variances for random effects and confidence intervals. Beta weights for Gaussian models
+#' \item{BW}{Standardised model estimates (beta weights) for fixed effects. Beta weights for Gaussian models
 #' are calculated as beta * sd(x)/sd(y), with beta being the estimated
 #' slope of a fixed effect for predictor x and response y. Beta weight for Non-Gaussian
 #' models are calculated as beta * sd(x). Beta weights for interactions or polynomial
@@ -84,7 +83,7 @@
 #' \item{IR2_boot}{Parametric bootstrap samples for inclusive R2 values}
 #' \item{BW_boot}{Parametric bootstrap samples for beta weights}
 #' \item{Ests_boot}{Parametric bootstrap samples for model estimates}
-#' \item{partvars}{predictors to partition}
+#' \item{partvars}{Predictors to partition}
 #' \item{CI}{Coverage of the confidence interval as specified by the \code{CI} argument.}
 #' \item{boot_warnings}{Potential warnings from estimating partial R2s during
 #' parametric bootstrapping}
@@ -95,7 +94,7 @@
 #' @references
 #'
 #' Nakagawa, S., & Schielzeth, H. (2013). \emph{A general and simple method for obtaining R2 from
-#' generalized linear mixed‐effects models}. Methods in Ecology and Evolution, 4(2), 133-142.
+#' generalized linear mixed-effects models}. Methods in Ecology and Evolution, 4(2), 133-142.
 #'
 #' Newton, R. G., & Spurrell, D. J. (1967).  \emph{A development of multiple regression for the
 #' analysis of routine data. Applied Statistics}. 51-64.
@@ -110,8 +109,7 @@
 #'
 #' # Gaussian data
 #' mod <- lmer(Biomass ~ Year + Temperature + Precipitation + SpeciesDiversity + (1 | Population),
-#'   data = biomass
-#' )
+#'   data = biomass)
 #'
 #' # R2
 #' (R2_1 <- partR2(mod))

@@ -237,7 +237,7 @@ var_comps_poisson <- function(mod, expct, overdisp_name) {
     # intercept on link scale
     beta0 <- unname(lme4::fixef(mod)[1])
 
-    # random effects
+    # random effect variances
     var_ran <- get_ran_var(mod, overdisp_name)
 
     # fixed effect variance

@@ -18,9 +18,9 @@ bootstrap_all(
 )
 }
 \arguments{
-\item{nboot}{Number of parametric bootstraps for interval estimation
-(defaults to NULL). Larger numbers of bootstraps give a better
-asymtotic CI, but may be time-consuming. Bootstrapping can be switch on by setting
+\item{nboot}{Number of parametric bootstrap iterations for confidence interval estimation
+(defaults to NULL, i.e. no bootstrapping). Larger numbers of bootstraps give a better
+asymptotic CI, but may be time-consuming. Bootstrapping can be switched on by setting
 \code{nboot = 1000}.}
 
 \item{mod}{merMod object, lme4 fit}

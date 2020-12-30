@@ -22,7 +22,7 @@ See our vignette for details. This feature is still experimental and
 should be used with caution.}
 
 \item{max_level}{Level up to which shared semi-partial R2s are calculated.
-The number of sets for which to calculate R2 increases exponantially,
+The number of sets for which to calculate R2 increases exponentially,
 i.e. for 10 variables 2^10 - 1 R2s  can be calculated. If you are
 only interested in the unique but not the shared effects, use max_level = 1.
 If interested in unique effects and combinations of two terms,

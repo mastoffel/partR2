@@ -80,6 +80,5 @@ The package is still in development, but will hopefully be uploaded to CRAN soon
 
 When using it, please cite our [preprint](https://www.biorxiv.org/content/10.1101/2020.07.26.221168v1.abstract) for now:
 
-Stoffel, MA, Nakagawa, S, & Schielzeth, H (2020). partR2: Partitioning R2 in generalized linear mixed models. bioRxiv. doi:10.1101/2020.07.26.221168
-
+Stoffel, MA, Nakagawa, S, & Schielzeth, H (2020). partR2: Partitioning R2 in generalized linear mixed models. bioRxiv. 
 `r badge_doi("10.1101/2020.07.26.221168", "green")`

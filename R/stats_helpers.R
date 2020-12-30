@@ -9,8 +9,8 @@
 fixef_simple <- function(mod, intcp = FALSE) {
   if (!inherits(mod, "merMod")) stop("only merMod supported atm")
   out <- dplyr::as_tibble(lme4::fixef(mod), rownames = "term") %>%
-          dplyr::rename(estimate = .data$value)
-  if (!intcp)  out <- out[!(out$term == "(Intercept)"), ]
+    dplyr::rename(estimate = .data$value)
+  if (!intcp) out <- out[!(out$term == "(Intercept)"), ]
   out
 }
 
@@ -23,32 +23,32 @@ fixef_simple <- function(mod, intcp = FALSE) {
 #' @keywords internal
 #'
 model_overdisp <- function(mod, dat, olre) {
-    # family
-    mod_fam <- stats::family(mod)[[1]]
-    resp <- lme4::getME(mod, "y")
-    overdisp_name <- "overdisp"
+  # family
+  mod_fam <- stats::family(mod)[[1]]
+  resp <- lme4::getME(mod, "y")
+  overdisp_name <- "overdisp"
 
-    # fit olre if not FALSE and family is either poisson or binomial but not binary
-    if (olre & (mod_fam == "poisson" | ((mod_fam == "binomial") & (length(table(resp)) > 2)))) {
-        # check if OLRE already there
-        overdisp_term <- lme4::getME(mod, "l_i") == nrow(dat)
-        # if so, get variable name
-        if (sum(overdisp_term) == 1) {
-            overdisp_name <- names(overdisp_term)[overdisp_term]
-            # rename OLRE to overdisp if not done so already
-            if (!(overdisp_name == "overdisp")) {
-                # names(dat[overdisp]) <- "overdisp"
-                message(paste0("'", overdisp_name, "' has been recognized as observational
+  # fit olre if not FALSE and family is either poisson or binomial but not binary
+  if (olre & (mod_fam == "poisson" | ((mod_fam == "binomial") & (length(table(resp)) > 2)))) {
+    # check if OLRE already there
+    overdisp_term <- lme4::getME(mod, "l_i") == nrow(dat)
+    # if so, get variable name
+    if (sum(overdisp_term) == 1) {
+      overdisp_name <- names(overdisp_term)[overdisp_term]
+      # rename OLRE to overdisp if not done so already
+      if (!(overdisp_name == "overdisp")) {
+        # names(dat[overdisp]) <- "overdisp"
+        message(paste0("'", overdisp_name, "' has been recognized as observational
 level random effect and is used to quantify overdispersion"))
-            }
-        } else if ((sum(overdisp_term) == 0)) {
-            dat[[overdisp_name]] <- as.factor(1:nrow(dat))
-            mod <- stats::update(mod, . ~ . + (1 | overdisp), data = dat)
-            message("An observational level random-effect has been fitted
+      }
+    } else if ((sum(overdisp_term) == 0)) {
+      dat[[overdisp_name]] <- as.factor(1:nrow(dat))
+      mod <- stats::update(mod, . ~ . + (1 | overdisp), data = dat)
+      message("An observational level random-effect has been fitted
 to account for overdispersion.")
-        }
     }
-    out <- list(mod = mod, dat = dat, overdisp_name = overdisp_name)
+  }
+  out <- list(mod = mod, dat = dat, overdisp_name = overdisp_name)
 }
 
 #' Calculates CI from bootstrap replicates
@@ -61,11 +61,11 @@ to account for overdispersion.")
 #
 # CI function
 calc_CI <- function(x, CI) {
-    out <- stats::quantile(x, c((1 - CI)/2, 1 - (1 - CI)/2), na.rm = TRUE)
-    out <- as.data.frame(t(out))
-    names(out) <- c("CI_lower", "CI_upper")
-    rownames(out) <- NULL
-    out
+  out <- stats::quantile(x, c((1 - CI) / 2, 1 - (1 - CI) / 2), na.rm = TRUE)
+  out <- as.data.frame(t(out))
+  names(out) <- c("CI_lower", "CI_upper")
+  rownames(out) <- NULL
+  out
 }
 
 #' Get numerator dfs for reduced models
@@ -78,17 +78,16 @@ calc_CI <- function(x, CI) {
 #' @return Numerator degrees of freedom
 #'
 get_ndf <- function(partvar, mod, dat) {
-
-    if (("Full" %in% partvar)&(length(partvar) == 1)) return(ncol(stats::model.matrix(mod)))
-
-    # which variables to reduce?
-    to_del <- paste(paste("-", partvar, sep= ""), collapse = " ")
-    # reduced formula
-    formula_red <- stats::update(stats::formula(mod), paste(". ~ . ", to_del, sep=""))
-    # fit reduced model
-    mod_red <-  stats::update(mod, formula. = formula_red, data = dat)
-    ncol(stats::model.matrix(mod_red))
-
+  if (("Full" %in% partvar) & (length(partvar) == 1)) {
+    return(ncol(stats::model.matrix(mod)))
+  }
+  # which variables to reduce?
+  to_del <- paste(paste("-", partvar, sep = ""), collapse = " ")
+  # reduced formula
+  formula_red <- stats::update(stats::formula(mod), paste(". ~ . ", to_del, sep = ""))
+  # fit reduced model
+  mod_red <- stats::update(mod, formula. = formula_red, data = dat)
+  ncol(stats::model.matrix(mod_red))
 }
 
 #' Structure coefficients
@@ -99,11 +98,11 @@ get_ndf <- function(partvar, mod, dat) {
 #'
 #'
 SC_pe <- function(mod) {
-    Yhat <- stats::predict(mod, re.form=NA)
-    mod_mat <- stats::model.matrix(mod)
-    mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop=FALSE]
-    scs <- stats::cor(Yhat, mod_mat)
-    out <- tidyr::tibble(term = colnames(scs), estimate = as.numeric(scs))
+  Yhat <- stats::predict(mod, re.form = NA)
+  mod_mat <- stats::model.matrix(mod)
+  mod_mat <- mod_mat[, colnames(mod_mat) != "(Intercept)", drop = FALSE]
+  scs <- stats::cor(Yhat, mod_mat)
+  out <- tidyr::tibble(term = colnames(scs), estimate = as.numeric(scs))
 }
 
 #' Get beta weights
@@ -114,26 +113,25 @@ SC_pe <- function(mod) {
 #'
 #'
 
-get_bw <- function(mod){
-
-    mod_mat <- stats::model.matrix(mod) %>%
-        as.data.frame() %>%
-        dplyr::select(-"(Intercept)")
-    bin_preds <- purrr::map_lgl(mod_mat, function(x) length(table(x))<=2)
-    resp <- lme4::getME(mod, "y")
-    sds <- purrr::map_dbl(mod_mat, stats::sd, na.rm = TRUE)
-    # only for gaussian dividing by sd of response
-    if (stats::family(mod)$family == "gaussian") sds <- sds/stats::sd(resp, na.rm = TRUE)
-    # only standardise for non-factors
-    sds[bin_preds] <- 1
-    # simple posthoc standardisation. Doesn't work for interactions and should
-    # be turned of when standardised before
-    ests <- fixef_simple(mod, intcp = FALSE)
-    ests[ests$term %in% names(sds), "estimate"] <-
-        purrr::map_dbl(names(sds), function(x) {
-            unlist(ests[ests$term %in% x, "estimate"] * sds[x])
-        })
-    ests
+get_bw <- function(mod) {
+  mod_mat <- stats::model.matrix(mod) %>%
+    as.data.frame() %>%
+    dplyr::select(-"(Intercept)")
+  bin_preds <- purrr::map_lgl(mod_mat, function(x) length(table(x)) <= 2)
+  resp <- lme4::getME(mod, "y")
+  sds <- purrr::map_dbl(mod_mat, stats::sd, na.rm = TRUE)
+  # only for gaussian dividing by sd of response
+  if (stats::family(mod)$family == "gaussian") sds <- sds / stats::sd(resp, na.rm = TRUE)
+  # only standardise for non-factors
+  sds[bin_preds] <- 1
+  # simple posthoc standardisation. Doesn't work for interactions and should
+  # be turned of when standardised before
+  ests <- fixef_simple(mod, intcp = FALSE)
+  ests[ests$term %in% names(sds), "estimate"] <-
+    purrr::map_dbl(names(sds), function(x) {
+      unlist(ests[ests$term %in% x, "estimate"] * sds[x])
+    })
+  ests
 }
 
 
@@ -158,52 +156,52 @@ bootstrap_all <- function(nboot, mod, R2_type, all_comb, partition,
   # main bootstrap function
   bootstr <- function(y, mod, expct, overdisp_name, R2_type, all_comb,
                       partition, data_mod, allow_neg_r2) {
-
-      mod_iter <- lme4::refit(mod, newresp = y)
-      out_r2s <- part_R2s(
-          mod = mod_iter, expct = expct, overdisp_name = overdisp_name,
-          R2_type = R2_type, all_comb= all_comb,  partition =  partition,
-          data_mod = data_mod, allow_neg_r2 = allow_neg_r2
-      )
-      out_scs <- SC_pe(mod_iter)
-      out_ests <- fixef_simple(mod_iter, intcp = FALSE)
-      out_bw <- get_bw(mod_iter)
-      out <- tidyr::tibble(
-          r2s = list(out_r2s), ests = list(out_ests), scs = list(out_scs),
-          bws = list(out_bw)
-      )
+    mod_iter <- lme4::refit(mod, newresp = y)
+    out_r2s <- part_R2s(
+      mod = mod_iter, expct = expct, overdisp_name = overdisp_name,
+      R2_type = R2_type, all_comb = all_comb, partition = partition,
+      data_mod = data_mod, allow_neg_r2 = allow_neg_r2
+    )
+    out_scs <- SC_pe(mod_iter)
+    out_ests <- fixef_simple(mod_iter, intcp = FALSE)
+    out_bw <- get_bw(mod_iter)
+    out <- tidyr::tibble(
+      r2s = list(out_r2s), ests = list(out_ests), scs = list(out_scs),
+      bws = list(out_bw)
+    )
   }
   # capture warnings and messages
   bootstr_quiet <- purrr::quietly(bootstr)
 
   # refit model with new responses
   if (!parallel) {
-      boot_r2s_scs_ests <- pbapply::pblapply(Ysim, bootstr_quiet,
-                                             mod, expct, overdisp_name,
-                                             R2_type, all_comb,
-                                             partition, data_mod,
-                                             allow_neg_r2)
+    boot_r2s_scs_ests <- pbapply::pblapply(
+      Ysim, bootstr_quiet,
+      mod, expct, overdisp_name,
+      R2_type, all_comb,
+      partition, data_mod,
+      allow_neg_r2
+    )
   }
 
   if (parallel) {
-      if (!requireNamespace("furrr", quietly = TRUE)) {
-          stop("Package \"furrr\" needed for parallelisation. Please install it.",
-               call. = FALSE
-          )
-      }
-      # if (is.null(ncores)) ncores <- parallel::detectCores()-1
-      # let the user plan
-      # future::plan(future::multiprocess, workers = ncores)
-      boot_r2s_scs_ests <- furrr::future_map(Ysim, bootstr_quiet,
-                                             mod, expct, overdisp_name,
-                                             R2_type, all_comb,
-                                             partition, data_mod,
-                                             allow_neg_r2,
-                                             .options = furrr::furrr_options(packages = "lme4"),
-                                             .progress = TRUE
+    if (!requireNamespace("furrr", quietly = TRUE)) {
+      stop("Package \"furrr\" needed for parallelisation. Please install it.",
+        call. = FALSE
       )
+    }
+    # if (is.null(ncores)) ncores <- parallel::detectCores()-1
+    # let the user plan
+    # future::plan(future::multiprocess, workers = ncores)
+    boot_r2s_scs_ests <- furrr::future_map(Ysim, bootstr_quiet,
+      mod, expct, overdisp_name,
+      R2_type, all_comb,
+      partition, data_mod,
+      allow_neg_r2,
+      .options = furrr::furrr_options(packages = "lme4"),
+      .progress = TRUE
+    )
   }
 
   boot_r2s_scs_ests
-
 }

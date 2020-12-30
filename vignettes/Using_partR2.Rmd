@@ -3,9 +3,9 @@ title: "Using partR2"
 author: "Martin A. Stoffel, Shinichi Nakagawa, Holger Schielzeth"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Using_partR2}
+  %\VignetteIndexEntry{Using partR2}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r, include = FALSE}
@@ -370,7 +370,7 @@ summary(R2_GPS, ests = TRUE)
 
 ## Literature
 
-Bates, D. M., Maechler, M., Bolker, B. M. & Walker, S. (2015). Fitting linear mixed‐effects models using lme4. Journal of Statistical Software 67: 1–48.
+Bates, D. M., Maechler, M., Bolker, B. M. & Walker, S. (2015). Fitting linear mixed-effects models using lme4. Journal of Statistical Software 67: 1-48.
 
 Bengtsson, H. (2019). future: Unified Parallel and Distributed Processing in R for Everyone. R
 package version 1.14.0. https://CRAN.R-project.org/package=future
@@ -383,13 +383,13 @@ Makowski, B.-S. & Lüdecke, D. (2019). Compute and interpret indices of effect s
 
 Mutwill, A.M., Schielzeth, H., Zimmermann, T.D., Richter, H., Kaiser, S. & Sachser, N. (in prep.). Endocrine mechanisms underlying dominance rank acquisition in males: individuality meets plasticity in a complex social environment.
 
-Nakagawa, S., & Schielzeth, H. (2010). Repeatability for Gaussian and non‐Gaussian data: a practical guide for biologists. Biological Reviews 85: 935-956.
+Nakagawa, S., & Schielzeth, H. (2010). Repeatability for Gaussian and non-Gaussian data: a practical guide for biologists. Biological Reviews 85: 935-956.
 
-Nakagawa, S. & Schielzeth, H. (2013). A general and simple method for obtaining R2 from generalized linear mixed‐effects models. Methods in Ecology and Evolution 4: 133-142.
+Nakagawa, S. & Schielzeth, H. (2013). A general and simple method for obtaining R2 from generalized linear mixed-effects models. Methods in Ecology and Evolution 4: 133-142.
 
 Schielzeth, H. (2010). Simple means to improve the interpretability of regression coefficients. Methods in Ecology and Evolution 1: 103-113.
 
-Stoffel, M. A., Nakagawa, S. & Schielzeth, H. (2017). rptR: Repeatability estimation and variance decomposition by generalized linear mixed‐effects models. Methods in Ecology and Evolution 8: 1639-1644.
+Stoffel, M. A., Nakagawa, S. & Schielzeth, H. (2017). rptR: Repeatability estimation and variance decomposition by generalized linear mixed-effects models. Methods in Ecology and Evolution 8: 1639-1644.
 
 Vaughan, D. & Dancho, M. (2018). furrr: Apply Mapping Functions in Parallel using Futures. R
 package version 0.1.0. https://CRAN.R-project.org/package=furrr
