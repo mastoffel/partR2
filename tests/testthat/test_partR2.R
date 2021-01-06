@@ -19,7 +19,7 @@ test_that("partR2 works for some special cases", {
     data = biomass
   )
   expect_equal(nrow(r2_1$R2), 4)
-  expect_equal(r2_1$R2$estimate, c(0.599, 0.0117, 0, 0.0106), tolerance = 0.001)
+  expect_equal(r2_1$R2$estimate, c(0.599, 0.0125, 0, 0.0124), tolerance = 0.001)
 
   # partR2 works for random slope models if fixed effect which is part
   # of random slope is not in partvars

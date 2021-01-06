@@ -157,7 +157,7 @@ bootstrap_all <- function(nboot, mod, R2_type, all_comb, partition,
   bootstr <- function(y, mod, expct, overdisp_name, R2_type, all_comb,
                       partition, data_mod, allow_neg_r2) {
     mod_iter <- lme4::refit(mod, newresp = y)
-    out_r2s <- part_R2s(
+    out_r2s <- part_R2s_fun(
       mod = mod_iter, expct = expct, overdisp_name = overdisp_name,
       R2_type = R2_type, all_comb = all_comb, partition = partition,
       data_mod = data_mod, allow_neg_r2 = allow_neg_r2

@@ -127,8 +127,11 @@
 
 partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_level = NULL,
                    nboot = NULL, CI = 0.95, parallel = FALSE, expct = "meanobs",
-                   olre = TRUE, partbatch = NULL, allow_neg_r2 = FALSE) {
+                   olre = TRUE, partbatch = NULL, allow_neg_r2 = FALSE,
+                   partR2calc = "new") {
 
+  # overwrite partR2 function if old one is wanted
+  part_R2s_fun <- ifelse(partR2calc == "old", part_R2s_old, part_R2s)
   # initial checks
   if (!inherits(mod, "merMod")) stop("partR2 only supports merMod objects at the moment")
   partition <- ifelse(is.null(partvars) & is.null(partbatch), FALSE, TRUE)
@@ -169,7 +172,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   # beta weights
   bws_pe <- get_bw(mod)
   # calculate R2 and partial R2s
-  r2s_pe <- part_R2s(
+  r2s_pe <- part_R2s_fun(
     mod = mod, expct = expct, overdisp_name = overdisp_name,
     R2_type = R2_type, all_comb = all_comb,
     partition = partition, data_mod = data_mod, allow_neg_r2 = allow_neg_r2
