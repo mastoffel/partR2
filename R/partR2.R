@@ -192,7 +192,8 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
       nboot = nboot, mod = mod, R2_type = R2_type,
       all_comb = all_comb, partition = partition,
       data_mod = data_mod, allow_neg_r2 = allow_neg_r2,
-      parallel = parallel, expct = expct, overdisp_name = overdisp_name
+      parallel = parallel, expct = expct, overdisp_name = overdisp_name,
+      part_R2s_fun # needs to be removed after testing
     )
 
     # all iterations in one df as list columns and calculating inclusive r2

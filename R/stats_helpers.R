@@ -149,7 +149,7 @@ get_bw <- function(mod) {
 #'
 bootstrap_all <- function(nboot, mod, R2_type, all_comb, partition,
                           data_mod, allow_neg_r2, parallel,
-                          expct, overdisp_name) {
+                          expct, overdisp_name, part_R2s_fun) { # part_R2s_fun needs to be removed eventually
 
   # simulating new responses for param. bootstraps
   if (nboot > 0) Ysim <- as.data.frame(stats::simulate(mod, nsim = nboot))
