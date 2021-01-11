@@ -16,8 +16,7 @@ partR2(
   expct = "meanobs",
   olre = TRUE,
   partbatch = NULL,
-  allow_neg_r2 = FALSE,
-  partR2calc = "new"
+  allow_neg_r2 = FALSE
 )
 }
 \arguments{

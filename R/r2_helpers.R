@@ -71,16 +71,14 @@ part_R2s <- function(mod, expct, overdisp_name, R2_type, all_comb, partition,
                                  (.data$var_fix + .data$var_ran + .data$var_res))
     }
 
-    R2s_red <- dplyr::bind_rows(R2_full, R2_out)
-
-    # if(!allow_neg_r2) {
-    #     R2s_red <-  R2s_red_tmp %>%
-    #         # if by chance part R2 drops below 0, set to 0
-    #         dplyr::mutate(R2 = ifelse(.data$R2 < 0, 0, .data$R2)) %>%
-    #         dplyr::bind_rows(R2_full, .)
-    # } else if (allow_neg_r2) {
-    #     R2s_red <-  R2s_red_tmp %>%  dplyr::bind_rows(R2_full, .)
-    # }
+    if(!allow_neg_r2) {
+        R2s_red <-  R2_out %>%
+            # if by chance part R2 drops below 0, set to 0
+            dplyr::mutate(R2 = ifelse(.data$R2 < 0, 0, .data$R2)) %>%
+            dplyr::bind_rows(R2_full, .)
+    } else if (allow_neg_r2) {
+        R2s_red <-  R2_out %>%  dplyr::bind_rows(R2_full, .)
+    }
 
     # names for partitions
     if (partition) {
@@ -123,97 +121,13 @@ fixvar_of_red_mod <- function(partvar, mod, dat, expct, overdisp_name, R2_type) 
 
     # fit reduced model
     mod_red <-  stats::update(object = mod, formula. = formula_red, data = dat)
+    # check that random slope models don't reduce fixed effects which
+    # are part of the random slope
+    get_ran_var(mod_red, overdisp_name) # throws error if action not allowed
     # reduced model fixef variance
     var_fix <- tibble::tibble(var_fix_red = stats::var(stats::predict(mod_red, re.form=NA)))
     #R2_red <- R2_pe(mod_red, expct, overdisp_name, R2_type)
-
 }
-
-
-#' Calculate part R2
-#'
-#' @param mod merMod object
-#' @param expct Expectation
-#' @param overdisp_name Name of overdispersion term
-#' @param R2_type "marginal" or "conditional"
-#' @param all_comb variable combinations to remove to calculate R2
-#' @param partition check if R2 partitioning is needed
-#' @param data_mod data.frame
-#' @param allow_neg_r2 TRUE or FALSE
-#'
-#' @keywords internal
-#' @return R2, atm data.frame with one element
-#'
-# partition R2
-part_R2s_old <- function(mod, expct, overdisp_name, R2_type, all_comb, partition,
-                     data_mod, allow_neg_r2) {
-    # calculate full model R2
-    R2_full <- R2_pe(mod, expct, overdisp_name, R2_type)
-    if (!partition) return( tidyr::tibble(term = "Full", estimate = R2_full$R2))
-    # calculate R2s of reduced models and difference with full model
-    R2s_red_tmp <- purrr::map_df(all_comb, R2_of_red_mod, mod = mod,
-                                 dat = data_mod, expct = expct,
-                                 overdisp_name = overdisp_name, R2_type = R2_type) %>%
-        dplyr::mutate(R2 = R2_full$R2 - .data$R2)
-
-    if(!allow_neg_r2) {
-        R2s_red <-  R2s_red_tmp %>%
-            # if by chance part R2 drops below 0, set to 0
-            dplyr::mutate(R2 = ifelse(.data$R2 < 0, 0, .data$R2)) %>%
-            dplyr::bind_rows(R2_full, .)
-    } else if (allow_neg_r2) {
-        R2s_red <-  R2s_red_tmp %>%  dplyr::bind_rows(R2_full, .)
-    }
-
-    # names for partitions
-    if (partition) {
-        part_terms <- c("Full", unlist(lapply(all_comb, paste, collapse = "+")))
-    } else if (!partition) {
-        part_terms <- "Full"
-    }
-
-    R2s_red <- tibble::tibble(term = part_terms, estimate = R2s_red$R2)
-}
-
-# reduced model R2 (mod without partvar)
-
-#' Calculate R2 from a reduced model
-#'
-#' @param partvar One or more fixed effect variables which are taken out
-#' of the model.
-#' @param mod merMod object.
-#' @param data Data.frame to fit the model
-#' @param expct Expectation
-#' @param overdisp_name Name of overdispersion term
-#' @param R2_type "marginal" or "conditional"
-#' @keywords internal
-#' @return R2 of reduced model.
-#'
-R2_of_red_mod <- function(partvar, mod, dat, expct, overdisp_name, R2_type) {
-
-    # which variables to reduce?
-    to_del <- paste(paste("-", partvar, sep= ""), collapse = " ")
-    # reduced formula
-    formula_red <- stats::update(stats::formula(mod), paste(". ~ . ", to_del, sep=""))
-
-    # check if old and new formula are different and hence the partvar does
-    # not exist
-    formula_terms <- attr(stats::terms(stats::formula(mod)), "term.labels")
-    formula_terms_red <- attr(stats::terms(formula_red), "term.labels")
-    if (all(formula_terms %in% formula_terms_red)) {
-        stop(paste0("partvar ", partvar, " not found in the model formula"))
-    }
-
-    # fit reduced model
-    mod_red <-  stats::update(object = mod, formula. = formula_red, data = dat)
-    # reduced model R2
-    R2_red <- R2_pe(mod_red, expct, overdisp_name, R2_type)
-
-}
-
-
-
-
 
 
 #' Extracts random effect variances
@@ -247,8 +161,8 @@ get_ran_var <- function(mod, overdisp_name = NULL){
             # a problem arises here for random slope models, when in the reduced
             # model the fixed effect isn't there anymore
             if (!all(colnames(sigma) %in% colnames(stats::model.matrix(mod)))){
-                stop("Currently, it is not possible to calculate part R2
-                     for fixed effects involved in random slope terms")
+                stop("partR2 can't calculate part R2
+                     for fixed effects involved in random slopes")
             }
             # design matrix subsetted for the elements of sigma
             Z <- stats::model.matrix(mod)[, colnames(sigma)]

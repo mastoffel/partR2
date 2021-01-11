@@ -60,7 +60,7 @@ R2_BMd <- partR2(modBM,
 test_that("partbatch without partvars works", {
   expect_equal(nrow(R2_BMc$R2), 2)
   expect_equal(R2_BMc$R2$term, c("Full", "Temperature+Precipitation"))
-  expect_equal(R2_BMc$R2$estimate, c(0.6005510, 0.3910285), tolerance = 0.00001)
+  expect_equal(R2_BMc$R2$estimate, c(0.6005510, 0.3910285), tolerance = 0.001)
 })
 
 
@@ -69,3 +69,4 @@ all_combs <- make_combs(
   partbatch = list(ClimateVars = c("Temperature", "Precipitation")),
   max_level = NULL
 )
+
