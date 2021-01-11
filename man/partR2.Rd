@@ -2,7 +2,7 @@
 % Please edit documentation in R/partR2.R
 \name{partR2}
 \alias{partR2}
-\title{Partition the R2 for mixed models}
+\title{Partitioning R2 (R-square) in mixed models}
 \usage{
 partR2(
   mod,

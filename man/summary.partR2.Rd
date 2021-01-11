@@ -7,17 +7,17 @@
 \method{summary}{partR2}(object, round_to = 4, ests = FALSE, ...)
 }
 \arguments{
-\item{object}{An partR2 object returned from one of the partR2 functions}
+\item{object}{partR2 object returned from one of the partR2 functions}
 
 \item{round_to}{Defaults to 4 (decimals)}
 
-\item{ests}{Defaults to FALSE, if TRUE, also prints model estimates (without further standardization).}
+\item{ests}{Defaults to FALSE, if TRUE, also prints raw model estimates.}
 
 \item{\dots}{Additional arguments; not used at the moment}
 }
 \description{
-Displays the complete results a partR2object (i.e. the result of a partR2 function call)
-which includes R2, partial R2, model estimates and structure coefficients.
+Displays extended results of partR2, including R2,
+part (semi-partial) R2, inclusive R2, structure coefficients and beta weights.
 }
 \references{
 Nakagawa, S., & Schielzeth, H. (2013). \emph{A general and simple method for obtaining R2 from
@@ -25,10 +25,5 @@ generalized linear mixed-effects models}. Methods in Ecology and Evolution, 4(2)
 
 Newton, R. G., & Spurrell, D. J. (1967).  \emph{A development of multiple regression for the
 analysis of routine data. Applied Statistics}. 51-64.
-}
-\author{
-Martin Stoffel (martin.adam.stoffel@gmail.com),
-        Shinichi Nakagawa (s.nakagawa@unsw.edu.au),
-        Holger Schielzeth  (holger.schielzeth@uni-jena.de)
 }
 \keyword{models}

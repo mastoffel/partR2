@@ -49,9 +49,9 @@ test_that("bootstrap_all creates the correct data structure", {
   )
 })
 
-# test parallel
+# test parallel / 1 worker so that CRAN build doesn't fail
 library(future)
-plan(multisession, workers = 2)
+plan(multisession, workers = 1)
 
 parallel <- TRUE
 set.seed(12321)

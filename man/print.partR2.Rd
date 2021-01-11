@@ -7,7 +7,7 @@
 \method{print}{partR2}(x, round_to = 4, ...)
 }
 \arguments{
-\item{x}{An partR2 object returned from one of the partR2 functions}
+\item{x}{partR2 object returned from one of the partR2 functions}
 
 \item{round_to}{defaults to 4 (decimals)}
 
@@ -22,10 +22,5 @@ generalized linear mixed-effects models}. Methods in Ecology and Evolution, 4(2)
 
 Newton, R. G., & Spurrell, D. J. (1967).  \emph{A development of multiple regression for the
 analysis of routine data. Applied Statistics}. 51-64.
-}
-\author{
-Martin Stoffel (martin.adam.stoffel@gmail.com),
-        Shinichi Nakagawa (s.nakagawa@unsw.edu.au),
-        Holger Schielzeth  (holger.schielzeth@uni-jena.de)
 }
 \keyword{models}

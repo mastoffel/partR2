@@ -2,7 +2,7 @@
 #'
 #' Displays the results a partR2object (i.e. the result of a partR2 function call) in a nice form.
 #'
-#' @param x An partR2 object returned from one of the partR2 functions
+#' @param x partR2 object returned from one of the partR2 functions
 #' @param round_to defaults to 4 (decimals)
 #' @param \dots Additional arguments; none are used in this method.
 #'
@@ -14,10 +14,6 @@
 #'
 #' Newton, R. G., & Spurrell, D. J. (1967).  \emph{A development of multiple regression for the
 #' analysis of routine data. Applied Statistics}. 51-64.
-#'
-#' @author Martin Stoffel (martin.adam.stoffel@@gmail.com),
-#'         Shinichi Nakagawa (s.nakagawa@unsw.edu.au),
-#'         Holger Schielzeth  (holger.schielzeth@@uni-jena.de)
 #'
 #'
 #' @keywords models

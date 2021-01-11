@@ -1,11 +1,11 @@
 #' Complete summary of a partR2 object
 #'
-#' Displays the complete results a partR2object (i.e. the result of a partR2 function call)
-#' which includes R2, partial R2, model estimates and structure coefficients.
+#' Displays extended results of partR2, including R2,
+#' part (semi-partial) R2, inclusive R2, structure coefficients and beta weights.
 #'
-#' @param object An partR2 object returned from one of the partR2 functions
+#' @param object partR2 object returned from one of the partR2 functions
 #' @param round_to Defaults to 4 (decimals)
-#' @param ests Defaults to FALSE, if TRUE, also prints model estimates (without further standardization).
+#' @param ests Defaults to FALSE, if TRUE, also prints raw model estimates.
 #' @param \dots Additional arguments; not used at the moment
 #'
 #'
@@ -17,9 +17,6 @@
 #' Newton, R. G., & Spurrell, D. J. (1967).  \emph{A development of multiple regression for the
 #' analysis of routine data. Applied Statistics}. 51-64.
 #'
-#' @author Martin Stoffel (martin.adam.stoffel@@gmail.com),
-#'         Shinichi Nakagawa (s.nakagawa@unsw.edu.au),
-#'         Holger Schielzeth  (holger.schielzeth@@uni-jena.de)
 #'
 #'
 #' @keywords models

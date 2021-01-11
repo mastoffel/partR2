@@ -1,4 +1,4 @@
-#' Partition the R2 for mixed models
+#' Partitioning R2 (R-square) in mixed models
 #'
 #' R2, semi-partial (part) R2 for predictors and their combinations as well as inclusive R2,
 #' structure coefficients and beta weights for Gaussian, Poisson and binomial

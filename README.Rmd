@@ -23,12 +23,12 @@ library("badger")
 
 # partR2
 
-The goal of partR2 is to estimate R^2^ in GLMMs (sensu Nakagawa & Schielzeth 2013) and to partition the R^2^ into the variance explained by the predictors.
+The goal of `partR2` is to estimate R^2^ in GLMMs (sensu Nakagawa & Schielzeth 2013) and to partition the R^2^ into the variance explained by the predictors.
 
 The package takes a fitted lme4 model as input and gives you:
 
 * R^2^ (marginal or conditional)
-* Semi-partial R^2^, the variance explained uniquely by each predictor and combinations of predictors
+* Part (semi-partial) R^2^, the variance explained uniquely by each predictor and combinations of predictors
 * Inclusive R^2^, the variance explained by a predictor independent of all
 other predictors
 * Structure coefficients, the correlation between a predictor and the fitted response
@@ -36,12 +36,11 @@ other predictors
 
 All estimates can be combined with parametric bootstrapping to get confidence intervals.
 
-partR2 is in an early phase of development and despite a lot of testing might still contain bugs, so 
-be careful and thoughtful when using it. 
+`partR2` is still in an early phase of development and might contain bugs.
 
 ## Installation
 
-You can install partR2 from github with:
+You can install the development version of `partR2` from GitHub with:
 
 ```{r gh-installation, eval = FALSE}
 # install.packages("remotes")
@@ -76,9 +75,7 @@ forestplot(R2, type = "R2", line_size = 0.7, text_size = 14, point_size = 3)
 
 ### Citation
 
-The package is still in development, but will hopefully be uploaded to CRAN soon.
-
-When using it, please cite our [preprint](https://www.biorxiv.org/content/10.1101/2020.07.26.221168v1.abstract) for now:
+When using it, please cite our [preprint](https://www.biorxiv.org/content/10.1101/2020.07.26.221168v1.abstract) for now, and look out for the peer-reviewed paper, which will hopefully come out soon.
 
 Stoffel, MA, Nakagawa, S, & Schielzeth, H (2020). partR2: Partitioning R2 in generalized linear mixed models. bioRxiv. 
 `r badge_doi("10.1101/2020.07.26.221168", "green")`
