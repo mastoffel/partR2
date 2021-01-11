@@ -66,7 +66,7 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> # A tibble: 1 x 5
 #>      R2 CI_lower CI_upper nboot   ndf
 #>   <dbl>    <dbl>    <dbl> <int> <dbl>
-#> 1 0.513    0.411    0.598   100     4
+#> 1 0.513    0.425    0.605   100     4
 #> 
 #> ----------
 #> 
@@ -74,14 +74,14 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> # A tibble: 8 x 6
 #>   `Predictor(s)`                       R2 CI_lower CI_upper nboot   ndf
 #>   <chr>                             <dbl>    <dbl>    <dbl> <int> <dbl>
-#> 1 Model                             0.513   0.411     0.598   100     4
-#> 2 SpeciesDiversity                  0.173   0.0218    0.286   100     3
-#> 3 Temperature                       0.306   0.173     0.414   100     3
-#> 4 Year                              0.014   0         0.152   100     3
-#> 5 SpeciesDiversity+Temperature      0.492   0.387     0.580   100     2
-#> 6 SpeciesDiversity+Year             0.186   0.0369    0.298   100     2
-#> 7 Temperature+Year                  0.328   0.197     0.436   100     2
-#> 8 SpeciesDiversity+Temperature+Year 0.513   0.411     0.598   100     1
+#> 1 Model                             0.513   0.425     0.605   100     4
+#> 2 SpeciesDiversity                  0.173   0.0377    0.296   100     3
+#> 3 Temperature                       0.306   0.184     0.417   100     3
+#> 4 Year                              0.014   0         0.164   100     3
+#> 5 SpeciesDiversity+Temperature      0.492   0.399     0.586   100     2
+#> 6 SpeciesDiversity+Year             0.186   0.0525    0.308   100     2
+#> 7 Temperature+Year                  0.328   0.208     0.437   100     2
+#> 8 SpeciesDiversity+Temperature+Year 0.513   0.425     0.605   100     1
 ```
 
 And to plot the results:
