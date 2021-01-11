@@ -10,11 +10,6 @@
 #' @param point_size Point size, default is 3.
 #'
 #'
-#' @author Martin Stoffel (martin.adam.stoffel@@gmail.com),
-#'         Holger Schielzeth  (holger.schielzeth@@uni-jena.de)
-#'         Shinichi Nakagawa (s.nakagawa@@unsw.edu.au),
-#'
-#'
 #' @keywords models
 #'
 #' @export

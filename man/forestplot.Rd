@@ -27,9 +27,4 @@ or model estimates.}
 \description{
 Forestplot of the partR2 results
 }
-\author{
-Martin Stoffel (martin.adam.stoffel@gmail.com),
-        Holger Schielzeth  (holger.schielzeth@uni-jena.de)
-        Shinichi Nakagawa (s.nakagawa@unsw.edu.au),
-}
 \keyword{models}

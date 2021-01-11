@@ -50,7 +50,7 @@ The `rptR` package (Stoffel et al., 2017) and the `partR2` package go hand in ha
 
 The workhorse of the package is a single function, `partR2()`. It takes a fitted model from `lme4` (Bates et al. 2015), with either a Gaussian, Poisson or binomial family. The function returns a `partR2` object. The package includes `print()`, `summary()` and `forestplot()` functions to display the results, and a helper function `mergeR2` that is useful for models with interactions (see below).
 
-Before we go through some examples, we load the `biomass` dataset. This is a simulated dataset that aims to mimic a study on biomass production in grasslands. In a nutshell, virtual invertebrates were sampled once every year over 10 consecuative years (*Year*) from 20 different virtual populations (*Population*). *Temperature* and *Precipitation* were measured and overall species diversity (*SpeciesDiversity*) and *Biomass* were recorded for each *Population* in each *Year*.
+Before we go through some examples, we load the `biomass` dataset. This is a simulated dataset that aims to mimic a study on biomass production in grasslands. In a nutshell, virtual invertebrates were sampled once every year over 10 consecutive years (*Year*) from 20 different virtual populations (*Population*). *Temperature* and *Precipitation* were measured and overall species diversity (*SpeciesDiversity*) and *Biomass* were recorded for each *Population* in each *Year*.
 
 ```{r setup, message=FALSE}
 library(partR2)
@@ -125,7 +125,7 @@ R2_BMd
 
 ## Plotting and data extraction
 
-We can plot the results as forestplots, powered by `ggplot2` (Wickham, 2016). The output of `forestplot` is a `ggplot` object. We can customize the object using `ggplot` syntax or assemble multiple plots with packages like `patchwork` (Pedersen, 2019). In the example here, we added a few arguments for a nicer appearance (see `?forestplot` for more information). What is plotted is controlled by the `type` argument, which can be `type = "R2"` (the detault)  for part $R^2$, `type = "IR2"` for inclusive $R^2$, `type = "SC"` for structure coefficients, `type = "BW"` for beta weights and `type = "Ests"` for raw model estimates.
+We can plot the results as forestplots, powered by `ggplot2` (Wickham, 2016). The output of `forestplot` is a `ggplot` object. We can customize the object using `ggplot` syntax or assemble multiple plots with packages like `patchwork` (Pedersen, 2019). In the example here, we added a few arguments for a nicer appearance (see `?forestplot` for more information). What is plotted is controlled by the `type` argument, which can be `type = "R2"` (the default)  for part $R^2$, `type = "IR2"` for inclusive $R^2$, `type = "SC"` for structure coefficients, `type = "BW"` for beta weights and `type = "Ests"` for raw model estimates.
 
 ```{r, fig.width = 7, fig.height=5}
 library(patchwork)
@@ -191,7 +191,7 @@ Parametric bootstrapping is an inherently slow process, because it involves repe
 
 A simple way to save runtime is to distribute the bootstrap iterations across multiple cores. `partR2` parallelises with the `future` (Bengtsson, 2019) and `furrr` (Vaughan & Dancho, 2018) packages. This makes it flexible for the user on how exactly to parallelise and should work on whatever OS you are running your analyses, be it Mac, Windows or Linux. 
 
-We illustrate the parallel option of `partR2` with the `modBM` fitted above. First we specify how we want to parallelize using future's `plan()` function. Check out `?future::plan` for more information. Generally, if you the analysis is run in RStudio, it is recommended to use `plan(multisession)`. After specifying the plan, you need to set the `parallel = TRUE` argument when calling  `partR2()` and bootstrapping will run in parallel. If there is no specified plan, `partR2` will still run sequentially.
+We illustrate the parallel option of `partR2` with the `modBM` fitted above. First we specify how we want to parallelise using future's `plan()` function. Check out `?future::plan` for more information. Generally, if you the analysis is run in RStudio, it is recommended to use `plan(multisession)`. After specifying the plan, you need to set the `parallel = TRUE` argument when calling  `partR2()` and bootstrapping will run in parallel. If there is no specified plan, `partR2` will still run sequentially.
 
 ```{r, warning=FALSE, message=FALSE}
 library(future)
@@ -291,7 +291,7 @@ A conceptual Venn diagram shows what has been estimated. Here, Y~X1~ is the (com
 
 #### Prioritising main effects
 
-The last option is the one that we think is usually preferable. The option involves prioretising main effects by assigning the proportion of variance that is explained by a main effect together with the variance jointly explained with its interaction to the main effect. This implies that first, only the part $R^2$ for the interaction is calculated from a model fit (`modGP1` and `R2_GPc_part1` below). In a second model fit, the variance explained by the main effects is estimated when their interaction is excluded from the model (`modGP2` and `R2_GP_part2` below).  We have implemented a helper function `mergeR2` that allows to merge the two `partR2` runs.
+The last option is the one that we think is usually preferable. The option involves prioritising main effects by assigning the proportion of variance that is explained by a main effect together with the variance jointly explained with its interaction to the main effect. This implies that first, only the part $R^2$ for the interaction is calculated from a model fit (`modGP1` and `R2_GPc_part1` below). In a second model fit, the variance explained by the main effects is estimated when their interaction is excluded from the model (`modGP2` and `R2_GP_part2` below).  We have implemented a helper function `mergeR2` that allows to merge the two `partR2` runs.
 
 ```{r, warning=FALSE}
 modGP1 <- lmer(TestoTrans ~ Rank * Time + (1|MaleID), data = GuineaPigs)

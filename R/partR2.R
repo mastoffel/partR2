@@ -69,7 +69,7 @@
 #' predictors and their combinations}
 #' \item{SC}{Structure coefficients and confidence intervals. SC are the
 #' correlation between a predictor and the predicted response.}
-#' \item{IR2}{Inklusive R2. This is SC^2 * R2_full.}
+#' \item{IR2}{Inclusive R2. This is SC^2 * R2_full.}
 #' \item{BW}{Standardised model estimates (beta weights) for fixed effects. Beta weights for Gaussian models
 #' are calculated as beta * sd(x)/sd(y), with beta being the estimated
 #' slope of a fixed effect for predictor x and response y. Beta weight for Non-Gaussian
