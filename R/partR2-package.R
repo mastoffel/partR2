@@ -1,20 +1,21 @@
 #' partR2: Partitioning R2 in generalized linear mixed models
 #'
-#' The goals of partR2 are:
+#' The partR2 package provides a simple way to estimate R2 in mixed models fitted with lme4
+#' as well as part (semi-partial) R2 for specific predictors and combinations of predictors,
+#' among other several other statistics. Here is an overview:
 #'
 #' \itemize{
-#' \item To estimate marginal and conditional R2 for LMMs and GLMMs.
-#' \item To partition the R2 into variance explained uniquely by each predictor
-#' and variance explained by a combination of predictors using semi-partial R2s.
-#' \item To provide structure coefficients (SC). SC are the correlation between a
-#' predictor and the predicted response, independent of the other predictors.
-#' \item To estimate the the total variance explained by a predictor independent of
-#' other predictors, using inclusive R2 (IR2). IR2 is estimated with SC^2 * R2_full_model.
-#' \item To provide beta weights, which are standardised regression coefficients.
+#' \item Marginal and conditional R2 for LMMs and GLMMs.
+#' \item Part (semi-partial) R2 which estimate the explained variance for
+#' specific predictors and combinations of predictors.
+#' \item Structure coefficients (SC). SC are the correlation between a
+#' predictor and the predicted response (called the linear predictor), independent of the other predictors.
+#' \item Inclusive R2 (IR2), which estimate the the total variance explained by a predictor independent of
+#' other predictors. IR2 is estimated with SC^2 * R2_full_model.
+#' \item Beta weights, which are standardised regression coefficients.
 #' If beta is a model estimate for variable x, and y is the response,then the
 #' beta weight is beta * (sd(x)/sd(y).
-#' \item Use parametric bootstrapping to estimate confidence intervals for
-#' all estimates.
+#' \item Confidence intervals for all estimates using parametric bootstrapping.
 #' }
 #'
 #' The package has one main function \code{\link{partR2}} which takes a fitted model
@@ -23,7 +24,7 @@
 #' observational level random effect to model additive overdispersion (if
 #' an olre is not fitted already).
 #'
-#' The \code{\link{summary.partR2}} function provides an extended summary with R2s, partial
+#' The \code{\link{summary.partR2}} function provides an extended summary with R2s, semi-partial
 #' R2s, model estimates and structure coefficients. The \code{\link{forestplot}}
 #' function provides a means of plotting the results.
 #'
