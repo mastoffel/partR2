@@ -75,7 +75,7 @@ forestplot(R2, type = "R2", line_size = 0.7, text_size = 14, point_size = 3)
 
 ### Citation
 
-When using it, please cite our [preprint](https://www.biorxiv.org/content/10.1101/2020.07.26.221168v1.abstract) for now, and look out for the peer-reviewed paper, which will hopefully come out soon.
+When using `partR2`, please cite our [preprint](https://www.biorxiv.org/content/10.1101/2020.07.26.221168v1.abstract) for now, and look out for the peer-reviewed paper, which will hopefully come out soon.
 
 Stoffel, MA, Nakagawa, S, & Schielzeth, H (2020). partR2: Partitioning R2 in generalized linear mixed models. bioRxiv. 
 `r badge_doi("10.1101/2020.07.26.221168", "green")`

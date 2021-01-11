@@ -66,7 +66,7 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> # A tibble: 1 x 5
 #>      R2 CI_lower CI_upper nboot   ndf
 #>   <dbl>    <dbl>    <dbl> <int> <dbl>
-#> 1 0.513    0.425    0.605   100     4
+#> 1 0.513    0.445    0.594   100     4
 #> 
 #> ----------
 #> 
@@ -74,14 +74,14 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> # A tibble: 8 x 6
 #>   `Predictor(s)`                       R2 CI_lower CI_upper nboot   ndf
 #>   <chr>                             <dbl>    <dbl>    <dbl> <int> <dbl>
-#> 1 Model                             0.513   0.425     0.605   100     4
-#> 2 SpeciesDiversity                  0.173   0.0377    0.296   100     3
-#> 3 Temperature                       0.306   0.184     0.417   100     3
-#> 4 Year                              0.014   0         0.164   100     3
-#> 5 SpeciesDiversity+Temperature      0.492   0.399     0.586   100     2
-#> 6 SpeciesDiversity+Year             0.186   0.0525    0.308   100     2
-#> 7 Temperature+Year                  0.328   0.208     0.437   100     2
-#> 8 SpeciesDiversity+Temperature+Year 0.513   0.425     0.605   100     1
+#> 1 Model                             0.513   0.445     0.594   100     4
+#> 2 SpeciesDiversity                  0.173   0.0762    0.282   100     3
+#> 3 Temperature                       0.306   0.221     0.398   100     3
+#> 4 Year                              0.014   0         0.145   100     3
+#> 5 SpeciesDiversity+Temperature      0.492   0.423     0.571   100     2
+#> 6 SpeciesDiversity+Year             0.186   0.0905    0.293   100     2
+#> 7 Temperature+Year                  0.328   0.246     0.417   100     2
+#> 8 SpeciesDiversity+Temperature+Year 0.513   0.445     0.594   100     1
 ```
 
 And to plot the results:
@@ -94,7 +94,7 @@ forestplot(R2, type = "R2", line_size = 0.7, text_size = 14, point_size = 3)
 
 ### Citation
 
-When using it, please cite our
+When using `partR2`, please cite our
 [preprint](https://www.biorxiv.org/content/10.1101/2020.07.26.221168v1.abstract)
 for now, and look out for the peer-reviewed paper, which will hopefully
 come out soon.
