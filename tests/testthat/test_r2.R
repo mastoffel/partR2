@@ -26,74 +26,61 @@ test_that("R2 marginal and conditional are correct", {
   expect_equal(r2_cond$R2, 0.229, tolerance = 0.001)
 })
 
-# Reduced R2
+# Reduced fixed effect variances
 
 # simple term
-r2_1a <- fixvar_of_red_mod(
+fix_1a <- fixvar_of_red_mod(
   partvar = "SpeciesDiversity", mod = fit1, dat = biomass,
   expct = "meanobs", overdisp_name = "overdisp",
   R2_type = "marginal"
-)
-r2_1b <- R2_pe(lme4::lmer(Biomass ~ I(Temperature^2) + (1 | Population),
-  data = biomass
-),
-expct = "meanobs", overdisp_name = "overdisp", R2_type = "marginal"
-)
+)[[1]]
+fix_1b <- var(stats::predict(lme4::lmer(Biomass ~ I(Temperature^2) + (1 | Population),
+  data = biomass), re.form = NA))
 
 # modified term
-r2_2a <- fixvar_of_red_mod(
+fix_2a <- fixvar_of_red_mod(
   partvar = "I(Temperature^2)", mod = fit1, dat = biomass,
   expct = "meanobs", overdisp_name = "overdisp",
   R2_type = "marginal"
-)
-r2_2b <- R2_pe(lme4::lmer(Biomass ~ SpeciesDiversity + (1 | Population),
-  data = biomass
-),
-expct = "meanobs", overdisp_name = "overdisp", R2_type = "marginal"
-)
+)[[1]]
+fix_2b <- var(stats::predict(lme4::lmer(Biomass ~ SpeciesDiversity + (1 | Population),
+                                       data = biomass), re.form = NA))
 
 # two terms
-r2_3a <- fixvar_of_red_mod(
+fix_3a <- fixvar_of_red_mod(
   partvar = c("SpeciesDiversity", "I(Temperature^2)"), mod = fit1, dat = biomass,
   expct = "meanobs", overdisp_name = "overdisp",
   R2_type = "conditional"
-)
+)[[1]]
 
-r2_3b <- R2_pe(lme4::lmer(Biomass ~ 1 + (1 | Population), data = biomass),
-  expct = "meanobs", overdisp_name = "overdisp", R2_type = "conditional"
-)
+fix_3b <- var(stats::predict(lme4::lmer(Biomass ~ 1 + (1 | Population), data = biomass),
+                        re.form = NA))
 
 # interaction
-r2_4a <- fixvar_of_red_mod(
+fix_4a <- fixvar_of_red_mod(
   partvar = c("SpeciesDiversity:I(Temperature^2)"), mod = fit2, dat = biomass,
   expct = "meanobs", overdisp_name = "overdisp",
   R2_type = "marginal"
-)
-r2_4b <- R2_pe(lme4::lmer(Biomass ~ Year + SpeciesDiversity + I(Temperature^2) + (1 | Population),
-  data = biomass
-),
-expct = "meanobs", overdisp_name = "overdisp", R2_type = "marginal"
-)
+)[[1]]
+fix_4b <- var(stats::predict(lme4::lmer(Biomass ~ Year + SpeciesDiversity + I(Temperature^2) + (1 | Population),
+  data = biomass), re.form = NA))
 
 # main effect which is part of interaction (not sure how legit this is)
-r2_5a <- fixvar_of_red_mod(
+fix_5a <- fixvar_of_red_mod(
   partvar = c("SpeciesDiversity"), mod = fit2, dat = biomass,
   expct = "meanobs", overdisp_name = "overdisp",
   R2_type = "marginal"
-)
-r2_5b <- R2_pe(lme4::lmer(Biomass ~ Year + I(Temperature^2) + SpeciesDiversity:I(Temperature^2) + (1 | Population),
-  data = biomass
-),
-expct = "meanobs", overdisp_name = "overdisp", R2_type = "marginal"
-)
+)[[1]]
+fix_5b <- var(stats::predict(lme4::lmer(Biomass ~ Year + I(Temperature^2) + SpeciesDiversity:I(Temperature^2) + (1 | Population),
+                                       data = biomass), re.form = NA))
 
-# test_that("Reduced model R2s are correct in R2_of_red_mod", {
-#   expect_equal(r2_1a, r2_1b)
-#   expect_equal(r2_2a, r2_2b)
-#   expect_equal(r2_3a, r2_3b)
-#   expect_equal(r2_4a, r2_4b)
-#   expect_equal(r2_5a, r2_5b)
-# })
+test_that("Reduced model R2s are correct in R2_of_red_mod", {
+  expect_equal(fix_1a, fix_1b)
+  expect_equal(fix_2a, fix_2b)
+  expect_equal(fix_3a, fix_3b)
+  expect_equal(fix_4a, fix_4b)
+  expect_equal(fix_5a, fix_5b)
+})
 
 
 
@@ -141,5 +128,5 @@ test_that("part R2s are correct with part_R2s()", {
   # some random checks
   expect_equal(nrow(r2_8), 16)
   expect_equal(sum(r2_8$term %in% "SpeciesDiversity:I(Temperature^2)"), 1)
-  expect_equal(r2_8[r2_8$term == "Year+SpeciesDiversity:I(Temperature^2)", "estimate"][[1]], 0.0195, tolerance = 0.0001)
+  expect_equal(r2_8[r2_8$term == "Year+SpeciesDiversity:I(Temperature^2)", "estimate"][[1]], 0.0210613, tolerance = 0.0001)
 })
