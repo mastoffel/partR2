@@ -36,7 +36,7 @@ print.partR2 <- function(x, round_to = 4, ...) {
              tibble::add_column(nboot = num_boot, .before = 5)
     # rename Full to Model
     r2_df[1, 1] <- "Model"
-    print(r2_df[1, 2:6], row.names = FALSE, right = FALSE)
+    print(as.data.frame(r2_df[1, 2:6]), row.names = FALSE, right = FALSE)
     #cat(paste0("R2 = ", round(x$R2$R2, 3), ", CI = [", round(x$R2$lower, 3), ", ", round(x$R2$upper, 3), "]"))
     cat("\n")
     cat("----------")
@@ -46,7 +46,7 @@ print.partR2 <- function(x, round_to = 4, ...) {
     if (nrow(x$R2) == 1) {
         print("No partitions selected.")
     } else {
-    print(r2_df, row.names = FALSE,right = FALSE)
+    print(as.data.frame(r2_df), row.names = FALSE,right = FALSE)
     }
 
 #

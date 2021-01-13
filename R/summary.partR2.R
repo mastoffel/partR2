@@ -45,7 +45,7 @@ summary.partR2 <- function(object, round_to = 4, ests = FALSE, ...) {
         tibble::add_column(nboot = num_boot, .before = 5)
     # rename Full to Model
     r2_df[1, 1] <- "Model"
-    print(r2_df[1, 2:6], row.names = FALSE, right = FALSE)
+    print(as.data.frame(r2_df[1, 2:6]), row.names = FALSE, right = FALSE)
     #cat(paste0("R2 = ", round(x$R2$R2, 3), ", CI = [", round(x$R2$lower, 3), ", ", round(x$R2$upper, 3), "]"))
 
     cat("\n")
@@ -57,7 +57,7 @@ summary.partR2 <- function(object, round_to = 4, ests = FALSE, ...) {
     if (nrow(r2_df) == 1) {
         print("No partitions selected.")
     } else {
-        print(r2_df, row.names = FALSE, right = FALSE)
+        print(as.data.frame(r2_df), row.names = FALSE, right = FALSE)
     }
 
     cat("\n")
@@ -66,7 +66,7 @@ summary.partR2 <- function(object, round_to = 4, ests = FALSE, ...) {
 
     cat("Inclusive R2 (SC^2 * R2):\n")
     IR2_df <- x$IR2 %>% dplyr::mutate_if(is.numeric, round, round_to)
-    print(IR2_df, row.names = FALSE, right = FALSE)
+    print(as.data.frame(IR2_df), row.names = FALSE, right = FALSE)
 
     cat("\n")
     cat("----------")
@@ -74,7 +74,7 @@ summary.partR2 <- function(object, round_to = 4, ests = FALSE, ...) {
 
     cat("Structure coefficients r(Yhat,x):\n")
     SC_df <- x$SC %>% dplyr::mutate_if(is.numeric, round, round_to)
-    print(SC_df, row.names = FALSE, right = FALSE)
+    print(as.data.frame(SC_df), row.names = FALSE, right = FALSE)
 
     cat("\n")
     cat("----------")
@@ -88,7 +88,7 @@ summary.partR2 <- function(object, round_to = 4, ests = FALSE, ...) {
 
         cat("Model estimates \n")
         ests_df <- x$Ests %>% dplyr::mutate_if(is.numeric, round, round_to)
-        print(ests_df, row.names = FALSE, right = FALSE)
+        print(as.data.frame(ests_df), row.names = FALSE, right = FALSE)
 
         cat("\n")
         cat("----------")
@@ -98,7 +98,7 @@ summary.partR2 <- function(object, round_to = 4, ests = FALSE, ...) {
     #cat("Model estimates:\n")
     cat("Beta weights (standardised estimates)\n")
     ests_df <- x$BW %>% dplyr::mutate_if(is.numeric, round, round_to)
-    print(ests_df, row.names = FALSE, right = FALSE)
+    print(as.data.frame(ests_df), row.names = FALSE, right = FALSE)
 
     cat("\n")
     cat("----------")
