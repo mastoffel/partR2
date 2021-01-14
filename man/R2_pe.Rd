@@ -16,7 +16,7 @@ R2_pe(mod, expct, overdisp_name, R2_type)
 \item{R2_type}{"marginal" or "conditional"}
 }
 \value{
-R2, atm data.frame with one element
+data.frame with one element, R2
 }
 \description{
 Calculate R2

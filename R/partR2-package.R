@@ -33,8 +33,9 @@
 #' Nakagawa, S., & Schielzeth, H. (2013). \emph{A general and simple method for obtaining R2 from
 #' generalized linear mixed-effects models}. Methods in Ecology and Evolution, 4(2), 133-142.
 #'
-#' Newton, R. G., & Spurrell, D. J. (1967).  \emph{A development of multiple regression for the
-#' analysis of routine data. Applied Statistics}. 51-64.
+#' Nakagawa, S., Johnson, P. C., & Schielzeth, H. (2017). \emph{The coefficient of
+#' determination R2 and intra-class correlation coefficient from generalized
+#' linear mixed-effects models revisited and expanded}. Journal of the Royal Society Interface, 14(134), 20170213.
 #'
 #' @importFrom rlang .data
 #'

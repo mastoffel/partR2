@@ -52,12 +52,13 @@ sequentially.}
 
 \item{expct}{A string specifying the method for estimating the expectation in Poisson models
 with log link and in Binomial models with logit link (in all other cases the argument is ignored).
-The only valid terms are 'meanobs' and 'latent' (and 'liability for binary and proportion data).
+The only valid terms are 'meanobs', 'latent', 'none' (and 'liability for binary and proportion data).
 With the default 'meanobs', the expectation is estimated as the mean of the observations in the sample.
 With 'latent', the expectation is estimated from estimates of the intercept and variances on the link scale.
 While this is a preferred solution, it is susceptible to the distribution of fixed effect covariates and gives
 appropriate results typically only when all covariances are centered to zero. With 'liability'
-estimates follow formulae as presented in Nakagawa & Schielzeth (2010).}
+estimates follow formulae as presented in Nakagawa & Schielzeth (2010). With 'none', R2 is calculated
+without distribution specific variance in the denominator.}
 
 \item{overdisp_name}{Name of overdispersion term}
 }

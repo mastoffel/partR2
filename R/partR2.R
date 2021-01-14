@@ -36,12 +36,13 @@
 #'        sequentially.
 #' @param expct A string specifying the method for estimating the expectation in Poisson models
 #'        with log link and in Binomial models with logit link (in all other cases the argument is ignored).
-#'        The only valid terms are 'meanobs' and 'latent' (and 'liability for binary and proportion data).
+#'        The only valid terms are 'meanobs', 'latent', 'none' (and 'liability for binary and proportion data).
 #'        With the default 'meanobs', the expectation is estimated as the mean of the observations in the sample.
 #'        With 'latent', the expectation is estimated from estimates of the intercept and variances on the link scale.
 #'        While this is a preferred solution, it is susceptible to the distribution of fixed effect covariates and gives
 #'        appropriate results typically only when all covariances are centered to zero. With 'liability'
-#'        estimates follow formulae as presented in Nakagawa & Schielzeth (2010).
+#'        estimates follow formulae as presented in Nakagawa & Schielzeth (2010). With 'none', R2 is calculated
+#'        without distribution specific variance in the denominator.
 #' @param olre Logical, defaults to TRUE. This argument allows the user to prevent the automatic fitting of
 #'        an observation level random effect (by setting it to FALSE) in Poisson and binomial models.
 #'        The OLRE is used to account for overdispersion.
@@ -96,8 +97,9 @@
 #' Nakagawa, S., & Schielzeth, H. (2013). \emph{A general and simple method for obtaining R2 from
 #' generalized linear mixed-effects models}. Methods in Ecology and Evolution, 4(2), 133-142.
 #'
-#' Newton, R. G., & Spurrell, D. J. (1967).  \emph{A development of multiple regression for the
-#' analysis of routine data. Applied Statistics}. 51-64.
+#' Nakagawa, S., Johnson, P. C., & Schielzeth, H. (2017). \emph{The coefficient of
+#' determination R2 and intra-class correlation coefficient from generalized
+#' linear mixed-effects models revisited and expanded}. Journal of the Royal Society Interface, 14(134), 20170213.
 #'
 #' @examples
 #'
@@ -140,6 +142,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, R2_type = "marginal", max_
   if (!(R2_type %in% c("marginal", "conditional"))) {
     stop("R2_type has to be marginal or conditional")
   }
+
 
   # check if data is there and if not try to get it
   if (is.null(data)) {

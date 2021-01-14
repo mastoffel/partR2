@@ -6,7 +6,7 @@
 #' @param R2_type "marginal" or "conditional"
 #'
 #' @keywords internal
-#' @return R2, atm data.frame with one element
+#' @return data.frame with one element, R2
 #'
 R2_pe <- function(mod, expct, overdisp_name, R2_type) {
 
@@ -279,10 +279,12 @@ var_comps_poisson <- function(mod, expct, overdisp_name) {
     # var_ran <- var_ran[!(var_ran$group == "overdisp"), ]
     # var_ran <- sum(var_ran$estimate)
 
-    if (mod_fam[["link"]] == "sqrt") {
+    if (expct == "none") {
+        # if none, the distribution specific variance is 0
+        var_res <- var_overdisp
+    } else if (mod_fam[["link"]] == "sqrt") {
         var_res <- var_overdisp + 0.25
-    }
-    if (mod_fam[["link"]] == "log") {
+    } else if (mod_fam[["link"]] == "log") {
         if(expct=="meanobs") EY <- mean(mod@resp$y, na.rm=TRUE)
         # no overdisp in var_ran
         if(expct=="latent") EY <- exp(beta0 + (sum(var_ran$estimate) + var_overdisp + var_fix)/2)
@@ -342,6 +344,9 @@ var_comps_proportion <- function(mod, expct, overdisp_name) {
             Ep <- exp(beta0) / (1 + exp(beta0))
             estdv_link <- pi^2/3
         }
+        if (expct=="none") {
+            estdv_link <- 0
+        }
         var_res <- var_overdisp + estdv_link
     }
 
@@ -361,6 +366,9 @@ var_comps_proportion <- function(mod, expct, overdisp_name) {
         }
         if (expct=="liability"){
             estdv_link <- 1
+        }
+        if (expct=="none") {
+            estdv_link <- 0
         }
         var_res <- var_overdisp + estdv_link
     }
@@ -400,17 +408,17 @@ var_comps_binary <- function(mod, expct) {
     mod_fam <- stats::family(mod)
 
     if (mod_fam[["link"]] == "logit") {
-        if (expct=="latent") {
-            Ep <- stats::plogis(beta0*sqrt(1+((16*sqrt(3))/(15*pi))^2*(var_ran + var_fix))^-1)
-            estdv_link <- 1 / (Ep*(1-Ep))
-        }
         if (expct=="meanobs") {
             Ep <- mean(lme4::getME(mod, "y"), na.rm=TRUE)
             estdv_link <- 1 / (Ep*(1-Ep))
-        }
-        if (expct=="liability") {
+        } else if (expct=="latent") {
+            Ep <- stats::plogis(beta0*sqrt(1+((16*sqrt(3))/(15*pi))^2*(var_ran + var_fix))^-1)
+            estdv_link <- 1 / (Ep*(1-Ep))
+        } else if (expct=="liability") {
             Ep <- exp(beta0) / (1 + exp(beta0))
             estdv_link <- pi^2/3
+        } else if (expct=="none") {
+            estdv_link <- 0
         }
         var_res <-  estdv_link
     }
@@ -421,16 +429,16 @@ var_comps_binary <- function(mod, expct) {
     inverf <- function(x) stats::qnorm((x + 1)/2)/sqrt(2)
 
     if (mod_fam[["link"]] == "probit"){
-        if (expct == "latent") {
-            Ep <- stats::pnorm(beta0*sqrt(1+var_ran+var_fix)^-1)
-            estdv_link <- 2*pi*Ep*(1-Ep) * (exp(inverf(2*Ep-1)^2))^2
-        }
         if (expct=="meanobs"){
             Ep <- mean(lme4::getME(mod, "y"), na.rm=TRUE)
             estdv_link <- 2*pi*Ep*(1-Ep) * (exp(inverf(2*Ep-1)^2))^2
-        }
-        if (expct=="liability"){
+        } else if (expct == "latent") {
+            Ep <- stats::pnorm(beta0*sqrt(1+var_ran+var_fix)^-1)
+            estdv_link <- 2*pi*Ep*(1-Ep) * (exp(inverf(2*Ep-1)^2))^2
+        } else if (expct=="liability"){
             estdv_link <- 1
+        } else if (expct=="none"){
+            estdv_link <- 0
         }
         var_res <- estdv_link
     }
