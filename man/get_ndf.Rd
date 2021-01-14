@@ -15,7 +15,7 @@ of the model.}
 \item{data}{Data.frame to fit the model}
 }
 \value{
-Numerator degrees of freedom
+Numeric vector, giving numerator degrees of freedom
 }
 \description{
 Get numerator dfs for reduced models

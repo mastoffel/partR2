@@ -18,6 +18,7 @@ NULL
 #'
 #' @param expr An expression, such as the sequence of code used by rptR to calculate
 #' bootstrap or permutation estimates
+#' @return List of warnings.
 #' @keywords internal
 
 with_warnings <- function(expr) {
@@ -107,6 +108,7 @@ make_combs <- function(partvars, partbatch, max_level) {
 #'
 #'
 #' @param lcol A bootstrap list-column
+#' @return data.frame with bootstrap estimates as list-column
 #' @keywords internal
 
 boot_to_df <- function(lcol) {
@@ -121,8 +123,10 @@ boot_to_df <- function(lcol) {
 #' Modify term names if partbatch is a named list
 #'
 #'
-#' @param  partbatch list with batches
+#' @param partbatch list with batches
 #' @param part_names character vector with names of terms (and their combinations)
+#' @return Modified names for partvars, where partvar combinations are replaced
+#' with partbatch names.
 #' @keywords internal
 #'
 # change partbatch with names, if present
@@ -140,6 +144,10 @@ mod_names_partbatch <- function(partbatch, part_names) {
   part_names
 }
 
+#' Adds columns for CI
+#' @param df data.frame with point estimates
+#' @return data.frame with two additional columns for lower and upper CI containing NAs
+#' @keywords internal
 add_CI_cols <- function(df) {
   df %>% dplyr::mutate(CI_lower = NA, CI_upper = NA)
 }

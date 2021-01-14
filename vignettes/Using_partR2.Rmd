@@ -198,7 +198,9 @@ library(future)
 # how many cores do I have?
 parallel::detectCores()
 # specify plan
-plan(multisession, workers = 3)
+# workers can now be set to multiple cores to parallelise 
+# only 1 core is used here.
+plan(multisession, workers = 1)
 R2_BMf <- partR2(modBM, partvars = c("Temperature", "Precipitation"), 
                         parallel = TRUE, data = biomass)
 ```

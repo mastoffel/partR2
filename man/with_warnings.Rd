@@ -10,6 +10,9 @@ with_warnings(expr)
 \item{expr}{An expression, such as the sequence of code used by rptR to calculate
 bootstrap or permutation estimates}
 }
+\value{
+List of warnings.
+}
 \description{
 This function is used within partR2 to capture lme4 model fitting warnings in the
 bootstrap and permutation procedures.

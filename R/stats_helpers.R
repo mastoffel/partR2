@@ -15,11 +15,13 @@ fixef_simple <- function(mod, intcp = FALSE) {
 }
 
 
-#' Adds an observational level random effect to a model
+#' Adds an observational level random effect to a model, if applicable.
 #'
 #'
 #' @param mod merMod object.
 #' @param dat The underlying data.frame
+#' @return list with three elements: merMod object with added OLRE,
+#' data.frame with added OLRE variable, and name of OLRE.
 #' @keywords internal
 #'
 model_overdisp <- function(mod, dat, olre) {
@@ -56,6 +58,7 @@ to account for overdispersion.")
 #'
 #' @param x numeric vector
 #' @param CI CI level, e.g. 0.95
+#' @return data.frame with two columns for lower and upper CI
 #' @keywords internal
 #'
 #
@@ -75,7 +78,7 @@ calc_CI <- function(x, CI) {
 #' @param mod merMod object.
 #' @param data Data.frame to fit the model
 #' @keywords internal
-#' @return Numerator degrees of freedom
+#' @return Numeric vector, giving numerator degrees of freedom
 #'
 get_ndf <- function(partvar, mod, dat) {
   if (("Full" %in% partvar) & (length(partvar) == 1)) {
@@ -109,7 +112,7 @@ SC_pe <- function(mod) {
 #'
 #' @param mod merMod object.
 #' @keywords internal
-#' @return tidy output with bw instead of raw estimates
+#' @return data.frame with bw instead of raw estimates
 #'
 #'
 

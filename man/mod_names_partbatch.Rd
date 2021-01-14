@@ -11,6 +11,10 @@ mod_names_partbatch(partbatch, part_names)
 
 \item{part_names}{character vector with names of terms (and their combinations)}
 }
+\value{
+Modified names for partvars, where partvar combinations are replaced
+with partbatch names.
+}
 \description{
 Modify term names if partbatch is a named list
 }

@@ -15,6 +15,9 @@
 
 \item{\dots}{Additional arguments; not used at the moment}
 }
+\value{
+No return value, prints extended summary of partR2 calculation.
+}
 \description{
 Displays extended results of partR2, including R2,
 part (semi-partial) R2, inclusive R2, structure coefficients and beta weights.

@@ -10,7 +10,7 @@ get_bw(mod)
 \item{mod}{merMod object.}
 }
 \value{
-tidy output with bw instead of raw estimates
+data.frame with bw instead of raw estimates
 }
 \description{
 Get beta weights

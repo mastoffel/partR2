@@ -16,7 +16,8 @@ Authors@R:
              role = c("aut"),
              email = "holger.schielzeth@uni-jena.de"))
 Description: Partitioning the R2 of GLMMs into explained variation unique to 
-    each predictor and shared among predictors.
+    each predictor and shared among predictors. Methods are detailed in 
+    Stoffel, Nakagawa & Schielzeth (2020) <doi:10.1101/2020.07.26.221168>
 License: GPL (>= 2)
 URL: https://github.com/mastoffel/partR2
 BugReports: https://github.com/mastoffel/partR2/issues

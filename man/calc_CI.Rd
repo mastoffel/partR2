@@ -11,6 +11,9 @@ calc_CI(x, CI)
 
 \item{CI}{CI level, e.g. 0.95}
 }
+\value{
+data.frame with two columns for lower and upper CI
+}
 \description{
 Calculates CI from bootstrap replicates
 }

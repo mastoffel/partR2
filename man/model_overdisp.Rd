@@ -2,7 +2,7 @@
 % Please edit documentation in R/stats_helpers.R
 \name{model_overdisp}
 \alias{model_overdisp}
-\title{Adds an observational level random effect to a model}
+\title{Adds an observational level random effect to a model, if applicable.}
 \usage{
 model_overdisp(mod, dat, olre)
 }
@@ -11,7 +11,11 @@ model_overdisp(mod, dat, olre)
 
 \item{dat}{The underlying data.frame}
 }
+\value{
+list with three elements: merMod object with added OLRE,
+data.frame with added OLRE variable, and name of OLRE.
+}
 \description{
-Adds an observational level random effect to a model
+Adds an observational level random effect to a model, if applicable.
 }
 \keyword{internal}

@@ -13,6 +13,9 @@
 
 \item{\dots}{Additional arguments; none are used in this method.}
 }
+\value{
+No return value, prints concise results of partR2 calculation.
+}
 \description{
 Displays the results a partR2object (i.e. the result of a partR2 function call) in a nice form.
 }

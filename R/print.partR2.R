@@ -6,6 +6,7 @@
 #' @param round_to defaults to 4 (decimals)
 #' @param \dots Additional arguments; none are used in this method.
 #'
+#' @return No return value, prints concise results of partR2 calculation.
 #'
 #' @references
 #'

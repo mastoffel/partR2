@@ -9,6 +9,9 @@ boot_to_df(lcol)
 \arguments{
 \item{lcol}{A bootstrap list-column}
 }
+\value{
+data.frame with bootstrap estimates as list-column
+}
 \description{
 List to data.frame with bootstrap samples per row
 }
