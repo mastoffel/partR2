@@ -3,6 +3,8 @@ output: github_document
 ---
 <!-- badges: start -->
 ![Build Status](https://travis-ci.org/mastoffel/partR2.svg?branch=master)
+[![CRAN total downloads](http://cranlogs.r-pkg.org/badges/grand-total/partR2?color=blue)](https://cran.r-project.org/package=partR2) 
+
 [![Lifecycle: maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 [![Codecov test coverage](https://codecov.io/gh/mastoffel/partR2/branch/master/graph/badge.svg)](https://codecov.io/gh/mastoffel/partR2?branch=master)
 <!-- badges: end -->
