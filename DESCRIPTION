@@ -1,6 +1,6 @@
 Package: partR2
 Title: Partitioning R2 in GLMMs
-Version: 0.9.1
+Version: 0.9.1.9000
 Depends: R (>= 3.5.0)
 Authors@R: 
     c(person(given = "Martin A.", 

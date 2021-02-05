@@ -38,7 +38,13 @@ bugs.
 
 ## Installation
 
-You can install the development version of `partR2` from GitHub with:
+You can install the stable version of `partR2` from CRAN with:
+
+``` r
+install.packages("partR2")
+```
+
+Or the development version from GitHub with:
 
 ``` r
 # install.packages("remotes")
@@ -67,20 +73,20 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> 
 #> R2 (marginal) and 95% CI for the full model: 
 #>  R2     CI_lower CI_upper nboot ndf
-#>  0.5133 0.4405   0.6085   100   4  
+#>  0.5133 0.426    0.6005   100   4  
 #> 
 #> ----------
 #> 
 #> Part (semi-partial) R2:
 #>  Predictor(s)                      R2     CI_lower CI_upper nboot ndf
-#>  Model                             0.5133 0.4405   0.6085   100   4  
-#>  SpeciesDiversity                  0.1729 0.0581   0.3024   100   3  
-#>  Temperature                       0.3058 0.2082   0.4260   100   3  
-#>  Year                              0.0140 0.0000   0.1663   100   3  
-#>  SpeciesDiversity+Temperature      0.4916 0.4133   0.5903   100   2  
-#>  SpeciesDiversity+Year             0.1862 0.0732   0.3148   100   2  
-#>  Temperature+Year                  0.3276 0.2318   0.4463   100   2  
-#>  SpeciesDiversity+Temperature+Year 0.5133 0.4405   0.6085   100   1
+#>  Model                             0.5133 0.4260   0.6005   100   4  
+#>  SpeciesDiversity                  0.1729 0.0371   0.3005   100   3  
+#>  Temperature                       0.3058 0.1977   0.4133   100   3  
+#>  Year                              0.0140 0.0000   0.1657   100   3  
+#>  SpeciesDiversity+Temperature      0.4916 0.4023   0.5817   100   2  
+#>  SpeciesDiversity+Year             0.1862 0.0547   0.3120   100   2  
+#>  Temperature+Year                  0.3276 0.2216   0.4325   100   2  
+#>  SpeciesDiversity+Temperature+Year 0.5133 0.4260   0.6005   100   1
 ```
 
 And to plot the results:
