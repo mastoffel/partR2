@@ -5,11 +5,11 @@
 Status](https://travis-ci.org/mastoffel/partR2.svg?branch=master)
 [![CRAN total
 downloads](http://cranlogs.r-pkg.org/badges/grand-total/partR2?color=blue)](https://cran.r-project.org/package=partR2)
-
 [![Lifecycle:
 maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 [![Codecov test
 coverage](https://codecov.io/gh/mastoffel/partR2/branch/master/graph/badge.svg)](https://codecov.io/gh/mastoffel/partR2?branch=master)
+
 <!-- badges: end -->
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -21,14 +21,14 @@ variance explained by the predictors.
 
 The package takes a fitted lme4 model as input and gives you:
 
-  - R<sup>2</sup> (marginal or conditional)
-  - Part (semi-partial) R<sup>2</sup>, the variance explained uniquely
+-   R<sup>2</sup> (marginal or conditional)
+-   Part (semi-partial) R<sup>2</sup>, the variance explained uniquely
     by each predictor and combinations of predictors
-  - Inclusive R<sup>2</sup>, the variance explained by a predictor
+-   Inclusive R<sup>2</sup>, the variance explained by a predictor
     independent of all other predictors
-  - Structure coefficients, the correlation between a predictor and the
+-   Structure coefficients, the correlation between a predictor and the
     fitted response
-  - Beta weights, standardised model estimates
+-   Beta weights, standardised model estimates
 
 All estimates can be combined with parametric bootstrapping to get
 confidence intervals.
@@ -73,20 +73,20 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> 
 #> R2 (marginal) and 95% CI for the full model: 
 #>  R2     CI_lower CI_upper nboot ndf
-#>  0.5133 0.426    0.6005   100   4  
+#>  0.5133 0.4123   0.6177   100   4  
 #> 
 #> ----------
 #> 
 #> Part (semi-partial) R2:
 #>  Predictor(s)                      R2     CI_lower CI_upper nboot ndf
-#>  Model                             0.5133 0.4260   0.6005   100   4  
-#>  SpeciesDiversity                  0.1729 0.0371   0.3005   100   3  
-#>  Temperature                       0.3058 0.1977   0.4133   100   3  
-#>  Year                              0.0140 0.0000   0.1657   100   3  
-#>  SpeciesDiversity+Temperature      0.4916 0.4023   0.5817   100   2  
-#>  SpeciesDiversity+Year             0.1862 0.0547   0.3120   100   2  
-#>  Temperature+Year                  0.3276 0.2216   0.4325   100   2  
-#>  SpeciesDiversity+Temperature+Year 0.5133 0.4260   0.6005   100   1
+#>  Model                             0.5133 0.4123   0.6177   100   4  
+#>  SpeciesDiversity                  0.1729 0.0396   0.3080   100   3  
+#>  Temperature                       0.3058 0.1871   0.4288   100   3  
+#>  Year                              0.0140 0.0000   0.1694   100   3  
+#>  SpeciesDiversity+Temperature      0.4916 0.3891   0.5979   100   2  
+#>  SpeciesDiversity+Year             0.1862 0.0544   0.3198   100   2  
+#>  Temperature+Year                  0.3276 0.2097   0.4486   100   2  
+#>  SpeciesDiversity+Temperature+Year 0.5133 0.4123   0.6177   100   1
 ```
 
 And to plot the results:
@@ -100,10 +100,8 @@ forestplot(R2, type = "R2", line_size = 0.7, text_size = 14, point_size = 3)
 ### Citation
 
 When using `partR2`, please cite our
-[preprint](https://www.biorxiv.org/content/10.1101/2020.07.26.221168v1.abstract)
-for now, and look out for the peer-reviewed paper, which will hopefully
-come out soon.
+[paper](https://peerj.com/articles/11414/):
 
-Stoffel, MA, Nakagawa, S, & Schielzeth, H (2020). partR2: Partitioning
-R2 in generalized linear mixed models. bioRxiv.
-[![](https://img.shields.io/badge/doi-10.1101/2020.07.26.221168-green.svg)](https://doi.org/10.1101/2020.07.26.221168)
+Stoffel MA, Nakagawa S, Schielzeth H. 2021. partR2: partitioning R2 in
+generalized linear mixed models. PeerJ 9:e11414
+<https://doi.org/10.7717/peerj.11414>

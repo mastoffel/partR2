@@ -5,11 +5,11 @@ citEntry(entry = "Article",
         author       = personList(as.person("Martin A. Stoffel"),
                                   as.person("Shinichi Nakagawa"),
                                   as.person("Holger Schielzeth")),
-        journal      = "bioRxiv",
-        year         = "2020",
-        doi          = "10.1101/2020.07.26.221168",
-        url          = "https://www.biorxiv.org/content/10.1101/2020.07.26.221168v1",
+        journal      = "PeerJ",
+        year         = "2021",
+        doi          = "https://doi.org/10.7717/peerj.11414",
+        url          = "https://peerj.com/articles/11414/",
         textVersion  =
-                paste("Stoffel, MA, Nakagawa, S, & Schielzeth, H (2020). partR2: Partitioning R2 in generalized linear mixed models. bioRxiv. doi:10.1101/2020.07.26.221168")
+                paste("Stoffel, MA, Nakagawa, S, & Schielzeth, H (2021). partR2: Partitioning R2 in generalized linear mixed models. PeerJ 9:e11414 https://doi.org/10.7717/peerj.11414")
 
 )

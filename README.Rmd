@@ -4,9 +4,9 @@ output: github_document
 <!-- badges: start -->
 ![Build Status](https://travis-ci.org/mastoffel/partR2.svg?branch=master)
 [![CRAN total downloads](http://cranlogs.r-pkg.org/badges/grand-total/partR2?color=blue)](https://cran.r-project.org/package=partR2) 
-
 [![Lifecycle: maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 [![Codecov test coverage](https://codecov.io/gh/mastoffel/partR2/branch/master/graph/badge.svg)](https://codecov.io/gh/mastoffel/partR2?branch=master)
+
 <!-- badges: end -->
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -83,7 +83,6 @@ forestplot(R2, type = "R2", line_size = 0.7, text_size = 14, point_size = 3)
 
 ### Citation
 
-When using `partR2`, please cite our [preprint](https://www.biorxiv.org/content/10.1101/2020.07.26.221168v1.abstract) for now, and look out for the peer-reviewed paper, which will hopefully come out soon.
+When using `partR2`, please cite our [paper](https://peerj.com/articles/11414/):
 
-Stoffel, MA, Nakagawa, S, & Schielzeth, H (2020). partR2: Partitioning R2 in generalized linear mixed models. bioRxiv. 
-`r badge_doi("10.1101/2020.07.26.221168", "green")`
+Stoffel MA, Nakagawa S, Schielzeth H. 2021. partR2: partitioning R2 in generalized linear mixed models. PeerJ 9:e11414 https://doi.org/10.7717/peerj.11414
