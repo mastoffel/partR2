@@ -5,6 +5,8 @@
 Status](https://travis-ci.org/mastoffel/partR2.svg?branch=master)
 [![CRAN total
 downloads](http://cranlogs.r-pkg.org/badges/grand-total/partR2?color=blue)](https://cran.r-project.org/package=partR2)
+[![Monthly downloads
+badge](https://cranlogs.r-pkg.org/badges/last-month/partR2?color=blue)](https://CRAN.R-project.org/package=partR2)
 [![Lifecycle:
 maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 [![Codecov test
@@ -73,20 +75,20 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> 
 #> R2 (marginal) and 95% CI for the full model: 
 #>  R2     CI_lower CI_upper nboot ndf
-#>  0.5133 0.4123   0.6177   100   4  
+#>  0.5133 0.4268   0.6023   100   4  
 #> 
 #> ----------
 #> 
 #> Part (semi-partial) R2:
 #>  Predictor(s)                      R2     CI_lower CI_upper nboot ndf
-#>  Model                             0.5133 0.4123   0.6177   100   4  
-#>  SpeciesDiversity                  0.1729 0.0396   0.3080   100   3  
-#>  Temperature                       0.3058 0.1871   0.4288   100   3  
-#>  Year                              0.0140 0.0000   0.1694   100   3  
-#>  SpeciesDiversity+Temperature      0.4916 0.3891   0.5979   100   2  
-#>  SpeciesDiversity+Year             0.1862 0.0544   0.3198   100   2  
-#>  Temperature+Year                  0.3276 0.2097   0.4486   100   2  
-#>  SpeciesDiversity+Temperature+Year 0.5133 0.4123   0.6177   100   1
+#>  Model                             0.5133 0.4268   0.6023   100   4  
+#>  SpeciesDiversity                  0.1729 0.0711   0.2969   100   3  
+#>  Temperature                       0.3058 0.2231   0.4145   100   3  
+#>  Year                              0.0140 0.0000   0.1587   100   3  
+#>  SpeciesDiversity+Temperature      0.4916 0.4059   0.5801   100   2  
+#>  SpeciesDiversity+Year             0.1862 0.0865   0.3089   100   2  
+#>  Temperature+Year                  0.3276 0.2445   0.4333   100   2  
+#>  SpeciesDiversity+Temperature+Year 0.5133 0.4268   0.6023   100   1
 ```
 
 And to plot the results:
