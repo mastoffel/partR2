@@ -39,7 +39,6 @@ other predictors
 
 All estimates can be combined with parametric bootstrapping to get confidence intervals.
 
-`partR2` is still in an early phase of development and might contain bugs.
 
 ## Installation
 
@@ -54,9 +53,22 @@ Or the development version from GitHub with:
 ```{r gh-installation, eval = FALSE}
 # install.packages("remotes")
 remotes::install_github("mastoffel/partR2", build_vignettes = TRUE, dependencies = TRUE) 
+```
+
+Access the vignette with:
+
+```{r vignette, eval = FALSE}
 # check vignette
 browseVignettes("partR2")
 ```
+
+`partR2` is still in an early phase of development and might contain bugs. If you find one, please report a minimal reproducible example in the [issues](https://github.com/mastoffel/partR2/issues).
+
+### Citation
+
+When using `partR2`, please cite our [paper](https://peerj.com/articles/11414/):
+
+Stoffel MA, Nakagawa S, Schielzeth H. 2021. partR2: partitioning R2 in generalized linear mixed models. *PeerJ* **9**:e11414 https://doi.org/10.7717/peerj.11414
 
 ## Example
 
@@ -77,13 +89,10 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 ```
 
 And to plot the results:
+
 ```{r plot, results = TRUE, warning=FALSE, fig.width=7, fig.height=4}
 forestplot(R2, type = "R2", line_size = 0.7, text_size = 14, point_size = 3)
 ```
 
 
-### Citation
 
-When using `partR2`, please cite our [paper](https://peerj.com/articles/11414/):
-
-Stoffel MA, Nakagawa S, Schielzeth H. 2021. partR2: partitioning R2 in generalized linear mixed models. PeerJ 9:e11414 https://doi.org/10.7717/peerj.11414
