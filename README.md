@@ -35,9 +35,6 @@ The package takes a fitted lme4 model as input and gives you:
 All estimates can be combined with parametric bootstrapping to get
 confidence intervals.
 
-`partR2` is still in an early phase of development and might contain
-bugs.
-
 ## Installation
 
 You can install the stable version of `partR2` from CRAN with:
@@ -51,9 +48,27 @@ Or the development version from GitHub with:
 ``` r
 # install.packages("remotes")
 remotes::install_github("mastoffel/partR2", build_vignettes = TRUE, dependencies = TRUE) 
+```
+
+Access the vignette with:
+
+``` r
 # check vignette
 browseVignettes("partR2")
 ```
+
+`partR2` is still in an early phase of development and might contain
+bugs. If you find one, please report a minimal reproducible example in
+the [issues](https://github.com/mastoffel/partR2/issues).
+
+### Citation
+
+When using `partR2`, please cite our
+[paper](https://peerj.com/articles/11414/):
+
+Stoffel MA, Nakagawa S, Schielzeth H. 2021. partR2: partitioning R2 in
+generalized linear mixed models. *PeerJ* **9**:e11414
+<https://doi.org/10.7717/peerj.11414>
 
 ## Example
 
@@ -75,20 +90,20 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> 
 #> R2 (marginal) and 95% CI for the full model: 
 #>  R2     CI_lower CI_upper nboot ndf
-#>  0.5133 0.4268   0.6023   100   4  
+#>  0.5133 0.4136   0.5889   100   4  
 #> 
 #> ----------
 #> 
 #> Part (semi-partial) R2:
 #>  Predictor(s)                      R2     CI_lower CI_upper nboot ndf
-#>  Model                             0.5133 0.4268   0.6023   100   4  
-#>  SpeciesDiversity                  0.1729 0.0711   0.2969   100   3  
-#>  Temperature                       0.3058 0.2231   0.4145   100   3  
-#>  Year                              0.0140 0.0000   0.1587   100   3  
-#>  SpeciesDiversity+Temperature      0.4916 0.4059   0.5801   100   2  
-#>  SpeciesDiversity+Year             0.1862 0.0865   0.3089   100   2  
-#>  Temperature+Year                  0.3276 0.2445   0.4333   100   2  
-#>  SpeciesDiversity+Temperature+Year 0.5133 0.4268   0.6023   100   1
+#>  Model                             0.5133 0.4136   0.5889   100   4  
+#>  SpeciesDiversity                  0.1729 0.0322   0.2792   100   3  
+#>  Temperature                       0.3058 0.1842   0.3966   100   3  
+#>  Year                              0.0140 0.0000   0.1362   100   3  
+#>  SpeciesDiversity+Temperature      0.4916 0.3918   0.5663   100   2  
+#>  SpeciesDiversity+Year             0.1862 0.0475   0.2913   100   2  
+#>  Temperature+Year                  0.3276 0.2091   0.4155   100   2  
+#>  SpeciesDiversity+Temperature+Year 0.5133 0.4136   0.5889   100   1
 ```
 
 And to plot the results:
@@ -98,12 +113,3 @@ forestplot(R2, type = "R2", line_size = 0.7, text_size = 14, point_size = 3)
 ```
 
 ![](README-plot-1.png)<!-- -->
-
-### Citation
-
-When using `partR2`, please cite our
-[paper](https://peerj.com/articles/11414/):
-
-Stoffel MA, Nakagawa S, Schielzeth H. 2021. partR2: partitioning R2 in
-generalized linear mixed models. PeerJ 9:e11414
-<https://doi.org/10.7717/peerj.11414>
