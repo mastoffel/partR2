@@ -76,7 +76,7 @@ calc_CI <- function(x, CI) {
 #' @param partvar One or more fixed effect variables which are taken out
 #' of the model.
 #' @param mod merMod object.
-#' @param data Data.frame to fit the model
+#' @param dat Data.frame to fit the model
 #' @keywords internal
 #' @return Numeric vector, giving numerator degrees of freedom
 #'

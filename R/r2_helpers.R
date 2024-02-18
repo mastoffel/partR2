@@ -97,7 +97,7 @@ part_R2s <- function(mod, expct, overdisp_name, R2_type, all_comb, partition,
 #' @param partvar One or more fixed effect variables which are taken out
 #' of the model.
 #' @param mod merMod object.
-#' @param data Data.frame to fit the model
+#' @param dat Data.frame to fit the model
 #' @param expct Expectation
 #' @param overdisp_name Name of overdispersion term
 #' @param R2_type "marginal" or "conditional"
