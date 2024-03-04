@@ -1,16 +1,14 @@
 
 <!-- badges: start -->
 
-![Build
-Status](https://travis-ci.org/mastoffel/partR2.svg?branch=master)
 [![CRAN total
 downloads](http://cranlogs.r-pkg.org/badges/grand-total/partR2?color=blue)](https://cran.r-project.org/package=partR2)
 [![Monthly downloads
 badge](https://cranlogs.r-pkg.org/badges/last-month/partR2?color=blue)](https://CRAN.R-project.org/package=partR2)
 [![Lifecycle:
-maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
 [![Codecov test
-coverage](https://codecov.io/gh/mastoffel/partR2/branch/master/graph/badge.svg)](https://codecov.io/gh/mastoffel/partR2?branch=master)
+coverage](https://codecov.io/gh/mastoffel/partR2/branch/master/graph/badge.svg)](https://app.codecov.io/gh/mastoffel/partR2?branch=master)
 
 <!-- badges: end -->
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -23,14 +21,14 @@ variance explained by the predictors.
 
 The package takes a fitted lme4 model as input and gives you:
 
--   R<sup>2</sup> (marginal or conditional)
--   Part (semi-partial) R<sup>2</sup>, the variance explained uniquely
-    by each predictor and combinations of predictors
--   Inclusive R<sup>2</sup>, the variance explained by a predictor
-    independent of all other predictors
--   Structure coefficients, the correlation between a predictor and the
-    fitted response
--   Beta weights, standardised model estimates
+- R<sup>2</sup> (marginal or conditional)
+- Part (semi-partial) R<sup>2</sup>, the variance explained uniquely by
+  each predictor and combinations of predictors
+- Inclusive R<sup>2</sup>, the variance explained by a predictor
+  independent of all other predictors
+- Structure coefficients, the correlation between a predictor and the
+  fitted response
+- Beta weights, standardised model estimates
 
 All estimates can be combined with parametric bootstrapping to get
 confidence intervals.
@@ -90,20 +88,20 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> 
 #> R2 (marginal) and 95% CI for the full model: 
 #>  R2     CI_lower CI_upper nboot ndf
-#>  0.5133 0.4136   0.5889   100   4  
+#>  0.5133 0.4439   0.5908   100   4  
 #> 
 #> ----------
 #> 
 #> Part (semi-partial) R2:
 #>  Predictor(s)                      R2     CI_lower CI_upper nboot ndf
-#>  Model                             0.5133 0.4136   0.5889   100   4  
-#>  SpeciesDiversity                  0.1729 0.0322   0.2792   100   3  
-#>  Temperature                       0.3058 0.1842   0.3966   100   3  
-#>  Year                              0.0140 0.0000   0.1362   100   3  
-#>  SpeciesDiversity+Temperature      0.4916 0.3918   0.5663   100   2  
-#>  SpeciesDiversity+Year             0.1862 0.0475   0.2913   100   2  
-#>  Temperature+Year                  0.3276 0.2091   0.4155   100   2  
-#>  SpeciesDiversity+Temperature+Year 0.5133 0.4136   0.5889   100   1
+#>  Model                             0.5133 0.4439   0.5908   100   4  
+#>  SpeciesDiversity                  0.1729 0.0736   0.2913   100   3  
+#>  Temperature                       0.3058 0.2193   0.4106   100   3  
+#>  Year                              0.0140 0.0000   0.1537   100   3  
+#>  SpeciesDiversity+Temperature      0.4916 0.4205   0.5714   100   2  
+#>  SpeciesDiversity+Year             0.1862 0.0883   0.3029   100   2  
+#>  Temperature+Year                  0.3276 0.2430   0.4293   100   2  
+#>  SpeciesDiversity+Temperature+Year 0.5133 0.4439   0.5908   100   1
 ```
 
 And to plot the results:

@@ -12,13 +12,13 @@ of the model.}
 
 \item{mod}{merMod object.}
 
+\item{dat}{Data.frame to fit the model}
+
 \item{expct}{Expectation}
 
 \item{overdisp_name}{Name of overdispersion term}
 
 \item{R2_type}{"marginal" or "conditional"}
-
-\item{data}{Data.frame to fit the model}
 }
 \value{
 R2 of reduced model.

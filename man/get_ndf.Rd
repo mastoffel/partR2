@@ -12,7 +12,7 @@ of the model.}
 
 \item{mod}{merMod object.}
 
-\item{data}{Data.frame to fit the model}
+\item{dat}{Data.frame to fit the model}
 }
 \value{
 Numeric vector, giving numerator degrees of freedom
