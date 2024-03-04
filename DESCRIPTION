@@ -18,8 +18,7 @@ Authors@R:
 Description: Partitioning the R2 of GLMMs into variation explained by each 
     predictor and combination of predictors using semi-partial (part) R2 and
     inclusive R2. Methods are based on the R2 for GLMMs described in
-    Nakagawa & Schielzeth (2013) <doi:10.1111/j.2041-210x.2012.00261.x> and
-    Nakagawa, Johnson & Schielzeth (2017) <doi:10.1098/rsif.2017.0213>.
+    Nakagawa & Schielzeth (2013) and Nakagawa, Johnson & Schielzeth (2017).
 License: GPL (>= 2)
 URL: https://github.com/mastoffel/partR2
 BugReports: https://github.com/mastoffel/partR2/issues

@@ -1,6 +1,6 @@
 bibentry("Article",
         title        = "partR2: Partitioning R2 in generalized linear mixed models",
-        author       = "Martin A. Stoffel, Shinichi Nakagawa, Holger Schielzeth"
+        author       = "Martin A. Stoffel, Shinichi Nakagawa, Holger Schielzeth",
         journal      = "PeerJ",
         year         = "2021",
         doi          = "10.7717/peerj.11414",
