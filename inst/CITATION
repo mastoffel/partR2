@@ -1,13 +1,9 @@
-citHeader("To cite partR2 in publications please refer to our article:")
-
-citEntry(entry = "Article",
+bibentry("Article",
         title        = "partR2: Partitioning R2 in generalized linear mixed models",
-        author       = personList(as.person("Martin A. Stoffel"),
-                                  as.person("Shinichi Nakagawa"),
-                                  as.person("Holger Schielzeth")),
+        author       = "Martin A. Stoffel, Shinichi Nakagawa, Holger Schielzeth"
         journal      = "PeerJ",
         year         = "2021",
-        doi          = "https://doi.org/10.7717/peerj.11414",
+        doi          = "10.7717/peerj.11414",
         url          = "https://peerj.com/articles/11414/",
         textVersion  =
                 paste("Stoffel, MA, Nakagawa, S, & Schielzeth, H (2021). partR2: Partitioning R2 in generalized linear mixed models. PeerJ 9:e11414 https://doi.org/10.7717/peerj.11414")
