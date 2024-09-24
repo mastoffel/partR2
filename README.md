@@ -2,7 +2,7 @@
 <!-- badges: start -->
 
 [![CRAN total
-downloads](http://cranlogs.r-pkg.org/badges/grand-total/partR2?color=blue)](https://cran.r-project.org/package=partR2)
+downloads](https://cranlogs.r-pkg.org/badges/grand-total/partR2?color=blue)](https://cran.r-project.org/package=partR2)
 [![Monthly downloads
 badge](https://cranlogs.r-pkg.org/badges/last-month/partR2?color=blue)](https://CRAN.R-project.org/package=partR2)
 [![Lifecycle:
@@ -88,20 +88,20 @@ mod <- lmer(Biomass ~  Year + Temperature + SpeciesDiversity + (1|Population),
 #> 
 #> R2 (marginal) and 95% CI for the full model: 
 #>  R2     CI_lower CI_upper nboot ndf
-#>  0.5133 0.4439   0.5908   100   4  
+#>  0.5133 0.4383   0.5848   100   4  
 #> 
 #> ----------
 #> 
 #> Part (semi-partial) R2:
 #>  Predictor(s)                      R2     CI_lower CI_upper nboot ndf
-#>  Model                             0.5133 0.4439   0.5908   100   4  
-#>  SpeciesDiversity                  0.1729 0.0736   0.2913   100   3  
-#>  Temperature                       0.3058 0.2193   0.4106   100   3  
-#>  Year                              0.0140 0.0000   0.1537   100   3  
-#>  SpeciesDiversity+Temperature      0.4916 0.4205   0.5714   100   2  
-#>  SpeciesDiversity+Year             0.1862 0.0883   0.3029   100   2  
-#>  Temperature+Year                  0.3276 0.2430   0.4293   100   2  
-#>  SpeciesDiversity+Temperature+Year 0.5133 0.4439   0.5908   100   1
+#>  Model                             0.5133 0.4383   0.5848   100   4  
+#>  SpeciesDiversity                  0.1729 0.0682   0.2721   100   3  
+#>  Temperature                       0.3058 0.2128   0.3917   100   3  
+#>  Year                              0.0140 0.0000   0.1354   100   3  
+#>  SpeciesDiversity+Temperature      0.4916 0.4147   0.5638   100   2  
+#>  SpeciesDiversity+Year             0.1862 0.0827   0.2835   100   2  
+#>  Temperature+Year                  0.3276 0.2364   0.4117   100   2  
+#>  SpeciesDiversity+Temperature+Year 0.5133 0.4383   0.5848   100   1
 ```
 
 And to plot the results:
